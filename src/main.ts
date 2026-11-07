@@ -21,6 +21,8 @@ import { NPCS } from './data/npcs';
 import { Npc } from './entities/npc';
 import { Cat } from './entities/cat';
 import { buildPickups } from './systems/pickups';
+import { Broom } from './entities/broom';
+import { Race } from './systems/race';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -66,6 +68,9 @@ for (const [x, z] of [[-20, 130], [20, 140], [0, 160], [-70, 90], [75, 70], [-60
   combat.enemies.push(e);
 }
 let kills = 0;
+const broom = new Broom(scene);
+const race = new Race(scene);
+race.onMessage = (a, b) => hud.announce(a, b, 4);
 const quests = new QuestLog();
 const panels = new Panels(quests);
 const npcs = NPCS.map((d) => new Npc(d));
@@ -230,7 +235,7 @@ renderer.setAnimationLoop(() => {
     const near = mount?.mounted ? null : nearestInteractable();
     panels.setPrompt(near ? `F - Talk to ${near.name}` : '');
     if (near && input.wasPressed('KeyF')) { near.act(); }
-    else if (mount && input.wasPressed('KeyF')) {
+    else if (mount && !broom.active && input.wasPressed('KeyF')) {
       if (mount.mounted) {
         if (!mount.dismount(player)) hud.announce('Too high', 'Land before dismounting.', 2);
         else hud.setHands(player.hands[0], player.hands[1]);
@@ -239,12 +244,28 @@ renderer.setAnimationLoop(() => {
         hud.announce('Mounted', `LMB fire breath - RMB ${TAIL_ATTACKS[mount.spec.tail].name} - Shift boost - F land+dismount`, 4);
       }
     }
+    if (input.wasPressed('KeyB') && !mount?.mounted) {
+      if (broom.active) {
+        if (!broom.dismount(player)) hud.announce('Too high', 'Land before dismounting.', 2);
+        else hud.setHands(player.hands[0], player.hands[1]);
+      } else {
+        broom.mount(player);
+        hud.announce('Broom', 'Mouse steers - W/S speed - Shift boost - V camera - B land', 4);
+      }
+    }
+    if (broom.active && input.wasPressed('KeyV')) player.thirdPerson = !player.thirdPerson;
+    if (mount?.mounted || broom.active) player.tickRegen(dt);
     if (mount?.mounted) {
       mount.update(dt, input, player, camera);
+    } else if (broom.active) {
+      broom.update(dt, input, player, camera);
+      mount?.update(dt, input, player, camera);
     } else {
       player.update(dt, input);
       mount?.update(dt, input, player, camera);
     }
+    race.update(dt, player.pos, broom.active);
+    hud.setRaceLine(race.label);
     story();
     // quest world logic
     quests.reach('flyTower', !!mount?.mounted && mount.pos.distanceTo(new THREE.Vector3(TOWER.x, TOWER.top, TOWER.z)) < 14);

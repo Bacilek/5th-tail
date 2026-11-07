@@ -143,6 +143,13 @@ export class Player {
     this.airPeak = this.pos.y; this.grounded = true; this.wasGrounded = true;
   }
 
+  /** Regeneration while riding (normal update is skipped). */
+  tickRegen(dt: number): void {
+    this.staminaDelay -= dt; this.magickaDelay -= dt;
+    if (this.staminaDelay <= 0) this.stamina = Math.min(this.maxStamina, this.stamina + 20 * dt);
+    if (this.magickaDelay <= 0) this.magicka = Math.min(this.maxMagicka, this.magicka + 7 * dt);
+  }
+
   useStaminaRaw(n: number): boolean { return this.useStamina(n); }
   delayMagickaRegen(): void { this.magickaDelay = 1.5; }
 

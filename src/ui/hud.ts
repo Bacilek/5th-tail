@@ -42,8 +42,8 @@ export class Hud {
     root.innerHTML = `
       <div id="dmg"></div><div id="cross"></div>
       <div id="hint"><b>WASD</b> move &middot; <b>Shift</b> sprint &middot; <b>Space</b> jump &middot; <b>V</b> 1st/3rd person<br>
-        <b>LMB</b> left hand &middot; <b>RMB</b> right hand &middot; <b>Q</b>/<b>E</b> cycle left/right item<br><b>H</b> hide this</div>
-      <div id="info"><div id="cls2"></div><div id="drg"></div><div id="wing"></div><div id="kills"></div></div>
+        <b>LMB</b> left hand &middot; <b>RMB</b> right hand &middot; <b>Q</b>/<b>E</b> cycle left/right item<br><b>F</b> talk/mount &middot; <b>R</b> summon dragon &middot; <b>B</b> broom &middot; <b>J</b> quests &middot; <b>H</b> hide this</div>
+      <div id="info"><div id="cls2"></div><div id="drg"></div><div id="race"></div><div id="wing"></div><div id="kills"></div></div>
       <div id="obj"></div><div id="ann"><h1></h1><p></p></div>
       <div class="hand" id="hl"></div><div class="hand" id="hr"></div>
       <div id="bars">
@@ -105,6 +105,7 @@ export class Hud {
     document.body.appendChild(el);
   }
 
+  setRaceLine(t: string): void { this.el('race').textContent = t; }
   setDragonLine(t: string): void { this.el('drg').textContent = t; }
   setObjective(t: string): void { this.el('obj').textContent = t; this.el('obj').style.display = t ? '' : 'none'; }
   setClassLabel(t: string): void { this.el('cls2').textContent = t; }
