@@ -3,7 +3,8 @@ import type { Input } from '../engine/input';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
 import { heightAt, MAP_HALF } from '../world/terrain';
-import { resolve } from '../world/collision';
+import type { Look } from '../data/look';
+import { resolve, supportAt } from '../world/collision';
 import type { Combat } from '../systems/combat';
 
 const EYE = 1.7;
@@ -86,6 +87,20 @@ export class Player {
     this.refreshHeld();
   }
 
+  private lookMats!: { cloth: THREE.MeshStandardMaterial; skin: THREE.MeshStandardMaterial; hair: THREE.MeshStandardMaterial };
+  private hairMeshes: THREE.Mesh[] = [];
+  name = 'Cadet';
+
+  /** Applies the character-creation look to the third-person avatar. */
+  applyLook(look: Look): void {
+    this.name = look.name;
+    this.lookMats.cloth.color.setHex(look.cloth);
+    this.lookMats.skin.color.setHex(look.skin);
+    this.lookMats.hair.color.setHex(look.hair);
+    this.hairMeshes[0].visible = look.hairStyle !== 'bald';
+    this.hairMeshes[1].visible = look.hairStyle === 'long';
+  }
+
   private buildAvatar(): void {
     const cloth = new THREE.MeshStandardMaterial({ color: 0x1d2030, flatShading: true });
     const leather = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
@@ -99,7 +114,11 @@ export class Player {
     head.position.y = 1.72;
     const hr = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
     hr.position.y = 1.74;
-    this.avatar.add(torso, belt, head, hr);
+    const longHair = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.6, 0.14), hair);
+    longHair.position.set(0, 1.5, 0.17); longHair.visible = false;
+    this.hairMeshes = [hr, longHair];
+    this.lookMats = { cloth, skin, hair };
+    this.avatar.add(torso, belt, head, hr, longHair);
     for (const s of [-1, 1]) {
       const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.8, 0.26), cloth);
       leg.position.set(s * 0.15, 0.4, 0);
@@ -259,7 +278,7 @@ export class Player {
     this.pos.z = Math.max(-MAP_HALF + 2, Math.min(MAP_HALF - 2, this.pos.z));
     resolve(this.pos, 0.45);
 
-    const gh = heightAt(this.pos.x, this.pos.z);
+    const gh = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y));
     if (this.vel.y <= 0 && this.pos.y - gh < 0.45) {
       this.pos.y = gh; this.vel.y = 0; this.grounded = true;
     } else {

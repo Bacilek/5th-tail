@@ -164,7 +164,7 @@ function onChosen(id: ClassId): void {
   chosen = id;
   player.setClass(id);
   hud.showMagicka(CLASSES[id].maxMagicka > 0);
-  hud.setClassLabel(`Class: ${CLASSES[id].name}`);
+  hud.setClassLabel(`${player.name} - ${CLASSES[id].name}`);
   hud.setHands(player.hands[0], player.hands[1]);
   if (id === 'rider') {
     // Riders go up the Conscription Tower and cross the Parapet
@@ -181,7 +181,10 @@ function onChosen(id: ClassId): void {
   }
   renderer.domElement.requestPointerLock();
 }
-hud.showClassSelect(onChosen);
+hud.showCharacterCreator((look) => {
+  player.applyLook(look);
+  hud.showClassSelect(onChosen);
+});
 
 player.onRespawn = () => {
   if (chosen === 'rider') { stage = 'parapet'; hud.setObjective('Cross the Parapet to the Riders Quadrant'); }

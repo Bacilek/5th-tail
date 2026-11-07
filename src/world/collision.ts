@@ -34,3 +34,12 @@ export function resolve(pos: { x: number; y: number; z: number }, r: number): vo
     }
   }
 }
+
+/** Highest box top under (x,z) that is at most `reach` above y (a surface the player can stand on / land on). */
+export function supportAt(x: number, z: number, y: number, reach = 0.5, r = 0.3): number {
+  let t = -Infinity;
+  for (const b of boxes) {
+    if (x >= b.x0 - r && x <= b.x1 + r && z >= b.z0 - r && z <= b.z1 + r && b.top <= y + reach) t = Math.max(t, b.top);
+  }
+  return t;
+}

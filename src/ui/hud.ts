@@ -1,5 +1,6 @@
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
+import { DEFAULT_LOOK, SKIN_TONES, HAIR_COLORS, HAIR_STYLES, CLOTH_COLORS, type Look } from '../data/look';
 
 const CSS = `
 #hud{position:fixed;inset:0;pointer-events:none;font-family:Georgia,serif;color:#f0e6d0;text-shadow:0 1px 3px #000}
@@ -18,6 +19,20 @@ const CSS = `
 #info{position:absolute;right:14px;top:12px;text-align:right;font-size:15px;line-height:1.5}
 #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000a;color:#f0e6d0;font-family:Georgia,serif;pointer-events:none}
 #start h1{font-size:56px;letter-spacing:6px;margin:0}#start p{font-size:18px}
+#cc{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#000a,#000e);color:#f0e6d0;font-family:Georgia,serif;z-index:6}
+#cc h1{font-size:40px;letter-spacing:5px;margin:0 0 24px}
+#cc .ccrow{display:flex;gap:44px;align-items:center;flex-wrap:wrap;justify-content:center}
+#cc .ccprev{position:relative;width:120px;height:230px}
+#cc .ph{position:absolute;left:35px;top:20px;width:50px;height:50px;border-radius:50%;background:#d9b69a}
+#cc .pf{position:absolute;left:30px;top:10px;width:60px;height:28px;border-radius:30px 30px 6px 6px;z-index:1;opacity:.95}
+#cc .pb{position:absolute;left:25px;top:76px;width:70px;height:120px;border-radius:6px;background:#1d2030}
+#cc .ccopts{display:flex;flex-direction:column;gap:14px}
+#cc label{font-size:18px}#cc input{margin-left:10px;padding:6px 10px;font:inherit;background:#14121a;color:#f0e6d0;border:1px solid #d8c9a0aa}
+#cc .sw{display:flex;align-items:center;gap:8px}#cc .sw span{width:60px;opacity:.8}
+#cc .opt{display:inline-block;min-width:28px;height:28px;line-height:28px;text-align:center;padding:0 6px;border:2px solid #0000;border-radius:4px;cursor:pointer;font-style:normal;font-size:13px;outline:1px solid #d8c9a044}
+#cc .opt.sel{border-color:#ffd98a}
+#cc button{margin-top:10px;padding:12px 18px;font:inherit;font-size:17px;background:#2a2330;color:#ffd98a;border:1px solid #d8c9a0aa;cursor:pointer}
+#cc button:hover{background:#3a3040}
 #cls{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#000a,#000d);color:#f0e6d0;font-family:Georgia,serif;z-index:5}
 #cls h1{font-size:46px;letter-spacing:5px;margin:0}#cls>p{opacity:.8;margin:6px 0 26px}
 #cls .cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
@@ -76,6 +91,59 @@ export class Hud {
   setHands(l: ItemId, r: ItemId): void {
     this.el('hl').textContent = 'L: ' + ITEMS[l].name;
     this.el('hr').textContent = 'R: ' + ITEMS[r].name;
+  }
+
+  /** Character creation: name, skin, hair, outfit. Calls onDone with the chosen look. */
+  showCharacterCreator(onDone: (look: Look) => void): void {
+    const look: Look = { ...DEFAULT_LOOK };
+    const el = document.createElement('div');
+    el.id = 'cc';
+    const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
+    el.innerHTML = `<h1>CREATE YOUR CADET</h1>
+      <div class="ccrow"><div class="ccprev"><div class="ph"></div><div class="pf"></div><div class="pb"></div></div>
+      <div class="ccopts">
+        <label>Name <input id="ccname" maxlength="16" value="${look.name}"></label>
+        <div class="sw" data-k="skin"><span>Skin</span></div>
+        <div class="sw" data-k="hair"><span>Hair</span></div>
+        <div class="sw" data-k="hairStyle"><span>Style</span></div>
+        <div class="sw" data-k="cloth"><span>Outfit</span></div>
+        <button id="ccgo">Continue to Conscription Day</button>
+      </div></div>`;
+    const paint = () => {
+      const q = (s: string) => el.querySelector(s) as HTMLElement;
+      q('.ph').style.background = hex(look.skin);
+      q('.pf').style.background = look.hairStyle === 'bald' ? 'transparent' : hex(look.hair);
+      q('.pf').style.height = look.hairStyle === 'long' ? '86px' : '28px';
+      q('.pb').style.background = hex(look.cloth);
+      el.querySelectorAll('.sw .opt').forEach((o) => {
+        const b = o as HTMLElement;
+        const k = b.parentElement!.dataset.k as keyof Look;
+        b.classList.toggle('sel', String(look[k]) === b.dataset.v);
+      });
+    };
+    const rows: [keyof Look, (number | string)[]][] = [
+      ['skin', SKIN_TONES], ['hair', HAIR_COLORS], ['hairStyle', HAIR_STYLES], ['cloth', CLOTH_COLORS],
+    ];
+    for (const [k, vals] of rows) {
+      const row = el.querySelector(`.sw[data-k="${k}"]`)!;
+      for (const v of vals) {
+        const b = document.createElement('i');
+        b.className = 'opt'; b.dataset.v = String(v);
+        if (typeof v === 'number') b.style.background = hex(v); else b.textContent = v;
+        b.addEventListener('click', () => { (look as unknown as Record<string, unknown>)[k] = v; paint(); });
+        row.appendChild(b);
+      }
+    }
+    let done = false;
+    const go = () => {
+      if (done) return; done = true;
+      const n = (el.querySelector('#ccname') as HTMLInputElement).value.trim();
+      look.name = n || 'Cadet';
+      el.remove(); onDone(look);
+    };
+    el.querySelector('#ccgo')!.addEventListener('click', go);
+    paint();
+    document.body.appendChild(el);
   }
 
   showClassSelect(onPick: (id: ClassId) => void): void {
