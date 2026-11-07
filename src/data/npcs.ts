@@ -20,7 +20,7 @@ export const NPCS: NpcDef[] = [
     chat: ['Infantry holds the line. Riders get the songs; we get the border.'] },
   { id: 'dain', name: 'Dain', role: 'Squad Leader', x: 98, z: -12, cloth: 0x2a2f45, hair: 0x6a4a28,
     chat: ['Stay in formation and keep your head down on the field.'] },
-  { id: 'rhiannon', name: 'Rhiannon', role: 'Rider', x: 100, z: -28, cloth: 0x2a2f45, hair: 0x3a2a1a,
+  { id: 'rhiannon', name: 'Rhiannon', role: 'Rider', x: 96, z: -22, cloth: 0x2a2f45, hair: 0x3a2a1a,
     chat: ['If you reached the Citadel, you already beat the Parapet. The rest is only dragons.', 'Fourth Wing is not the easiest place to be a first-year. But nobody here is alone.'] },
   { id: 'ridoc', name: 'Ridoc', role: 'Rider', x: 106, z: -16, cloth: 0x2a2f45, hair: 0x1a1210,
     chat: ['Nice landing. Okay, you fell on it, but it counts.', 'Rumor says the cat in the lower college has opinions on every rider.'] },

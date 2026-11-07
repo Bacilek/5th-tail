@@ -23,6 +23,7 @@ import { Cat } from './entities/cat';
 import { buildPickups } from './systems/pickups';
 import { Broom } from './entities/broom';
 import { Race } from './systems/race';
+import { audio } from './engine/audio';
 import { Gauntlet } from './systems/gauntlet';
 import { Threshing, type Bond } from './systems/threshing';
 
@@ -77,7 +78,7 @@ scene.add(gauntlet.group);
 const fieldLabel = makeLabel('The Flight Field', '#ffe9b0', 40); fieldLabel.position.set(234, CITADEL_Y + 22, -15); scene.add(fieldLabel);
 gauntlet.onMessage = (a, b) => hud.announce(a, b, 4);
 const threshing = new Threshing(scene);
-threshing.onMessage = (a, b) => hud.announce(a, b, 5);
+threshing.onMessage = (a, b) => { hud.announce(a, b, 5); if (a.includes('approaches') || a === 'Rejected') audio.roar(); };
 threshing.onBond = (b) => bondDragon(b);
 race.onMessage = (a, b) => hud.announce(a, b, 4);
 const quests = new QuestLog();
@@ -87,14 +88,14 @@ npcs.forEach((n) => scene.add(n.group));
 const cat = new Cat(8, 20);
 scene.add(cat.group);
 const pickups = buildPickups(scene);
-combat.onKill = () => { hud.setKills(++kills, quests.gold); quests.kill(); };
+combat.onKill = () => { audio.hit(); hud.setKills(++kills, quests.gold); quests.kill(); };
 quests.onChange = ((prev) => () => { prev(); hud.setKills(kills, quests.gold); })(quests.onChange);
 
 function talkTo(npc: Npc): void {
   const id = npc.def.id, name = npc.def.name;
   const ready = QUESTS.find((q) => (q.turnIn ?? q.giver) === id && quests.status(q.id) === 'ready');
   if (ready) {
-    panels.open(name, ready.outro, [{ label: 'Thank you.', cb: () => { const g = quests.turnIn(ready.id); hud.announce('Quest complete', `${ready.title}  +${g} gold`, 4); } }]);
+    panels.open(name, ready.outro, [{ label: 'Thank you.', cb: () => { const g = quests.turnIn(ready.id); hud.announce('Quest complete', `${ready.title}  +${g} gold`, 4); audio.quest(); } }]);
     return;
   }
   const offer = QUESTS.find((q) => q.giver === id && quests.status(q.id) === 'none' && (!q.requires || quests.status(q.requires) === 'done'));
@@ -177,7 +178,15 @@ player.onRespawn = () => {
   hud.announce('You fell.', chosen === 'rider' ? 'The Parapet claims another. Try again.' : 'Try again.', 4);
 };
 player.onDeath = () => { hud.announce('You died', '', 3); };
-player.onDamaged = () => hud.flashDamage();
+player.onDamaged = () => { hud.flashDamage(); audio.hurt(); };
+player.onAttack = (k) => { if (k === 'melee') audio.swing(); else if (k === 'fireball') audio.fire(); else if (k === 'lightning') audio.lightning(); else audio.heal(); };
+panels.onOpen = (name) => {
+  if (name === 'Broccoli') { audio.meow(); return; }
+  let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 97;
+  audio.babble(0.75 + (h % 10) * 0.09, 10 + (h % 6));
+};
+addEventListener('pointerdown', () => audio.start());
+addEventListener('keydown', (e) => { audio.start(); if (e.code === 'KeyM') hud.announce(audio.toggleMute() ? 'Sound off' : 'Sound on', '', 1.5); });
 player.onHandsChanged = () => hud.setHands(player.hands[0], player.hands[1]);
 hud.setKills(0);
 
@@ -185,6 +194,7 @@ function bondDragon(b: Bond): void {
   stage = 'done';
   const spec = b.spec;
   mount = new DragonMount(spec, scene, combat);
+  audio.roar();
   hud.setObjective('');
   hud.setDragonLine(`Dragon: ${spec.name} (${b.species.color} ${b.species.tail}tail, ${b.species.rarity}) - R summon, F mount`);
   hud.announce('The Threshing', `${spec.name}, a ${b.species.color} ${b.species.tail}tail (${b.species.rarity}), has chosen you.`, 8);
@@ -285,7 +295,7 @@ renderer.setAnimationLoop(() => {
       pk.mesh.visible = !pk.taken && st === 'active';
       pk.mesh.position.y = pk.base + Math.sin(t * 2 + pk.mesh.position.x) * 0.15;
       pk.mesh.rotation.y = t;
-      if (pk.mesh.visible && pk.mesh.position.distanceTo(player.pos) < 2.6) { pk.taken = true; pk.mesh.visible = false; quests.collect(pk.item); }
+      if (pk.mesh.visible && pk.mesh.position.distanceTo(player.pos) < 2.6) { pk.taken = true; pk.mesh.visible = false; audio.pickup(); quests.collect(pk.item); }
     }
     const tgt = new THREE.Vector3(player.pos.x, player.pos.y, player.pos.z);
     for (const e of combat.enemies) {

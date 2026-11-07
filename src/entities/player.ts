@@ -187,20 +187,25 @@ export class Player {
     return true;
   }
 
+  onAttack: (kind: string) => void = () => {};
+
   private attack(h: Hand): void {
     const item = ITEMS[this.hands[h]];
     if (item.kind === 'none' || this.cooldown[h] > 0 || this.swing[h] > 0) return;
     if (item.kind === 'heal') {
       this.health = Math.min(this.maxHealth, this.health + item.damage);
+      this.onAttack('heal');
       this.swing[h] = 0.001; this.swingHit[h] = true;
     } else if (item.kind === 'melee') {
       if (!this.useStamina(item.cost)) return;
+      this.onAttack('melee');
       this.swing[h] = 0.001; this.swingHit[h] = false;
     } else {
       if (this.magicka < item.cost) return;
       this.magicka -= item.cost; this.magickaDelay = 1.5;
       const origin = this.eye;
       const dir = this.forward;
+      this.onAttack(item.id);
       if (item.id === 'fireball') this.combat.fireball(origin.clone().addScaledVector(dir, 0.8), dir, item.damage);
       else this.combat.lightning(origin, dir, item.range, item.damage);
       this.swing[h] = 0.001; this.swingHit[h] = true;

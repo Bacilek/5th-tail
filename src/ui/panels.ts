@@ -21,6 +21,7 @@ export class Panels {
   private trk: HTMLElement;
   private qlog: HTMLElement;
   private choices: Choice[] = [];
+  onOpen: (name: string) => void = () => {};
   dialogOpen = false;
   logOpen = false;
 
@@ -45,6 +46,7 @@ export class Panels {
   open(name: string, text: string, choices: Choice[]): void {
     this.choices = choices;
     this.dialogOpen = true;
+    this.onOpen(name);
     this.dlg.innerHTML = '';
     const h = document.createElement('h2'); h.textContent = name; this.dlg.appendChild(h);
     const p = document.createElement('p'); p.textContent = text; this.dlg.appendChild(p);

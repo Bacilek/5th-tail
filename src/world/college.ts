@@ -78,11 +78,49 @@ function ring(g: THREE.Group, r: Rect, y: number, T: number, H: number, gaps: { 
   wallLine(g, 'z', r.x1, r.z0, r.z1, gaps.e ?? [], T, H, y, mat);
 }
 
-function hall(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, roofH: number): void {
-  block(g, cx, cz, w, d, h, y);
+type Door = 'n' | 's' | 'e' | 'w';
+type Kind = 'table' | 'bunks' | 'cots' | 'shelves' | 'none';
+
+const lantern = new THREE.MeshBasicMaterial({ color: 0xffc070 });
+const cloth = new THREE.MeshStandardMaterial({ color: 0x8a3a30, flatShading: true });
+const linen = new THREE.MeshStandardMaterial({ color: 0xc9c2b0, flatShading: true });
+const bookMat = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
+
+function prop(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, mat: THREE.Material, solid = true): void {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(cx, y + h / 2, cz); m.castShadow = m.receiveShadow = true; g.add(m);
+  if (solid) addBox(cx, cz, w, d, y + h);
+}
+
+/** Enterable building: hollow walls with a 4.4 m door, visual roof slab, simple furniture. The roof has no collider. */
+function hall(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, roofH: number, door: Door = 's', kind: Kind = 'table', mat: THREE.Material = stone): void {
+  const r: Rect = { x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2 };
+  const gx: [number, number][] = [[cx - 2.2, cx + 2.2]], gz: [number, number][] = [[cz - 2.2, cz + 2.2]];
+  ring(g, r, y, 1.2, h, { n: door === 'n' ? gx : [], s: door === 's' ? gx : [], w: door === 'w' ? gz : [], e: door === 'e' ? gz : [] }, mat);
+  floor(g, r, y, 0x5a4a3c);
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(w + 1, 0.7, d + 1), darkStone);
+  slab.position.set(cx, y + h + 0.35, cz); slab.castShadow = true; g.add(slab);
   const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, roofH, 4), roofMat);
   roof.rotation.y = Math.PI / 4; roof.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
-  roof.position.set(cx, y + h + roofH / 2, cz); roof.castShadow = true; g.add(roof);
+  roof.position.set(cx, y + h + 0.7 + roofH / 2, cz); roof.castShadow = true; g.add(roof);
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.25, 6, 5), lantern);
+  lamp.position.set(cx, y + h - 1.2, cz); g.add(lamp);
+  // furniture in the half opposite the door, along the long axis
+  const dir = { n: [0, 1], s: [0, -1], e: [-1, 0], w: [1, 0] }[door];
+  const fx = cx + dir[0] * w * 0.22, fz = cz + dir[1] * d * 0.22;
+  const alongX = Math.abs(dir[0]) < 0.5; // door on n/s => spread furniture along x
+  const span = (alongX ? w : d) * 0.6;
+  const put = (t: number, ww: number, dd: number, hh: number, m: THREE.Material) =>
+    prop(g, alongX ? fx + t : fx, alongX ? fz : fz + t, ww, dd, hh, y, m);
+  if (kind === 'table') {
+    put(0, alongX ? Math.min(8, span) : 1.6, alongX ? 1.6 : Math.min(8, span), 0.9, wood);
+  } else if (kind === 'bunks') {
+    for (let i = -1; i <= 1; i++) put(i * span / 3, alongX ? 2.2 : 3.6, alongX ? 3.6 : 2.2, 1.4, cloth);
+  } else if (kind === 'cots') {
+    for (let i = -1; i <= 1; i++) put(i * span / 3, alongX ? 1.6 : 3, alongX ? 3 : 1.6, 0.6, linen);
+  } else if (kind === 'shelves') {
+    for (let i = -2; i <= 2; i++) put(i * span / 4, alongX ? 0.9 : 5, alongX ? 5 : 0.9, 2.6, bookMat);
+  }
 }
 
 function torch(g: THREE.Group, x: number, y: number, z: number): void {
@@ -113,11 +151,12 @@ export function buildCollege(): THREE.Group {
   tower(g, -10, z0, 4, 36, Y); tower(g, 10, z0, 4, 30, Y); // northern turret
 
   // administrative keep
-  block(g, 0, -32, 26, 22, 22, Y);
-  block(g, 0, -32, 16, 14, 36, Y, darkStone);
+  hall(g, 0, -32, 26, 22, 22, Y, 0.01, 's', 'table');
+  const donjon = new THREE.Mesh(new THREE.BoxGeometry(16, 36, 14), darkStone);
+  donjon.position.set(0, Y + 22 + 18, -32); donjon.castShadow = true; g.add(donjon);
   const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 14, 4), roofMat);
-  keepRoof.rotation.y = Math.PI / 4; keepRoof.position.set(0, Y + 36 + 7, -32); keepRoof.castShadow = true; g.add(keepRoof);
-  label(g, 'Basgiath War College', '#ffe9b0', 0, Y + 62, -32, 34);
+  keepRoof.rotation.y = Math.PI / 4; keepRoof.position.set(0, Y + 58 + 7, -32); keepRoof.castShadow = true; g.add(keepRoof);
+  label(g, 'Basgiath War College', '#ffe9b0', 0, Y + 82, -32, 34);
   label(g, 'Administration', '#d8d8e8', 0, Y + 27, -19, 12);
 
   // Conscription Tower: tall, open platform on top = start of the Parapet
@@ -146,8 +185,8 @@ export function buildHealers(): THREE.Group {
   const Y = PLATEAU;
   floor(g, HEALERS, Y, 0x4d5a48);
   ring(g, HEALERS, Y, 2, 6, { n: [[-6, 6]] });
-  hall(g, 0, 78, 30, 16, 9, Y, 7);
-  hall(g, -26, 62, 10, 8, 6, Y, 4); hall(g, 26, 62, 10, 8, 6, Y, 4);
+  hall(g, 0, 78, 30, 16, 9, Y, 7, 'n', 'cots');
+  hall(g, -26, 62, 10, 8, 6, Y, 4, 'e', 'cots'); hall(g, 26, 62, 10, 8, 6, Y, 4, 'w', 'table');
   const bed = new THREE.MeshStandardMaterial({ color: 0x2f7a42, flatShading: true });
   for (let i = 0; i < 5; i++) for (const sx of [-1, 1]) {
     const b = new THREE.Mesh(new THREE.BoxGeometry(5, 0.5, 2), bed);
@@ -164,8 +203,8 @@ export function buildInfantry(): THREE.Group {
   const Y = PLATEAU;
   floor(g, INFANTRY, Y, 0x6a5f4a);
   ring(g, INFANTRY, Y, 3, 7, { s: [[-6, 6]] });
-  for (const x of [-30, 0, 30]) hall(g, x, -112, 24, 10, 7, Y, 4);
-  hall(g, -36, -90, 14, 10, 7, Y, 4); hall(g, 36, -90, 14, 10, 7, Y, 4);
+  for (const x of [-30, 0, 30]) hall(g, x, -112, 24, 10, 7, Y, 4, 's', 'bunks');
+  hall(g, -36, -90, 14, 10, 7, Y, 4, 's', 'table'); hall(g, 36, -90, 14, 10, 7, Y, 4, 's', 'table');
   tower(g, -48, -72, 4, 24, Y); tower(g, 48, -72, 4, 24, Y); tower(g, -48, -124, 4, 24, Y); tower(g, 48, -124, 4, 24, Y);
   // parade ground training dummies
   for (let i = 0; i < 8; i++) {
@@ -187,16 +226,14 @@ export function buildScribes(): THREE.Group {
   floor(g, SCRIBE, Y, 0x4a4658);
   ring(g, SCRIBE, Y, 2, 7, { e: [[-16, -4]] });
   // Archives: big hall with columns and a dark arched door
-  block(g, -100, -34, 34, 14, 11, Y, darkStone);
+  hall(g, -100, -34, 34, 14, 11, Y, 0.01, 's', 'shelves', darkStone);
   const roof = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 34, 8, 1, false, 0, Math.PI), roofMat);
   roof.rotation.z = Math.PI / 2; roof.rotation.x = 0; roof.position.set(-100, Y + 11, -34); roof.castShadow = true; g.add(roof);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 0.4), new THREE.MeshBasicMaterial({ color: 0x08080c }));
-  door.position.set(-100, Y + 4, -26.9); g.add(door);
   for (let i = 0; i < 6; i++) for (const sx of [-1, 1]) {
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 9, 6), stone);
     c.position.set(-100 + sx * (4 + i * 2.8), Y + 4.5, -26); c.castShadow = true; g.add(c);
   }
-  hall(g, -82, -14, 14, 10, 7, Y, 4); hall(g, -118, -14, 14, 10, 7, Y, 4);
+  hall(g, -82, -14, 14, 10, 7, Y, 4, 'n', 'shelves'); hall(g, -118, -14, 14, 10, 7, Y, 4, 'n', 'shelves');
   banner(g, -104, Y + 7, -26.6, 0x6a3fa0); banner(g, -96, Y + 7, -26.6, 0x6a3fa0);
   label(g, 'Scribe Quadrant & Archives', '#c9a8ff', -100, Y + 22, -34, 26);
   torch(g, -76, Y, -17); torch(g, -76, Y, -3);
@@ -210,8 +247,8 @@ export function buildCitadel(): THREE.Group {
   floor(g, CITADEL, Y, 0x585a64);
   // walls ~3 m thick, 2.5 m tall (10 ft x 8 ft); gap where the Parapet lands
   ring(g, CITADEL, Y, 3, 2.5, { w: [[PARAPET.z - 3, PARAPET.z + 3]], e: [[-30, -14]] }, darkStone);
-  hall(g, 112, -34, 24, 16, 14, Y, 9);
-  hall(g, 104, 0, 16, 10, 9, Y, 5);
+  hall(g, 112, -34, 24, 16, 14, Y, 9, 's', 'table');
+  hall(g, 104, 0, 16, 10, 9, Y, 5, 'n', 'bunks');
   tower(g, CITADEL.x0 + 2, CITADEL.z0 + 2, 4, 16, Y); tower(g, CITADEL.x1 - 2, CITADEL.z0 + 2, 4, 16, Y);
   tower(g, CITADEL.x0 + 2, CITADEL.z1 - 2, 4, 16, Y); tower(g, CITADEL.x1 - 2, CITADEL.z1 - 2, 4, 16, Y);
   banner(g, 112, Y + 8, -25.3, 0xa02a20, 0, 8);
