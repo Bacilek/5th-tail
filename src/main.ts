@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 import { Input } from './engine/input';
 import {
-  buildTerrain, heightAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y,
+  buildTerrain, heightAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y, FIELD,
 } from './world/terrain';
-import { buildCollege, buildParapet, buildHealers, buildInfantry, buildScribes, buildCitadel } from './world/college';
+import { makeLabel, buildCollege, buildParapet, buildHealers, buildInfantry, buildScribes, buildCitadel } from './world/college';
 import { buildSky } from './world/sky';
 import { buildTrees } from './world/trees';
 import { Player } from './entities/player';
 import { Enemy } from './entities/enemy';
 import { createDragon, type Dragon } from './entities/dragon';
-import { DRAGONS, BOND_SPECIES, BOND_NAMES, TAIL_ATTACKS, type DragonSpec } from './data/dragons';
+import { DRAGONS, TAIL_ATTACKS } from './data/dragons';
 import { DragonMount } from './entities/mount';
 import { CLASSES, type ClassId } from './data/classes';
 import { Combat } from './systems/combat';
@@ -23,6 +23,8 @@ import { Cat } from './entities/cat';
 import { buildPickups } from './systems/pickups';
 import { Broom } from './entities/broom';
 import { Race } from './systems/race';
+import { Gauntlet } from './systems/gauntlet';
+import { Threshing, type Bond } from './systems/threshing';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -70,6 +72,13 @@ for (const [x, z] of [[-20, 130], [20, 140], [0, 160], [-70, 90], [75, 70], [-60
 let kills = 0;
 const broom = new Broom(scene);
 const race = new Race(scene);
+const gauntlet = new Gauntlet();
+scene.add(gauntlet.group);
+const fieldLabel = makeLabel('The Flight Field', '#ffe9b0', 40); fieldLabel.position.set(234, CITADEL_Y + 22, -15); scene.add(fieldLabel);
+gauntlet.onMessage = (a, b) => hud.announce(a, b, 4);
+const threshing = new Threshing(scene);
+threshing.onMessage = (a, b) => hud.announce(a, b, 5);
+threshing.onBond = (b) => bondDragon(b);
 race.onMessage = (a, b) => hud.announce(a, b, 4);
 const quests = new QuestLog();
 const panels = new Panels(quests);
@@ -128,7 +137,6 @@ function nearestInteractable(): Target | null {
 // ---- Story: Conscription Day, class choice, Parapet (Riders only), quadrant arrival, wing sorting
 let chosen: ClassId | null = null;
 type Stage = 'select' | 'go' | 'parapet' | 'citadel' | 'threshing' | 'done';
-const FLIGHT_FIELD = { x0: 134, x1: 150, z0: -58, z1: 12 };
 let mount: DragonMount | null = null;
 let stage: Stage = 'select';
 
@@ -173,15 +181,13 @@ player.onDamaged = () => hud.flashDamage();
 player.onHandsChanged = () => hud.setHands(player.hands[0], player.hands[1]);
 hud.setKills(0);
 
-function bondDragon(): void {
+function bondDragon(b: Bond): void {
   stage = 'done';
-  const s = BOND_SPECIES[Math.floor(Math.random() * BOND_SPECIES.length)];
-  const name = BOND_NAMES[Math.floor(Math.random() * BOND_NAMES.length)];
-  const spec: DragonSpec = { name, color: s.hex, tail: s.tail, size: 1.0 };
+  const spec = b.spec;
   mount = new DragonMount(spec, scene, combat);
   hud.setObjective('');
-  hud.setDragonLine(`Dragon: ${name} (${s.color} ${s.tail}tail) - R summon, F mount`);
-  hud.announce('The Threshing', `${name}, a ${s.color} ${s.tail}tail, has chosen you.`, 8);
+  hud.setDragonLine(`Dragon: ${spec.name} (${b.species.color} ${b.species.tail}tail, ${b.species.rarity}) - R summon, F mount`);
+  hud.announce('The Threshing', `${spec.name}, a ${b.species.color} ${b.species.tail}tail (${b.species.rarity}), has chosen you.`, 8);
 }
 
 function story(): void {
@@ -205,9 +211,12 @@ function story(): void {
     }
   } else if (stage === 'citadel') {
     stage = 'threshing';
-    hud.setObjective('Report to the Flight Field for the Threshing');
+    hud.setObjective('Run the Gauntlet east of the Citadel to reach the Flight Field');
   } else if (stage === 'threshing') {
-    if (inRect(FLIGHT_FIELD, x, z)) bondDragon();
+    if (inRect(FIELD, x, z) && y > CITADEL_Y - 2 && !threshing.active) {
+      hud.setObjective('Stand in the field. The dragons will choose.');
+      threshing.start(player);
+    }
   }
 }
 
@@ -264,8 +273,10 @@ renderer.setAnimationLoop(() => {
       player.update(dt, input);
       mount?.update(dt, input, player, camera);
     }
+    gauntlet.update(dt, t, player);
+    threshing.update(dt, t, player);
     race.update(dt, player.pos, broom.active);
-    hud.setRaceLine(race.label);
+    hud.setRaceLine(race.label || gauntlet.label);
     story();
     // quest world logic
     quests.reach('flyTower', !!mount?.mounted && mount.pos.distanceTo(new THREE.Vector3(TOWER.x, TOWER.top, TOWER.z)) < 14);

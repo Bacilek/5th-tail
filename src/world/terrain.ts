@@ -13,7 +13,11 @@ export const INFANTRY: Rect = { x0: -48, x1: 48, z0: -124, z1: -72 };   // north
 export const SCRIBE: Rect = { x0: -125, x1: -72, z0: -46, z1: -4 };     // west, sunken (archives)
 export const SCRIBE_Y = PLATEAU - 6;
 // Riders: the Citadel on a high ridge/mesa east of the college
-export const MESA: Rect = { x0: 86, x1: 152, z0: -62, z1: 14 };
+export const MESA: Rect = { x0: 86, x1: 190, z0: -62, z1: 14 };
+// The Gauntlet: walled obstacle corridor from the Citadel east gate to the Flight Field
+export const GAUNTLET: Rect = { x0: 128, x1: 190, z0: -30, z1: -14 };
+// Flight Field: big open meadow east of the Gauntlet, level with the Citadel (Threshing, flight practice)
+export const FIELD: Rect = { x0: 192, x1: 276, z0: -125, z1: 95 };
 export const CITADEL: Rect = { x0: 90, x1: 126, z0: -52, z1: 8 };
 export const CITADEL_Y = 58.5;
 // Conscription Tower and the Parapet (stone span, ~60 m up, 1.2 m wide, no rails)
@@ -34,7 +38,7 @@ export function onParapet(x: number, y: number, z: number): boolean {
   return y > 50 && x > PARAPET.x0 + 2 && x < PARAPET.x1 && Math.abs(z - PARAPET.z) < 3;
 }
 
-const FLAT_RECTS = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA];
+const FLAT_RECTS = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD];
 
 export function heightAt(x: number, z: number): number {
   if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r * 0.85) return TOWER.top;
@@ -51,6 +55,8 @@ export function heightAt(x: number, z: number): number {
   h -= (PLATEAU - SCRIBE_Y) * (1 - smoothstep(0, 10, rectDist(SCRIBE, x, z)));
   const mk = 1 - smoothstep(0, 12, rectDist(MESA, x, z));
   h += (CITADEL_Y - h) * mk;
+  const fk = 1 - smoothstep(0, 22, rectDist(FIELD, x, z));
+  h += (CITADEL_Y - h) * fk;
 
   if (Math.abs(z - PARAPET.z) < PARAPET.half && x > PARAPET.x0 && x < PARAPET.x1) h = Math.max(h, PARAPET.y);
   return h;

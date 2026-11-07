@@ -209,22 +209,15 @@ export function buildCitadel(): THREE.Group {
   const Y = CITADEL_Y;
   floor(g, CITADEL, Y, 0x585a64);
   // walls ~3 m thick, 2.5 m tall (10 ft x 8 ft); gap where the Parapet lands
-  ring(g, CITADEL, Y, 3, 2.5, { w: [[PARAPET.z - 3, PARAPET.z + 3]] }, darkStone);
+  ring(g, CITADEL, Y, 3, 2.5, { w: [[PARAPET.z - 3, PARAPET.z + 3]], e: [[-30, -14]] }, darkStone);
   hall(g, 112, -34, 24, 16, 14, Y, 9);
   hall(g, 104, 0, 16, 10, 9, Y, 5);
   tower(g, CITADEL.x0 + 2, CITADEL.z0 + 2, 4, 16, Y); tower(g, CITADEL.x1 - 2, CITADEL.z0 + 2, 4, 16, Y);
   tower(g, CITADEL.x0 + 2, CITADEL.z1 - 2, 4, 16, Y); tower(g, CITADEL.x1 - 2, CITADEL.z1 - 2, 4, 16, Y);
   banner(g, 112, Y + 8, -25.3, 0xa02a20, 0, 8);
-  // Gauntlet: built into the ridgeline between the Citadel and the flight field
-  block(g, 130, -22, 6, 56, 10, Y, darkStone);
-  for (let i = 0; i < 6; i++) {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 5), darkStone);
-    b.position.set(135 + (i % 2) * 2, Y + 3 + i * 1.2, -40 + i * 12); g.add(b);
-  }
-  floor(g, { x0: 134, x1: 150, z0: -58, z1: 12 }, Y, 0x8a7a58);
+    // (the Gauntlet corridor and Flight Field are built in systems/gauntlet.ts and buildFlightField)
   label(g, 'Riders Quadrant - the Citadel', '#ff9a8a', 112, Y + 28, -34, 28);
-  label(g, 'The Gauntlet', '#ffd98a', 130, Y + 18, -22, 14);
-  label(g, 'Flight Field', '#ffe9b0', 142, Y + 12, -22, 14);
+  label(g, 'The Gauntlet', '#ffd98a', 140, Y + 14, -22, 14);
   torch(g, 96, Y, PARAPET.z - 4); torch(g, 96, Y, PARAPET.z + 4);
   return g;
 }
