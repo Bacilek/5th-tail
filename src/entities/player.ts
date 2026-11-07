@@ -206,6 +206,13 @@ export class Player {
     return true;
   }
 
+  /** Extra horizontal velocity from knockback; decays over time and does not fight the movement smoothing. */
+  readonly knock = new THREE.Vector3();
+  push(vx: number, vy: number, vz: number): void {
+    this.knock.x += vx; this.knock.z += vz;
+    if (vy > 0) { this.vel.y = Math.max(this.vel.y, vy); this.grounded = false; }
+  }
+
   onAttack: (kind: string) => void = () => {};
 
   private attack(h: Hand): void {
@@ -264,7 +271,8 @@ export class Player {
     if (input.wasPressed('Space') && this.grounded && this.useStamina(8)) { this.vel.y = 8; this.grounded = false; }
 
     this.pos.z += this.windZ * dt;
-    let nx = this.pos.x + this.vel.x * dt, nz = this.pos.z + this.vel.z * dt;
+    let nx = this.pos.x + (this.vel.x + this.knock.x) * dt, nz = this.pos.z + (this.vel.z + this.knock.z) * dt;
+    this.knock.multiplyScalar(Math.exp(-3.2 * dt));
     // cliffs and steep slopes block movement (no walking up walls)
     const climb = (x: number, z: number) => heightAt(x, z) - this.pos.y > 0.9;
     if (climb(nx, nz)) {

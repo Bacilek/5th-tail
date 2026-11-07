@@ -9,6 +9,11 @@ export interface NpcDef {
   chat: string[];
   invented?: boolean;
   wander?: number; // wander radius around home
+  skin?: number;
+  eyes?: number;
+  build?: 'tall' | 'hulking';
+  /** Signature marks from the books. Only key (canon) NPCs have these; generic NPCs never do. */
+  marks?: ('shadowAura' | 'goldEyes' | 'tousled' | 'chinScar' | 'halfShaved' | 'braid' | 'insignia')[];
 }
 
 // Canon names per docs/lore.md; dialogue lines are original (not quoted from the books).
@@ -19,21 +24,21 @@ export const NPCS: NpcDef[] = [
     chat: ['Healers carry no magic. Just patience, clean hands and very little sleep.'] },
   { id: 'brask', name: 'Sgt. Brask', role: 'Infantry (invented)', x: 0, z: -84, cloth: 0x7a5a2a, hair: 0x1a1a1a, invented: true,
     chat: ['Infantry holds the line. Riders get the songs; we get the border.'] },
-  { id: 'dain', name: 'Dain', role: 'Squad Leader', x: 98, z: -12, cloth: 0x2a2f45, hair: 0x6a4a28,
+  { id: 'dain', name: 'Dain', role: 'Squad Leader', x: 98, z: -12, cloth: 0x2a2f45, hair: 0x8a6a42, skin: 0xe0bfa0, eyes: 0x5a3a20, marks: ['chinScar'],
     chat: ['Stay in formation and keep your head down on the field.'] },
   { id: 'rhiannon', name: 'Rhiannon', role: 'Rider', x: 96, z: -22, cloth: 0x2a2f45, hair: 0x3a2a1a,
     chat: ['If you reached the Citadel, you already beat the Parapet. The rest is only dragons.', 'Fourth Wing is not the easiest place to be a first-year. But nobody here is alone.'] },
   { id: 'ridoc', name: 'Ridoc', role: 'Rider', x: 106, z: -16, cloth: 0x2a2f45, hair: 0x1a1210,
     chat: ['Nice landing. Okay, you fell on it, but it counts.', 'Rumor says the cat in the lower college has opinions on every rider.'] },
-  { id: 'xaden', name: 'Xaden', role: 'Wingleader', x: 122, z: -22, cloth: 0x0e0e14, hair: 0x0a0a0a,
+  { id: 'xaden', name: 'Xaden', role: 'Wingleader', x: 122, z: -22, cloth: 0x0e0e14, hair: 0x0a0a0a, skin: 0xb88a62, build: 'tall', marks: ['shadowAura', 'goldEyes', 'tousled'],
     chat: ['Make yourself useful or make yourself scarce.'] },
-  { id: 'imogen', name: 'Imogen', role: 'Rider', x: 116, z: -8, cloth: 0x2a2f45, hair: 0x2a1a1a,
+  { id: 'imogen', name: 'Imogen', role: 'Rider', x: 116, z: -8, cloth: 0x2a2f45, hair: 0xff6fae, skin: 0xf0d8c8, eyes: 0x9ad0a0, build: 'tall', marks: ['halfShaved'],
     chat: ['If you want respect here, finish the Gauntlet.'] },
-  { id: 'garrick', name: 'Garrick', role: 'Rider', x: 110, z: -46, cloth: 0x2a2f45, hair: 0x4a3a28,
+  { id: 'garrick', name: 'Garrick', role: 'Rider', x: 110, z: -46, cloth: 0x2a2f45, hair: 0x4a3a28, build: 'hulking',
     chat: ['I do not talk much. It saves breath for the flight field.'] },
-  { id: 'mira', name: 'Mira', role: 'Rider', x: 94, z: 4, cloth: 0x2a2f45, hair: 0x3a2a1a,
+  { id: 'mira', name: 'Mira', role: 'Rider', x: 94, z: 4, cloth: 0x2a2f45, hair: 0x3a2a1a, marks: ['braid'],
     chat: ['Survived the Parapet? Good. That was the easy part.'] },
-  { id: 'commandant', name: 'Commandant Sorrengail', role: 'Commandant', x: 0, z: -24, cloth: 0x1a1a22, hair: 0x2a2a2a,
+  { id: 'commandant', name: 'Commandant Sorrengail', role: 'Commandant', x: 0, z: -24, cloth: 0x1a1a22, hair: 0xb8b8c0, build: 'tall', marks: ['insignia'],
     chat: ['The college does not waste what it cannot replace.'] },
   { id: 'tavik', name: 'Tavik', role: 'Merchant (invented)', x: -99, z: 87, cloth: 0x8a4a2a, hair: 0x5a3a20, invented: true,
     chat: ['Roots, fish, rope, rumor. Best prices south of the college.'] },

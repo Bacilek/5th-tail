@@ -1,3 +1,4 @@
+import { isTyping } from '../engine/input';
 import type { QuestLog } from '../systems/quests';
 
 const CSS = `
@@ -22,6 +23,7 @@ export class Panels {
   private qlog: HTMLElement;
   private choices: Choice[] = [];
   onOpen: (name: string) => void = () => {};
+  enabled = false; // off during character creation / class select
   dialogOpen = false;
   logOpen = false;
 
@@ -32,6 +34,7 @@ export class Panels {
     const mk = (id: string) => { const d = document.createElement('div'); d.id = id; document.body.appendChild(d); return d; };
     this.dlg = mk('dlg'); this.prompt = mk('prompt'); this.trk = mk('trk'); this.qlog = mk('qlog');
     addEventListener('keydown', (e) => {
+      if (isTyping(e) || !this.enabled) return;
       if (this.dialogOpen) {
         const i = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code);
         if (i >= 0 && i < this.choices.length) this.pick(i);

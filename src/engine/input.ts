@@ -1,3 +1,9 @@
+/** True when a key event comes from a text field (name entry etc.), so game hotkeys must ignore it. */
+export function isTyping(e: Event): boolean {
+  const t = e.target as HTMLElement | null;
+  return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+}
+
 export class Input {
   private keys = new Set<string>();
   private pressed = new Set<string>();
@@ -9,7 +15,7 @@ export class Input {
 
   constructor(private el: HTMLElement) {
     addEventListener('keydown', (e) => {
-      if (e.repeat) return;
+      if (e.repeat || isTyping(e)) return;
       this.keys.add(e.code);
       this.pressed.add(e.code);
       if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();

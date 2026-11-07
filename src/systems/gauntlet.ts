@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { addBox } from '../world/collision';
+import { addBox, addCircle } from '../world/collision';
 import { GAUNTLET, CITADEL_Y } from '../world/terrain';
 import type { Player } from '../entities/player';
 
@@ -42,11 +42,12 @@ export class Gauntlet {
     const fl = new THREE.Mesh(new THREE.PlaneGeometry(len, W), new THREE.MeshStandardMaterial({ color: 0x6a6258, flatShading: true }));
     fl.rotation.x = -Math.PI / 2; fl.position.set(cx, Y + 0.05, CZ); fl.receiveShadow = true; g.add(fl);
 
-    this.wall(136, 1.1, 1.2); this.wall(141, 1.3, 1.2);
-    this.sweeper(150, 1.5, 0); this.sweeper(155, -1.7, 1.6);
-    for (const [x, h] of [[160, 1.0], [163, 2.0], [166, 3.0], [169, 2.0], [172, 1.0]]) this.wall(x, h, 3);
-    this.sweeper(178, 1.9, 0.5); this.sweeper(183, -2.1, 2.5);
-    this.pendulum(187, 2.2);
+    // spacing keeps every sweeper arc (radius ~7.2 m) clear of walls and steps
+    this.wall(132, 1.1, 1.2); this.wall(136, 1.3, 1.2);
+    this.sweeper(146, 1.6, 0);
+    for (const [x, h] of [[155, 1.0], [158, 2.0], [161, 3.0], [164, 2.0], [167, 1.0]]) this.wall(x, h, 3);
+    this.sweeper(176, -1.9, 0.5);
+    this.pendulum(186, 2.2);
 
     for (const z of [GAUNTLET.z0 + 1, GAUNTLET.z1 - 1]) {
       const p = new THREE.Mesh(new THREE.BoxGeometry(1.6, 12, 1.6), stone);
@@ -71,6 +72,7 @@ export class Gauntlet {
     pivot.add(post, arm);
     pivot.position.set(x, Y, CZ);
     this.group.add(pivot);
+    addCircle(x, CZ, 0.5, Y + 1.8); // the post is solid
     this.sweepers.push({ pivot, x, speed, phase, len: (W - 1.5) / 2 });
   }
 
@@ -102,24 +104,34 @@ export class Gauntlet {
 
     this.hitCd -= dt;
     if (inside && this.hitCd <= 0 && player.alive) {
-      let hit = false;
+      let hit = false, kx = 0, kz = 0, ky = 0, dmg = 0;
       for (const s of this.sweepers) {
-        if (Math.abs(px - s.x) > 1.4 || py > Y + 1.0) continue;
+        if (py > Y + 0.85) continue; // jumped over the bar
         const a = s.pivot.rotation.y;
         const dx = px - s.x, dz = pz - CZ;
         // bar axis in world space is (cos a, 0, -sin a)
         const along = dx * Math.cos(a) - dz * Math.sin(a);
         const across = dx * Math.sin(a) + dz * Math.cos(a);
-        if (Math.abs(along) < s.len && Math.abs(across) < 0.9) hit = true;
+        if (Math.abs(along) < s.len && Math.abs(across) < 0.9) {
+          // knock the player in the direction the bar is moving at that point (v = w x r)
+          const sg = s.speed >= 0 ? 1 : -1;
+          const vx = sg * dz, vz = -sg * dx, l = Math.hypot(vx, vz) || 1;
+          kx = (vx / l) * 14; kz = (vz / l) * 14; ky = 3; dmg = 8; hit = true;
+        }
       }
       for (const p of this.pendulums) {
         const a = p.pivot.rotation.x;
         const bz = CZ + Math.sin(a) * PEND_LEN, by = Y + 9.2 - Math.cos(a) * PEND_LEN;
-        if (Math.hypot(px - p.x, pz - bz) < 1.9 && Math.abs(py + 1 - by) < 2.2) hit = true;
+        if (Math.hypot(px - p.x, pz - bz) < 1.9 && Math.abs(py + 1 - by) < 2.2) {
+          // wrecking ball: hurl the player along the swing direction
+          const dir = Math.sign(Math.cos(t * Math.PI * 2 / p.period)) || 1;
+          kx = (px - p.x) * 3 + 2; kz = dir * 22; ky = 7; dmg = 22; hit = true;
+        }
       }
       if (hit) {
-        player.damage(14);
-        player.vel.x -= 6; player.vel.y = Math.max(player.vel.y, 4); this.hitCd = 0.9;
+        player.damage(dmg);
+        player.push(kx, ky, kz);
+        this.hitCd = 0.9;
       }
     }
 

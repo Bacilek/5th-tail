@@ -2,6 +2,34 @@ export interface Box { x0: number; x1: number; z0: number; z1: number; top: numb
 
 export const boxes: Box[] = [];
 
+interface Circle { x: number; z: number; r: number; top: number; }
+const CELL = 8;
+const circles = new Map<number, Circle[]>();
+const ck = (cx: number, cz: number) => (cx + 1024) * 4096 + (cz + 1024);
+
+/** Round collider (tree trunk, pillar). Blocks anything whose feet are below `top`. */
+export function addCircle(x: number, z: number, r: number, top: number): void {
+  const k = ck(Math.floor(x / CELL), Math.floor(z / CELL));
+  const a = circles.get(k);
+  if (a) a.push({ x, z, r, top }); else circles.set(k, [{ x, z, r, top }]);
+}
+
+function resolveCircles(pos: { x: number; y: number; z: number }, r: number): void {
+  const cx = Math.floor(pos.x / CELL), cz = Math.floor(pos.z / CELL);
+  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+    const a = circles.get(ck(cx + i, cz + j));
+    if (!a) continue;
+    for (const c of a) {
+      if (pos.y >= c.top - 0.3) continue;
+      const dx = pos.x - c.x, dz = pos.z - c.z;
+      const d = Math.hypot(dx, dz), min = c.r + r;
+      if (d >= min) continue;
+      if (d < 1e-4) { pos.x += min; continue; }
+      pos.x = c.x + (dx / d) * min; pos.z = c.z + (dz / d) * min;
+    }
+  }
+}
+
 export function addBox(cx: number, cz: number, w: number, d: number, top: number): void {
   boxes.push({ x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2, top });
 }
@@ -15,6 +43,7 @@ export function topAt(x: number, z: number): number {
 
 /** Pushes a circle (radius r) at pos out of all boxes whose top is above pos.y. Mutates pos. */
 export function resolve(pos: { x: number; y: number; z: number }, r: number): void {
+  resolveCircles(pos, r);
   for (const b of boxes) {
     if (pos.y >= b.top - 0.3) continue;
     const cx = Math.max(b.x0, Math.min(pos.x, b.x1));

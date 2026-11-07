@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Input } from './engine/input';
+import { Input, isTyping } from './engine/input';
 import {
   buildTerrain, heightAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, CAMP, VILLAGE, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y, FIELD,
 } from './world/terrain';
@@ -162,6 +162,7 @@ hud.setObjective('');
 
 function onChosen(id: ClassId): void {
   chosen = id;
+  panels.enabled = true;
   player.setClass(id);
   hud.showMagicka(CLASSES[id].maxMagicka > 0);
   hud.setClassLabel(`${player.name} - ${CLASSES[id].name}`);
@@ -199,7 +200,7 @@ panels.onOpen = (name) => {
   audio.babble(0.75 + (h % 10) * 0.09, 10 + (h % 6));
 };
 addEventListener('pointerdown', () => audio.start());
-addEventListener('keydown', (e) => { audio.start(); if (e.code === 'KeyM') hud.announce(audio.toggleMute() ? 'Sound off' : 'Sound on', '', 1.5); });
+addEventListener('keydown', (e) => { if (isTyping(e)) return; audio.start(); if (e.code === 'KeyM') hud.announce(audio.toggleMute() ? 'Sound off' : 'Sound on', '', 1.5); });
 player.onHandsChanged = () => hud.setHands(player.hands[0], player.hands[1]);
 hud.setKills(0);
 
@@ -295,6 +296,12 @@ renderer.setAnimationLoop(() => {
     } else {
       player.update(dt, input);
       mount?.update(dt, input, player, camera);
+    }
+    for (const n of npcs) {
+      if (Math.abs(n.pos.y - player.pos.y) < 2) {
+        const dx = player.pos.x - n.pos.x, dz = player.pos.z - n.pos.z, d = Math.hypot(dx, dz), min = 0.85;
+        if (d < min && d > 1e-4) { player.pos.x = n.pos.x + (dx / d) * min; player.pos.z = n.pos.z + (dz / d) * min; }
+      }
     }
     if (gauntlet.update(dt, t, player)) gauntletDone = true;
     threshing.update(dt, t, player);

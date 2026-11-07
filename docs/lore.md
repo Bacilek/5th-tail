@@ -33,3 +33,11 @@ Violet Sorrengail, Xaden Riorson, Dain Aetos, Rhiannon Matthias, Ridoc Gamlyn, S
 - Dragon rarity weights and acceptance chances (data/dragons.ts) are invented; only "daggertails are rare and deadly" is from the books (?).
 - Gauntlet layout, Flight Field size, Basgiath Village, Venin Camp are invented. Gauntlet is real; its obstacles here are not canon.
 - Mira, Imogen, Garrick, Commandant Sorrengail are canon names; their dialogue and placement are invented.
+
+## NPC appearance (fan wikis: empyreanriders.com, Audible character guides)
+- Xaden: tall, tawny-brown skin, tousled black hair, onyx eyes with gold flecks, wields shadows (dark wisps around him in-game).
+- Dain: sandy-brown hair, soft brown eyes, scar on the chin.
+- Imogen: half-shaved pink hair, pale green eyes, tall.
+- Garrick: hulking build.
+- Mira (braid), Commandant Sorrengail (silver hair, gold epaulettes, cape), Rhiannon, Ridoc: appearance NOT found in sources (?) - plain looks/guesses.
+- Signature marks are only given to canon key NPCs; generic and invented NPCs never get them.

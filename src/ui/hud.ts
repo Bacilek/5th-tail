@@ -1,3 +1,4 @@
+import { isTyping } from '../engine/input';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
 import { DEFAULT_LOOK, SKIN_TONES, HAIR_COLORS, HAIR_STYLES, CLOTH_COLORS, type Look } from '../data/look';
@@ -73,7 +74,7 @@ export class Hud {
     document.addEventListener('pointerlockchange', () => {
       start.style.display = document.pointerLockElement || !this.chosen ? 'none' : 'flex';
     });
-    addEventListener('keydown', (e) => { if (e.code === 'KeyH') this.el('hint').style.display = this.el('hint').style.display === 'none' ? '' : 'none'; });
+    addEventListener('keydown', (e) => { if (isTyping(e)) return; if (e.code === 'KeyH') this.el('hint').style.display = this.el('hint').style.display === 'none' ? '' : 'none'; });
   }
 
   private setBar(id: string, f: number): void {
@@ -166,6 +167,7 @@ export class Hud {
       cards.appendChild(d);
     });
     addEventListener('keydown', (e) => {
+      if (isTyping(e)) return;
       const i = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
       if (i >= 0) pick(order[i]);
     });
