@@ -1,132 +1,241 @@
 import * as THREE from 'three';
 import { addBox } from './collision';
-import { PLATEAU, COLLEGE, PARAPET_Z0, PARAPET_Z1, PARAPET_HALF_W, RAVINE_Z0, RAVINE_Z1 } from './terrain';
+import {
+  PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, type Rect,
+} from './terrain';
 
 const stone = new THREE.MeshStandardMaterial({ color: 0x6b6f78, flatShading: true, roughness: 0.95 });
 const darkStone = new THREE.MeshStandardMaterial({ color: 0x4a4d57, flatShading: true, roughness: 0.95 });
 const roofMat = new THREE.MeshStandardMaterial({ color: 0x23283f, flatShading: true });
-const BOT = PLATEAU - 6;
+const wood = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
 
-export function makeLabel(text: string, color = '#ffffff'): THREE.Sprite {
+export function makeLabel(text: string, color = '#ffffff', w = 16): THREE.Sprite {
   const cv = document.createElement('canvas');
   cv.width = 512; cv.height = 96;
   const g = cv.getContext('2d')!;
-  g.font = 'bold 44px Georgia, serif';
+  g.font = 'bold 40px Georgia, serif';
   g.textAlign = 'center'; g.textBaseline = 'middle';
   g.lineWidth = 8; g.strokeStyle = 'rgba(0,0,0,0.85)'; g.strokeText(text, 256, 48);
   g.fillStyle = color; g.fillText(text, 256, 48);
-  const tex = new THREE.CanvasTexture(cv);
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, fog: false }));
-  s.scale.set(16, 3, 1);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthWrite: false, fog: false }));
+  s.scale.set(w, w * 96 / 512, 1);
   return s;
 }
 
-function block(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, mat = stone): THREE.Mesh {
-  const full = h + (PLATEAU - BOT);
+/** Box standing on ground level y (extends 6 m below to hide terrain seams). */
+function block(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, mat: THREE.Material = stone): THREE.Mesh {
+  const full = h + 6;
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, full, d), mat);
-  m.position.set(cx, BOT + full / 2, cz);
+  m.position.set(cx, y - 6 + full / 2, cz);
   m.castShadow = m.receiveShadow = true;
   g.add(m);
-  addBox(cx, cz, w, d, PLATEAU + h);
+  addBox(cx, cz, w, d, y + h);
   return m;
 }
 
-function tower(g: THREE.Group, cx: number, cz: number, r: number, h: number): void {
+function tower(g: THREE.Group, cx: number, cz: number, r: number, h: number, y: number): void {
   const t = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.1, h + 6, 8), stone);
-  t.position.set(cx, PLATEAU + h / 2 - 3, cz);
+  t.position.set(cx, y + h / 2 - 3, cz);
   t.castShadow = t.receiveShadow = true;
   g.add(t);
   const top = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.15, r, 2, 8), darkStone);
-  top.position.set(cx, PLATEAU + h + 0.5, cz); top.castShadow = true;
+  top.position.set(cx, y + h + 0.5, cz); top.castShadow = true;
   g.add(top);
   const roof = new THREE.Mesh(new THREE.ConeGeometry(r * 1.25, h * 0.35, 8), roofMat);
-  roof.position.set(cx, PLATEAU + h + 1.5 + h * 0.175, cz); roof.castShadow = true;
+  roof.position.set(cx, y + h + 1.5 + h * 0.175, cz); roof.castShadow = true;
   g.add(roof);
-  addBox(cx, cz, r * 1.8, r * 1.8, PLATEAU + h);
+  addBox(cx, cz, r * 1.8, r * 1.8, y + h);
 }
 
-function banner(g: THREE.Group, x: number, y: number, z: number, color: number): void {
-  const b = new THREE.Mesh(new THREE.PlaneGeometry(2, 6), new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, flatShading: true }));
-  b.position.set(x, y, z);
+function banner(g: THREE.Group, x: number, y: number, z: number, color: number, rotY = 0, h = 6): void {
+  const b = new THREE.Mesh(new THREE.PlaneGeometry(2, h), new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, flatShading: true }));
+  b.position.set(x, y, z); b.rotation.y = rotY;
   g.add(b);
 }
 
+function floor(g: THREE.Group, r: Rect, y: number, color: number): void {
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(r.x1 - r.x0, r.z1 - r.z0), new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 1 }));
+  f.rotation.x = -Math.PI / 2; f.position.set((r.x0 + r.x1) / 2, y + 0.03, (r.z0 + r.z1) / 2); f.receiveShadow = true;
+  g.add(f);
+}
+
+/** Wall along an axis with gaps. axis 'x': line runs along x at z=fixed; gaps are [from,to] ranges along the axis. */
+function wallLine(g: THREE.Group, axis: 'x' | 'z', fixed: number, a: number, b: number, gaps: [number, number][], T: number, H: number, y: number, mat: THREE.Material = stone): void {
+  const seg = (s0: number, s1: number) => {
+    if (s1 - s0 < 0.1) return;
+    const mid = (s0 + s1) / 2, len = s1 - s0;
+    if (axis === 'x') block(g, mid, fixed, len, T, H, y, mat); else block(g, fixed, mid, T, len, H, y, mat);
+  };
+  let cur = a;
+  for (const [g0, g1] of [...gaps].sort((p, q) => p[0] - q[0])) { seg(cur, g0); cur = g1; }
+  seg(cur, b);
+}
+
+function ring(g: THREE.Group, r: Rect, y: number, T: number, H: number, gaps: { n?: [number, number][]; s?: [number, number][]; w?: [number, number][]; e?: [number, number][] } = {}, mat: THREE.Material = stone): void {
+  wallLine(g, 'x', r.z0, r.x0, r.x1, gaps.n ?? [], T, H, y, mat);
+  wallLine(g, 'x', r.z1, r.x0, r.x1, gaps.s ?? [], T, H, y, mat);
+  wallLine(g, 'z', r.x0, r.z0, r.z1, gaps.w ?? [], T, H, y, mat);
+  wallLine(g, 'z', r.x1, r.z0, r.z1, gaps.e ?? [], T, H, y, mat);
+}
+
+function hall(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, roofH: number): void {
+  block(g, cx, cz, w, d, h, y);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, roofH, 4), roofMat);
+  roof.rotation.y = Math.PI / 4; roof.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
+  roof.position.set(cx, y + h + roofH / 2, cz); roof.castShadow = true; g.add(roof);
+}
+
+function torch(g: THREE.Group, x: number, y: number, z: number): void {
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.4, 5), darkStone);
+  post.position.set(x, y + 1.2, z); post.castShadow = true; g.add(post);
+  const f = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.8, 5), new THREE.MeshBasicMaterial({ color: 0xffa040 }));
+  f.position.set(x, y + 2.8, z); g.add(f);
+}
+
+function label(g: THREE.Group, text: string, color: string, x: number, y: number, z: number, w = 16): void {
+  const l = makeLabel(text, color, w); l.position.set(x, y, z); g.add(l);
+}
+
+/** Lower college: administrative courtyard + Conscription Tower (start of the Parapet). */
 export function buildCollege(): THREE.Group {
   const g = new THREE.Group();
   const { x0, x1, z0, z1 } = COLLEGE;
-  const W = x1 - x0, T = 3, H = 14;
-  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const Y = PLATEAU, H = 14, T = 3;
+  floor(g, COLLEGE, Y, 0x5d5f66);
+  // gates: south (to Healers), north (to Infantry), west tunnel (to Scribes/Archives)
+  ring(g, COLLEGE, Y, T, H, { s: [[-6, 6]], n: [[-6, 6]], w: [[-16, -4]] });
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(13, 4, T + 1), darkStone);
+  lintel.position.set(0, Y + H - 1, z1); g.add(lintel);
+  const lintelN = lintel.clone(); lintelN.position.set(0, Y + H - 1, z0); g.add(lintelN);
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(W, z1 - z0), new THREE.MeshStandardMaterial({ color: 0x5d5f66, flatShading: true, roughness: 1 }));
-  floor.rotation.x = -Math.PI / 2; floor.position.set(cx, PLATEAU + 0.03, cz); floor.receiveShadow = true;
-  g.add(floor);
+  for (const [tx, tz] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) tower(g, tx, tz, 5, 26, Y);
+  tower(g, -10, z1, 3.5, 22, Y); tower(g, 10, z1, 3.5, 22, Y);
+  tower(g, -10, z0, 4, 36, Y); tower(g, 10, z0, 4, 30, Y); // northern turret
 
-  // walls (gate gap in south wall)
-  block(g, cx, z0, W, T, H);
-  block(g, x0, cz, T, z1 - z0, H);
-  block(g, x1, cz, T, z1 - z0, H);
-  const gate = 6;
-  block(g, x0 + (cx - gate - x0) / 2, z1, cx - gate - x0, T, H);
-  block(g, x1 - (x1 - cx - gate) / 2, z1, x1 - cx - gate, T, H);
-  const lintel = new THREE.Mesh(new THREE.BoxGeometry(gate * 2 + 1, 4, T + 1), darkStone);
-  lintel.position.set(cx, PLATEAU + H - 1, z1); lintel.castShadow = true; g.add(lintel);
-
-  tower(g, x0, z0, 5, 28); tower(g, x1, z0, 5, 28);
-  tower(g, x0, z1, 5, 24); tower(g, x1, z1, 5, 24);
-  tower(g, -gate - 4, z1, 3.5, 22); tower(g, gate + 4, z1, 3.5, 22);
-
-  // central keep
-  block(g, 0, -32, 26, 22, 22, stone);
-  block(g, 0, -32, 16, 14, 36, darkStone);
+  // administrative keep
+  block(g, 0, -32, 26, 22, 22, Y);
+  block(g, 0, -32, 16, 14, 36, Y, darkStone);
   const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 14, 4), roofMat);
-  keepRoof.rotation.y = Math.PI / 4; keepRoof.position.set(0, PLATEAU + 36 + 7, -32); keepRoof.castShadow = true; g.add(keepRoof);
-  for (const [tx, tz] of [[-14, -22], [14, -22], [-14, -42], [14, -42]]) tower(g, tx, tz, 3, 30);
+  keepRoof.rotation.y = Math.PI / 4; keepRoof.position.set(0, Y + 36 + 7, -32); keepRoof.castShadow = true; g.add(keepRoof);
+  label(g, 'Basgiath War College', '#ffe9b0', 0, Y + 62, -32, 34);
+  label(g, 'Administration', '#d8d8e8', 0, Y + 27, -19, 12);
 
-  // quadrant halls
-  const halls: [string, number, number, number, string][] = [
-    ['Riders Quadrant', -30, -2, 0xa02a20, '#ff9a8a'],
-    ['Scribe Quadrant', 30, -2, 0x6a3fa0, '#c9a8ff'],
-    ['Healer Quadrant', -32, -52, 0x2f8a52, '#9fe3b5'],
-    ['Infantry Quadrant', 32, -52, 0x8a6a2a, '#ffd98a'],
-  ];
-  for (const [name, hx, hz, col, lc] of halls) {
-    block(g, hx, hz, 16, 13, 10, stone);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(11.5, 6, 4), roofMat);
-    roof.rotation.y = Math.PI / 4; roof.position.set(hx, PLATEAU + 13, hz); roof.scale.set(1, 1, 0.85); roof.castShadow = true; g.add(roof);
-    banner(g, hx, PLATEAU + 6, hz + 6.6, col);
-    const lab = makeLabel(name, lc); lab.position.set(hx, PLATEAU + 24, hz); g.add(lab);
-  }
-  const keepLab = makeLabel('Basgiath War College', '#ffe9b0'); keepLab.position.set(0, PLATEAU + 66, -32); keepLab.scale.set(30, 5.6, 1); g.add(keepLab);
+  // Conscription Tower: tall, open platform on top = start of the Parapet
+  const tw = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r - 0.4, TOWER.r + 1, TOWER.top - Y + 6, 10), stone);
+  tw.position.set(TOWER.x, Y - 6 + (TOWER.top - Y + 6) / 2, TOWER.z); tw.castShadow = tw.receiveShadow = true; g.add(tw);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r * 0.9, TOWER.r - 0.4, 1.2, 10), darkStone);
+  cap.position.set(TOWER.x, TOWER.top - 0.6, TOWER.z); cap.castShadow = true; g.add(cap);
+  addBox(TOWER.x, TOWER.z, 8.5, 8.5, TOWER.top);
+  label(g, 'Conscription Tower', '#ffd98a', TOWER.x, TOWER.top + 10, TOWER.z, 20);
+  banner(g, TOWER.x - 5.2, TOWER.top - 8, TOWER.z, 0xa02a20, Math.PI / 2, 12);
 
-  banner(g, -gate - 0.2, PLATEAU + 8, z1 + 2, 0xa02a20);
-  banner(g, gate + 0.2, PLATEAU + 8, z1 + 2, 0xa02a20);
-
-  // torches along the entry path
-  const flame = new THREE.MeshBasicMaterial({ color: 0xffa040 });
+  // assembly square markings (Conscription Day) with torches
   for (const sx of [-1, 1]) {
-    for (const tz of [30, 20, 10]) {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.4, 5), darkStone);
-      post.position.set(sx * 7, PLATEAU + 1.2, tz); post.castShadow = true; g.add(post);
-      const f = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.8, 5), flame);
-      f.position.set(sx * 7, PLATEAU + 2.8, tz); g.add(f);
-    }
-    const l = new THREE.PointLight(0xff9040, 60, 30, 1.6); l.position.set(sx * 7, PLATEAU + 3.2, 25); g.add(l);
+    for (const tz of [30, 20, 10]) torch(g, sx * 9, Y, tz);
+    const l = new THREE.PointLight(0xff9040, 60, 30, 1.6); l.position.set(sx * 9, Y + 3.2, 20); g.add(l);
   }
+  label(g, 'Conscription Day', '#ffe9b0', 0, Y + 12, 8, 20);
+  label(g, 'North: Infantry', '#ffd98a', 0, Y + 9, -58, 12);
+  label(g, 'South: Healers', '#9fe3b5', 0, Y + 9, 33, 12);
+  label(g, 'West tunnel: Scribes & Archives', '#c9a8ff', -48, Y + 9, -10, 18);
+  return g;
+}
+
+export function buildHealers(): THREE.Group {
+  const g = new THREE.Group();
+  const Y = PLATEAU;
+  floor(g, HEALERS, Y, 0x4d5a48);
+  ring(g, HEALERS, Y, 2, 6, { n: [[-6, 6]] });
+  hall(g, 0, 78, 30, 16, 9, Y, 7);
+  hall(g, -26, 62, 10, 8, 6, Y, 4); hall(g, 26, 62, 10, 8, 6, Y, 4);
+  const bed = new THREE.MeshStandardMaterial({ color: 0x2f7a42, flatShading: true });
+  for (let i = 0; i < 5; i++) for (const sx of [-1, 1]) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(5, 0.5, 2), bed);
+    b.position.set(sx * 18, Y + 0.25, 86 + i * 3.4); g.add(b);
+  }
+  banner(g, -6, Y + 6, 85.2, 0x2f8a52); banner(g, 6, Y + 6, 85.2, 0x2f8a52);
+  label(g, 'Healer Quadrant', '#9fe3b5', 0, Y + 20, 78, 22);
+  torch(g, -4, Y, 50); torch(g, 4, Y, 50);
+  return g;
+}
+
+export function buildInfantry(): THREE.Group {
+  const g = new THREE.Group();
+  const Y = PLATEAU;
+  floor(g, INFANTRY, Y, 0x6a5f4a);
+  ring(g, INFANTRY, Y, 3, 7, { s: [[-6, 6]] });
+  for (const x of [-30, 0, 30]) hall(g, x, -112, 24, 10, 7, Y, 4);
+  hall(g, -36, -90, 14, 10, 7, Y, 4); hall(g, 36, -90, 14, 10, 7, Y, 4);
+  tower(g, -48, -72, 4, 24, Y); tower(g, 48, -72, 4, 24, Y); tower(g, -48, -124, 4, 24, Y); tower(g, 48, -124, 4, 24, Y);
+  // parade ground training dummies
+  for (let i = 0; i < 8; i++) {
+    const x = -21 + i * 6;
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 6), wood);
+    post.position.set(x, Y + 0.9, -96); post.castShadow = true; g.add(post);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.2, 0.2), wood);
+    arm.position.set(x, Y + 1.5, -96); g.add(arm);
+  }
+  banner(g, -6, Y + 7, -71, 0x8a6a2a); banner(g, 6, Y + 7, -71, 0x8a6a2a);
+  label(g, 'Infantry Quadrant', '#ffd98a', 0, Y + 22, -100, 24);
+  torch(g, -4, Y, -70); torch(g, 4, Y, -70);
+  return g;
+}
+
+export function buildScribes(): THREE.Group {
+  const g = new THREE.Group();
+  const Y = SCRIBE_Y;
+  floor(g, SCRIBE, Y, 0x4a4658);
+  ring(g, SCRIBE, Y, 2, 7, { e: [[-16, -4]] });
+  // Archives: big hall with columns and a dark arched door
+  block(g, -100, -34, 34, 14, 11, Y, darkStone);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 34, 8, 1, false, 0, Math.PI), roofMat);
+  roof.rotation.z = Math.PI / 2; roof.rotation.x = 0; roof.position.set(-100, Y + 11, -34); roof.castShadow = true; g.add(roof);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 0.4), new THREE.MeshBasicMaterial({ color: 0x08080c }));
+  door.position.set(-100, Y + 4, -26.9); g.add(door);
+  for (let i = 0; i < 6; i++) for (const sx of [-1, 1]) {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 9, 6), stone);
+    c.position.set(-100 + sx * (4 + i * 2.8), Y + 4.5, -26); c.castShadow = true; g.add(c);
+  }
+  hall(g, -82, -14, 14, 10, 7, Y, 4); hall(g, -118, -14, 14, 10, 7, Y, 4);
+  banner(g, -104, Y + 7, -26.6, 0x6a3fa0); banner(g, -96, Y + 7, -26.6, 0x6a3fa0);
+  label(g, 'Scribe Quadrant & Archives', '#c9a8ff', -100, Y + 22, -34, 26);
+  torch(g, -76, Y, -17); torch(g, -76, Y, -3);
+  return g;
+}
+
+/** Riders Quadrant: the Citadel on the ridge. The Parapet ends at its western wall. */
+export function buildCitadel(): THREE.Group {
+  const g = new THREE.Group();
+  const Y = CITADEL_Y;
+  floor(g, CITADEL, Y, 0x585a64);
+  // walls ~3 m thick, 2.5 m tall (10 ft x 8 ft); gap where the Parapet lands
+  ring(g, CITADEL, Y, 3, 2.5, { w: [[PARAPET.z - 3, PARAPET.z + 3]] }, darkStone);
+  hall(g, 112, -34, 24, 16, 14, Y, 9);
+  hall(g, 104, 0, 16, 10, 9, Y, 5);
+  tower(g, CITADEL.x0 + 2, CITADEL.z0 + 2, 4, 16, Y); tower(g, CITADEL.x1 - 2, CITADEL.z0 + 2, 4, 16, Y);
+  tower(g, CITADEL.x0 + 2, CITADEL.z1 - 2, 4, 16, Y); tower(g, CITADEL.x1 - 2, CITADEL.z1 - 2, 4, 16, Y);
+  banner(g, 112, Y + 8, -25.3, 0xa02a20, 0, 8);
+  // Gauntlet: built into the ridgeline between the Citadel and the flight field
+  block(g, 130, -22, 6, 56, 10, Y, darkStone);
+  for (let i = 0; i < 6; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 5), darkStone);
+    b.position.set(135 + (i % 2) * 2, Y + 3 + i * 1.2, -40 + i * 12); g.add(b);
+  }
+  floor(g, { x0: 134, x1: 150, z0: -58, z1: 12 }, Y, 0x8a7a58);
+  label(g, 'Riders Quadrant - the Citadel', '#ff9a8a', 112, Y + 28, -34, 28);
+  label(g, 'The Gauntlet', '#ffd98a', 130, Y + 18, -22, 14);
+  label(g, 'Flight Field', '#ffe9b0', 142, Y + 12, -22, 14);
+  torch(g, 96, Y, PARAPET.z - 4); torch(g, 96, Y, PARAPET.z + 4);
   return g;
 }
 
 export function buildParapet(): THREE.Group {
   const g = new THREE.Group();
-  const len = PARAPET_Z1 - PARAPET_Z0;
-  const span = new THREE.Mesh(new THREE.BoxGeometry(PARAPET_HALF_W * 2, 0.6, len), darkStone);
-  span.position.set(0, PLATEAU - 0.3, (PARAPET_Z0 + PARAPET_Z1) / 2);
+  const len = PARAPET.x1 - PARAPET.x0;
+  const span = new THREE.Mesh(new THREE.BoxGeometry(len, 0.6, PARAPET.half * 2), darkStone);
+  span.position.set((PARAPET.x0 + PARAPET.x1) / 2, PARAPET.y - 0.3, PARAPET.z);
   span.castShadow = span.receiveShadow = true;
   g.add(span);
-  for (let z = RAVINE_Z0 + 4; z < RAVINE_Z1 - 2; z += 7) {
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(1.2, 14, 5), darkStone);
-    spike.rotation.x = Math.PI; spike.position.set(0, PLATEAU - 7.5, z);
-    g.add(spike);
-  }
-  const lab = makeLabel('The Parapet', '#ffd98a'); lab.position.set(0, PLATEAU + 9, 55); g.add(lab);
+  label(g, 'The Parapet', '#ffd98a', 66, PARAPET.y + 8, PARAPET.z, 18);
   return g;
 }

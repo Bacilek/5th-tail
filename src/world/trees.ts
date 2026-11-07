@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { heightAt, COLLEGE } from './terrain';
+import { heightAt, COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, type Rect } from './terrain';
+const KEEP_OUT: Rect[] = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA];
 import { fbm, mulberry } from '../engine/noise';
 
 export function buildTrees(): THREE.Group {
@@ -7,8 +8,8 @@ export function buildTrees(): THREE.Group {
   const pts: { x: number; y: number; z: number; s: number }[] = [];
   for (let i = 0; i < 9000 && pts.length < 1800; i++) {
     const x = (rnd() - 0.5) * 560, z = (rnd() - 0.5) * 560;
-    if (x > COLLEGE.x0 - 8 && x < COLLEGE.x1 + 8 && z > COLLEGE.z0 - 8 && z < 90) continue;
-    if (Math.abs(x) < 6 && z > 30 && z < 100) continue;
+    if (KEEP_OUT.some((r) => x > r.x0 - 10 && x < r.x1 + 10 && z > r.z0 - 10 && z < r.z1 + 10)) continue;
+
     const h = heightAt(x, z);
     if (h < 6 || h > 70) continue;
     if (Math.abs(heightAt(x + 2, z) - h) + Math.abs(heightAt(x, z + 2) - h) > 2.2) continue;

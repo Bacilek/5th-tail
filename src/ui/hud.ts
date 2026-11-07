@@ -1,4 +1,5 @@
 import { ITEMS, type ItemId } from '../data/items';
+import { CLASSES, type ClassId } from '../data/classes';
 
 const CSS = `
 #hud{position:fixed;inset:0;pointer-events:none;font-family:Georgia,serif;color:#f0e6d0;text-shadow:0 1px 3px #000}
@@ -17,12 +18,20 @@ const CSS = `
 #info{position:absolute;right:14px;top:12px;text-align:right;font-size:15px;line-height:1.5}
 #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000a;color:#f0e6d0;font-family:Georgia,serif;pointer-events:none}
 #start h1{font-size:56px;letter-spacing:6px;margin:0}#start p{font-size:18px}
+#cls{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#000a,#000d);color:#f0e6d0;font-family:Georgia,serif;z-index:5}
+#cls h1{font-size:46px;letter-spacing:5px;margin:0}#cls>p{opacity:.8;margin:6px 0 26px}
+#cls .cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+#cls .card{width:210px;padding:16px;border:1px solid #d8c9a0aa;background:#14121acc;cursor:pointer;transition:.15s}
+#cls .card:hover{background:#2a2330;transform:translateY(-4px)}
+#cls .card b{font-size:22px}#cls .card kbd{float:right;opacity:.7}#cls .card p{font-size:14px;opacity:.85}
+#obj{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:15px;background:#0006;padding:4px 14px;border:1px solid #d8c9a044}
 #dmg{position:absolute;inset:0;box-shadow:inset 0 0 120px #c00;opacity:0;transition:opacity .4s}
 `;
 
 export class Hud {
   private el = (id: string) => document.getElementById(id)!;
   private annTimer = 0;
+  chosen = false;
 
   constructor() {
     const style = document.createElement('style');
@@ -34,8 +43,8 @@ export class Hud {
       <div id="dmg"></div><div id="cross"></div>
       <div id="hint"><b>WASD</b> move &middot; <b>Shift</b> sprint &middot; <b>Space</b> jump &middot; <b>V</b> 1st/3rd person<br>
         <b>LMB</b> left hand &middot; <b>RMB</b> right hand &middot; <b>Q</b>/<b>E</b> cycle left/right item<br><b>H</b> hide this</div>
-      <div id="info"><div id="wing"></div><div id="kills"></div></div>
-      <div id="ann"><h1></h1><p></p></div>
+      <div id="info"><div id="cls2"></div><div id="wing"></div><div id="kills"></div></div>
+      <div id="obj"></div><div id="ann"><h1></h1><p></p></div>
       <div class="hand" id="hl"></div><div class="hand" id="hr"></div>
       <div id="bars">
         <div class="bar" id="bm"><i></i></div><div class="bar" id="bh"><i></i></div><div class="bar" id="bs"><i></i></div>
@@ -44,9 +53,10 @@ export class Hud {
     const start = document.createElement('div');
     start.id = 'start';
     start.innerHTML = '<h1>5TH TAIL</h1><p>Click to begin &middot; Esc to release the mouse</p>';
+    start.style.display = 'none';
     document.body.appendChild(start);
     document.addEventListener('pointerlockchange', () => {
-      start.style.display = document.pointerLockElement ? 'none' : 'flex';
+      start.style.display = document.pointerLockElement || !this.chosen ? 'none' : 'flex';
     });
     addEventListener('keydown', (e) => { if (e.code === 'KeyH') this.el('hint').style.display = this.el('hint').style.display === 'none' ? '' : 'none'; });
   }
@@ -67,6 +77,37 @@ export class Hud {
     this.el('hl').textContent = 'L: ' + ITEMS[l].name;
     this.el('hr').textContent = 'R: ' + ITEMS[r].name;
   }
+
+  showClassSelect(onPick: (id: ClassId) => void): void {
+    const el = document.createElement('div');
+    el.id = 'cls';
+    const order: ClassId[] = ['rider', 'infantry', 'healer', 'scribe'];
+    el.innerHTML = '<h1>CONSCRIPTION DAY</h1><p>Basgiath War College. Choose your quadrant.</p><div class="cards"></div>';
+    const cards = el.querySelector('.cards')!;
+    let done = false;
+    const pick = (id: ClassId) => {
+      if (done) return; done = true; this.chosen = true;
+      el.remove(); onPick(id);
+    };
+    order.forEach((id, i) => {
+      const c = CLASSES[id];
+      const d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML = `<kbd>${i + 1}</kbd><b>${c.name}</b><p>${c.tagline}</p>`;
+      d.addEventListener('click', () => pick(id));
+      cards.appendChild(d);
+    });
+    addEventListener('keydown', (e) => {
+      const i = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
+      if (i >= 0) pick(order[i]);
+    });
+    el.style.display = 'flex';
+    document.body.appendChild(el);
+  }
+
+  setObjective(t: string): void { this.el('obj').textContent = t; this.el('obj').style.display = t ? '' : 'none'; }
+  setClassLabel(t: string): void { this.el('cls2').textContent = t; }
+  showMagicka(v: boolean): void { this.el('bm').style.visibility = v ? 'visible' : 'hidden'; }
 
   setWing(text: string): void { this.el('wing').textContent = text; }
   setKills(n: number): void { this.el('kills').textContent = `Venin slain: ${n}`; }

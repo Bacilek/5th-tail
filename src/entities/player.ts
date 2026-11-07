@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import type { Input } from '../engine/input';
-import { ITEMS, CYCLE, type ItemId } from '../data/items';
+import { ITEMS, type ItemId } from '../data/items';
+import { CLASSES, type ClassId } from '../data/classes';
 import { heightAt, MAP_HALF } from '../world/terrain';
 import { resolve } from '../world/collision';
 import type { Combat } from '../systems/combat';
 
 const EYE = 1.7;
 const GRAVITY = 24;
-export const SPAWN = new THREE.Vector3(0, 0, 100);
+export const SPAWN = new THREE.Vector3(0, 0, 24);
 
 type Hand = 0 | 1; // 0 = left, 1 = right
 
@@ -36,6 +37,14 @@ function buildHeld(id: ItemId, scale: number): THREE.Object3D {
 
 export class Player {
   pos = SPAWN.clone();
+  spawn = SPAWN.clone();
+  spawnYaw = 0;
+  classId: ClassId = 'infantry';
+  cycle: ItemId[] = CLASSES.infantry.items;
+  /** lateral wind (m/s along z), set by the world while on the Parapet */
+  windZ = 0;
+  private airPeak = 0;
+  private wasGrounded = true;
   vel = new THREE.Vector3();
   yaw = 0;
   pitch = 0;
@@ -66,6 +75,7 @@ export class Player {
 
   constructor(private camera: THREE.PerspectiveCamera, private combat: Combat, scene: THREE.Scene) {
     this.pos.y = heightAt(this.pos.x, this.pos.z);
+    this.airPeak = this.pos.y;
     this.buildAvatar();
     scene.add(this.avatar);
     camera.rotation.order = 'YXZ';
@@ -113,6 +123,26 @@ export class Player {
     this.onHandsChanged();
   }
 
+  setClass(id: ClassId): void {
+    const c = CLASSES[id];
+    this.classId = id; this.cycle = c.items;
+    this.maxHealth = this.health = c.maxHealth;
+    this.maxMagicka = this.magicka = c.maxMagicka;
+    this.maxStamina = this.stamina = c.maxStamina;
+    this.hands = [c.hands[0], c.hands[1]];
+    this.refreshHeld();
+  }
+
+  setSpawn(x: number, y: number, z: number, yaw: number): void {
+    this.spawn.set(x, y, z); this.spawnYaw = yaw;
+  }
+
+  teleportToSpawn(): void {
+    this.pos.copy(this.spawn);
+    this.vel.set(0, 0, 0); this.yaw = this.spawnYaw; this.pitch = 0;
+    this.airPeak = this.pos.y; this.grounded = true; this.wasGrounded = true;
+  }
+
   get eye(): THREE.Vector3 { return new THREE.Vector3(this.pos.x, this.pos.y + EYE, this.pos.z); }
 
   get forward(): THREE.Vector3 {
@@ -128,8 +158,7 @@ export class Player {
   }
 
   respawn(): void {
-    this.pos.copy(SPAWN); this.pos.y = heightAt(SPAWN.x, SPAWN.z);
-    this.vel.set(0, 0, 0); this.yaw = 0; this.pitch = 0;
+    this.teleportToSpawn();
     this.health = this.maxHealth; this.magicka = this.maxMagicka; this.stamina = this.maxStamina;
     this.alive = true;
     this.onRespawn();
@@ -145,7 +174,10 @@ export class Player {
   private attack(h: Hand): void {
     const item = ITEMS[this.hands[h]];
     if (item.kind === 'none' || this.cooldown[h] > 0 || this.swing[h] > 0) return;
-    if (item.kind === 'melee') {
+    if (item.kind === 'heal') {
+      this.health = Math.min(this.maxHealth, this.health + item.damage);
+      this.swing[h] = 0.001; this.swingHit[h] = true;
+    } else if (item.kind === 'melee') {
       if (!this.useStamina(item.cost)) return;
       this.swing[h] = 0.001; this.swingHit[h] = false;
     } else {
@@ -164,7 +196,7 @@ export class Player {
     if (!this.alive) {
       this.deadTimer -= dt;
       if (this.deadTimer <= 0) this.respawn();
-      this.syncVisuals(dt);
+      this.sync(dt);
       return;
     }
     if (input.locked) {
@@ -191,8 +223,17 @@ export class Player {
     if (sprint) { this.stamina = Math.max(0, this.stamina - 14 * dt); this.staminaDelay = 1.0; }
     if (input.wasPressed('Space') && this.grounded && this.useStamina(8)) { this.vel.y = 8; this.grounded = false; }
 
-    this.pos.x += this.vel.x * dt;
-    this.pos.z += this.vel.z * dt;
+    this.pos.z += this.windZ * dt;
+    let nx = this.pos.x + this.vel.x * dt, nz = this.pos.z + this.vel.z * dt;
+    // cliffs and steep slopes block movement (no walking up walls)
+    const climb = (x: number, z: number) => heightAt(x, z) - this.pos.y > 0.9;
+    if (climb(nx, nz)) {
+      if (!climb(nx, this.pos.z)) nz = this.pos.z;
+      else if (!climb(this.pos.x, nz)) nx = this.pos.x;
+      else { nx = this.pos.x; nz = this.pos.z; }
+    }
+    this.pos.x = nx;
+    this.pos.z = nz;
     this.pos.x = Math.max(-MAP_HALF + 2, Math.min(MAP_HALF - 2, this.pos.x));
     this.pos.z = Math.max(-MAP_HALF + 2, Math.min(MAP_HALF - 2, this.pos.z));
     resolve(this.pos, 0.45);
@@ -206,6 +247,15 @@ export class Player {
       this.pos.y += this.vel.y * dt;
       if (this.pos.y < gh) { this.pos.y = gh; this.vel.y = 0; this.grounded = true; }
     }
+    if (!this.grounded) this.airPeak = Math.max(this.airPeak, this.pos.y);
+    else {
+      if (!this.wasGrounded) {
+        const drop = this.airPeak - this.pos.y;
+        if (drop > 7) this.damage((drop - 7) * 5.5);
+      }
+      this.airPeak = this.pos.y;
+    }
+    this.wasGrounded = this.grounded;
     if (this.pos.y < -30) this.damage(this.health + 1);
 
     // regen
@@ -232,14 +282,14 @@ export class Player {
         if (this.swing[h] >= 1) this.swing[h] = 0;
       }
     }
-    this.syncVisuals(dt);
+    this.sync(dt);
   }
 
   private nextItem(cur: ItemId): ItemId {
-    return CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    return this.cycle[(this.cycle.indexOf(cur) + 1) % this.cycle.length];
   }
 
-  private syncVisuals(_dt: number): void {
+  sync(_dt: number): void {
     const cam = this.camera;
     this.avatar.visible = this.thirdPerson;
     this.fpMount[0].visible = this.fpMount[1].visible = !this.thirdPerson;

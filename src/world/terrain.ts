@@ -3,33 +3,56 @@ import { fbm, smoothstep } from '../engine/noise';
 
 export const PLATEAU = 10;
 export const MAP_HALF = 290;
-// Ravine band (the Parapet crosses it along z at x=0)
-export const RAVINE_Z0 = 40;
-export const RAVINE_Z1 = 70;
-export const PARAPET_Z0 = 36;
-export const PARAPET_Z1 = 74;
-export const PARAPET_HALF_W = 0.8;
-// College courtyard rectangle (flattened)
-export const COLLEGE = { x0: -52, x1: 52, z0: -65, z1: 38 };
+
+export interface Rect { x0: number; x1: number; z0: number; z1: number; }
+// Lower college (administrative courtyard, Conscription Day assembly)
+export const COLLEGE: Rect = { x0: -52, x1: 52, z0: -65, z1: 38 };
+// Each quadrant has its own campus
+export const HEALERS: Rect = { x0: -40, x1: 40, z0: 44, z1: 104 };      // south, via southern gate
+export const INFANTRY: Rect = { x0: -48, x1: 48, z0: -124, z1: -72 };   // north, via northern turret/gate (largest)
+export const SCRIBE: Rect = { x0: -125, x1: -72, z0: -46, z1: -4 };     // west, sunken (archives)
+export const SCRIBE_Y = PLATEAU - 6;
+// Riders: the Citadel on a high ridge/mesa east of the college
+export const MESA: Rect = { x0: 86, x1: 152, z0: -62, z1: 14 };
+export const CITADEL: Rect = { x0: 90, x1: 126, z0: -52, z1: 8 };
+export const CITADEL_Y = 58.5;
+// Conscription Tower and the Parapet (stone span, ~60 m up, 0.8 m wide, no rails)
+export const TOWER = { x: 40, z: -20, r: 5, top: 62 };
+export const PARAPET = { y: 62, z: -20, x0: 43, x1: 92, half: 0.4 };
+
+function rectDist(r: Rect, x: number, z: number): number {
+  const dx = Math.max(r.x0 - x, 0, x - r.x1);
+  const dz = Math.max(r.z0 - z, 0, z - r.z1);
+  return Math.hypot(dx, dz);
+}
+
+export function inRect(r: Rect, x: number, z: number): boolean {
+  return x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1;
+}
+
+export function onParapet(x: number, y: number, z: number): boolean {
+  return y > 50 && x > PARAPET.x0 + 2 && x < PARAPET.x1 && Math.abs(z - PARAPET.z) < 3;
+}
+
+const FLAT_RECTS = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA];
 
 export function heightAt(x: number, z: number): number {
-  const dr = Math.max(0, Math.abs(z - 55) - 15);
-  const flatR = 1 - smoothstep(0, 20, dr);
-  const dx = Math.max(0, Math.abs(x) - COLLEGE.x1);
-  const dz = Math.max(0, COLLEGE.z0 - z, z - COLLEGE.z1);
-  const flatC = 1 - smoothstep(0, 20, Math.hypot(dx, dz));
-  const amp = 5 * (1 - flatR) * (1 - flatC);
+  if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r * 0.85) return TOWER.top;
+
+  let flat = 1;
+  for (const r of FLAT_RECTS) flat *= smoothstep(0, 20, rectDist(r, x, z));
+  const amp = 5 * flat;
   let h = PLATEAU + (fbm(x * 0.02, z * 0.02) - 0.5) * 2 * amp;
   h += (fbm(x * 0.06 + 9, z * 0.06 + 9) - 0.5) * amp * 0.5;
 
-  const r = Math.hypot(x, z + 20);
-  const m = smoothstep(130, 260, r);
+  const m = smoothstep(130, 260, Math.hypot(x, z + 20));
   h += m * (40 + 170 * Math.pow(fbm(x * 0.007 + 50, z * 0.007 + 50), 1.4));
 
-  const d = smoothstep(RAVINE_Z0 - 3, RAVINE_Z0 + 3, z) * (1 - smoothstep(RAVINE_Z1 - 3, RAVINE_Z1 + 3, z));
-  h -= 62 * d;
+  h -= (PLATEAU - SCRIBE_Y) * (1 - smoothstep(0, 10, rectDist(SCRIBE, x, z)));
+  const mk = 1 - smoothstep(0, 12, rectDist(MESA, x, z));
+  h += (CITADEL_Y - h) * mk;
 
-  if (Math.abs(x) < PARAPET_HALF_W && z > PARAPET_Z0 && z < PARAPET_Z1) h = Math.max(h, PLATEAU);
+  if (Math.abs(z - PARAPET.z) < PARAPET.half && x > PARAPET.x0 && x < PARAPET.x1) h = Math.max(h, PARAPET.y);
   return h;
 }
 
