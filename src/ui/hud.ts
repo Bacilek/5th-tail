@@ -111,7 +111,7 @@ export class Hud {
   showMagicka(v: boolean): void { this.el('bm').style.visibility = v ? 'visible' : 'hidden'; }
 
   setWing(text: string): void { this.el('wing').textContent = text; }
-  setKills(n: number): void { this.el('kills').textContent = `Venin slain: ${n}`; }
+  setKills(n: number, gold = 0): void { this.el('kills').textContent = `Venin slain: ${n}  |  Gold: ${gold}`; }
 
   announce(title: string, sub = '', seconds = 4): void {
     const a = this.el('ann');

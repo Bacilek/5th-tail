@@ -14,6 +14,13 @@ import { DragonMount } from './entities/mount';
 import { CLASSES, type ClassId } from './data/classes';
 import { Combat } from './systems/combat';
 import { Hud } from './ui/hud';
+import { Panels } from './ui/panels';
+import { QuestLog } from './systems/quests';
+import { QUESTS } from './data/quests';
+import { NPCS } from './data/npcs';
+import { Npc } from './entities/npc';
+import { Cat } from './entities/cat';
+import { buildPickups } from './systems/pickups';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -59,7 +66,59 @@ for (const [x, z] of [[-20, 130], [20, 140], [0, 160], [-70, 90], [75, 70], [-60
   combat.enemies.push(e);
 }
 let kills = 0;
-combat.onKill = () => { hud.setKills(++kills); };
+const quests = new QuestLog();
+const panels = new Panels(quests);
+const npcs = NPCS.map((d) => new Npc(d));
+npcs.forEach((n) => scene.add(n.group));
+const cat = new Cat(8, 20);
+scene.add(cat.group);
+const pickups = buildPickups(scene);
+combat.onKill = () => { hud.setKills(++kills, quests.gold); quests.kill(); };
+quests.onChange = ((prev) => () => { prev(); hud.setKills(kills, quests.gold); })(quests.onChange);
+
+function talkTo(npc: Npc): void {
+  const id = npc.def.id, name = npc.def.name;
+  const ready = QUESTS.find((q) => (q.turnIn ?? q.giver) === id && quests.status(q.id) === 'ready');
+  if (ready) {
+    panels.open(name, ready.outro, [{ label: 'Thank you.', cb: () => { const g = quests.turnIn(ready.id); hud.announce('Quest complete', `${ready.title}  +${g} gold`, 4); } }]);
+    return;
+  }
+  const offer = QUESTS.find((q) => q.giver === id && quests.status(q.id) === 'none' && (!q.requires || quests.status(q.requires) === 'done'));
+  if (offer) {
+    panels.open(name, offer.intro, [
+      { label: 'I will do it.', cb: () => { quests.start(offer.id); hud.announce('Quest started', offer.title, 3); } },
+      { label: 'Not now.' },
+    ]);
+    return;
+  }
+  const active = QUESTS.find((q) => q.giver === id && (quests.status(q.id) === 'active' || quests.status(q.id) === 'ready'));
+  if (active) { panels.open(name, active.remind, [{ label: 'Understood.' }]); return; }
+  panels.open(name, npc.def.chat[Math.floor(Math.random() * npc.def.chat.length)], [{ label: 'Farewell.' }]);
+}
+
+function talkToCat(): void {
+  if (!cat.adopted) {
+    panels.open('Broccoli', 'A scruffy orange cat inspects you, then decides you will do. (Its origin in the books is uncertain, so it is a stray here.)', [
+      { label: 'Adopt Broccoli.', cb: () => { cat.adopted = true; hud.announce('Broccoli joins you', 'The cat will follow you around.', 4); } },
+      { label: 'Leave it.' },
+    ]);
+  } else {
+    panels.open('Broccoli', 'Mrrrow.', [{ label: 'Pet Broccoli.' }]);
+  }
+}
+
+type Target = { name: string; dist: number; act: () => void };
+function nearestInteractable(): Target | null {
+  let best: Target | null = null;
+  const p = player.pos;
+  for (const n of npcs) {
+    const d = Math.hypot(n.pos.x - p.x, n.pos.z - p.z);
+    if (d < 3.5 && Math.abs(n.pos.y - p.y) < 4 && (!best || d < best.dist)) best = { name: n.def.name, dist: d, act: () => talkTo(n) };
+  }
+  const dc = Math.hypot(cat.pos.x - p.x, cat.pos.z - p.z);
+  if (dc < 2.5 && Math.abs(cat.pos.y - p.y) < 3 && (!best || dc < best.dist)) best = { name: 'Broccoli', dist: dc, act: talkToCat };
+  return best;
+}
 
 // ---- Story: Conscription Day, class choice, Parapet (Riders only), quadrant arrival, wing sorting
 let chosen: ClassId | null = null;
@@ -160,13 +219,18 @@ renderer.setAnimationLoop(() => {
 
   if (!chosen) {
     player.sync(dt);
+  } else if (panels.dialogOpen) {
+    player.sync(dt);
   } else {
     // Parapet wind: strong gusts push sideways
     player.windZ = onParapet(player.pos.x, player.pos.y, player.pos.z)
       ? 0.55 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.3 + 1)
       : 0;
     if (mount && input.wasPressed('KeyR') && !mount.mounted) { mount.summon(player); hud.announce(mount.spec.name, 'answers your call...', 3); }
-    if (mount && input.wasPressed('KeyF')) {
+    const near = mount?.mounted ? null : nearestInteractable();
+    panels.setPrompt(near ? `F - Talk to ${near.name}` : '');
+    if (near && input.wasPressed('KeyF')) { near.act(); }
+    else if (mount && input.wasPressed('KeyF')) {
       if (mount.mounted) {
         if (!mount.dismount(player)) hud.announce('Too high', 'Land before dismounting.', 2);
         else hud.setHands(player.hands[0], player.hands[1]);
@@ -182,6 +246,15 @@ renderer.setAnimationLoop(() => {
       mount?.update(dt, input, player, camera);
     }
     story();
+    // quest world logic
+    quests.reach('flyTower', !!mount?.mounted && mount.pos.distanceTo(new THREE.Vector3(TOWER.x, TOWER.top, TOWER.z)) < 14);
+    for (const pk of pickups) {
+      const st = quests.status(pk.quest);
+      pk.mesh.visible = !pk.taken && st === 'active';
+      pk.mesh.position.y = pk.base + Math.sin(t * 2 + pk.mesh.position.x) * 0.15;
+      pk.mesh.rotation.y = t;
+      if (pk.mesh.visible && pk.mesh.position.distanceTo(player.pos) < 2.6) { pk.taken = true; pk.mesh.visible = false; quests.collect(pk.item); }
+    }
     const tgt = new THREE.Vector3(player.pos.x, player.pos.y, player.pos.z);
     for (const e of combat.enemies) {
       const dmg = e.update(dt, tgt, player.alive);
@@ -190,6 +263,8 @@ renderer.setAnimationLoop(() => {
     combat.update(dt);
   }
 
+  npcs.forEach((n) => n.update(t, player.pos));
+  cat.update(dt, t, player.pos);
   circling.forEach((c, i) => {
     const a = c.phase + t * c.speed;
     const x = 110 + Math.cos(a) * c.r, z = -20 + Math.sin(a) * c.r;
