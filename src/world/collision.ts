@@ -6,6 +6,13 @@ export function addBox(cx: number, cz: number, w: number, d: number, top: number
   boxes.push({ x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2, top });
 }
 
+/** Highest collider top at (x,z), or -Infinity. */
+export function topAt(x: number, z: number): number {
+  let t = -Infinity;
+  for (const b of boxes) if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1) t = Math.max(t, b.top);
+  return t;
+}
+
 /** Pushes a circle (radius r) at pos out of all boxes whose top is above pos.y. Mutates pos. */
 export function resolve(pos: { x: number; y: number; z: number }, r: number): void {
   for (const b of boxes) {

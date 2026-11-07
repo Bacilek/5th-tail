@@ -9,7 +9,8 @@ import { buildTrees } from './world/trees';
 import { Player } from './entities/player';
 import { Enemy } from './entities/enemy';
 import { createDragon, type Dragon } from './entities/dragon';
-import { DRAGONS } from './data/dragons';
+import { DRAGONS, BOND_SPECIES, BOND_NAMES, TAIL_ATTACKS, type DragonSpec } from './data/dragons';
+import { DragonMount } from './entities/mount';
 import { CLASSES, type ClassId } from './data/classes';
 import { Combat } from './systems/combat';
 import { Hud } from './ui/hud';
@@ -62,7 +63,9 @@ combat.onKill = () => { hud.setKills(++kills); };
 
 // ---- Story: Conscription Day, class choice, Parapet (Riders only), quadrant arrival, wing sorting
 let chosen: ClassId | null = null;
-type Stage = 'select' | 'go' | 'parapet' | 'citadel' | 'done';
+type Stage = 'select' | 'go' | 'parapet' | 'citadel' | 'threshing' | 'done';
+const FLIGHT_FIELD = { x0: 134, x1: 150, z0: -58, z1: 12 };
+let mount: DragonMount | null = null;
 let stage: Stage = 'select';
 
 const SECTIONS = ['Flame', 'Claw', 'Tail'];
@@ -106,6 +109,17 @@ player.onDamaged = () => hud.flashDamage();
 player.onHandsChanged = () => hud.setHands(player.hands[0], player.hands[1]);
 hud.setKills(0);
 
+function bondDragon(): void {
+  stage = 'done';
+  const s = BOND_SPECIES[Math.floor(Math.random() * BOND_SPECIES.length)];
+  const name = BOND_NAMES[Math.floor(Math.random() * BOND_NAMES.length)];
+  const spec: DragonSpec = { name, color: s.hex, tail: s.tail, size: 1.0 };
+  mount = new DragonMount(spec, scene, combat);
+  hud.setObjective('');
+  hud.setDragonLine(`Dragon: ${name} (${s.color} ${s.tail}tail) - R summon, F mount`);
+  hud.announce('The Threshing', `${name}, a ${s.color} ${s.tail}tail, has chosen you.`, 8);
+}
+
 function story(): void {
   if (!chosen) return;
   const { x, y, z } = player.pos;
@@ -126,7 +140,10 @@ function story(): void {
       hud.announce('You crossed the Parapet', `Assigned to the ${label}`, 7);
     }
   } else if (stage === 'citadel') {
-    stage = 'done';
+    stage = 'threshing';
+    hud.setObjective('Report to the Flight Field for the Threshing');
+  } else if (stage === 'threshing') {
+    if (inRect(FLIGHT_FIELD, x, z)) bondDragon();
   }
 }
 
@@ -148,7 +165,22 @@ renderer.setAnimationLoop(() => {
     player.windZ = onParapet(player.pos.x, player.pos.y, player.pos.z)
       ? 0.55 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.3 + 1)
       : 0;
-    player.update(dt, input);
+    if (mount && input.wasPressed('KeyR') && !mount.mounted) { mount.summon(player); hud.announce(mount.spec.name, 'answers your call...', 3); }
+    if (mount && input.wasPressed('KeyF')) {
+      if (mount.mounted) {
+        if (!mount.dismount(player)) hud.announce('Too high', 'Land before dismounting.', 2);
+        else hud.setHands(player.hands[0], player.hands[1]);
+      } else if (mount.canMount(player)) {
+        mount.mount(player);
+        hud.announce('Mounted', `LMB fire breath - RMB ${TAIL_ATTACKS[mount.spec.tail].name} - Shift boost - F land+dismount`, 4);
+      }
+    }
+    if (mount?.mounted) {
+      mount.update(dt, input, player, camera);
+    } else {
+      player.update(dt, input);
+      mount?.update(dt, input, player, camera);
+    }
     story();
     const tgt = new THREE.Vector3(player.pos.x, player.pos.y, player.pos.z);
     for (const e of combat.enemies) {

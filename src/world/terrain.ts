@@ -16,9 +16,9 @@ export const SCRIBE_Y = PLATEAU - 6;
 export const MESA: Rect = { x0: 86, x1: 152, z0: -62, z1: 14 };
 export const CITADEL: Rect = { x0: 90, x1: 126, z0: -52, z1: 8 };
 export const CITADEL_Y = 58.5;
-// Conscription Tower and the Parapet (stone span, ~60 m up, 0.8 m wide, no rails)
+// Conscription Tower and the Parapet (stone span, ~60 m up, 1.2 m wide, no rails)
 export const TOWER = { x: 40, z: -20, r: 5, top: 62 };
-export const PARAPET = { y: 62, z: -20, x0: 43, x1: 92, half: 0.4 };
+export const PARAPET = { y: 62, z: -20, x0: 43, x1: 92, half: 0.6 };
 
 function rectDist(r: Rect, x: number, z: number): number {
   const dx = Math.max(r.x0 - x, 0, x - r.x1);

@@ -21,15 +21,26 @@ export class Combat {
     if (was && !e.alive) this.onKill(e);
   }
 
-  melee(origin: THREE.Vector3, forward: THREE.Vector3, range: number, dmg: number): void {
+  melee(origin: THREE.Vector3, forward: THREE.Vector3, range: number, dmg: number, minDot = 0.35): void {
     for (const e of this.enemies) {
       if (!e.alive) continue;
       const to = e.center.sub(origin);
       const d = to.length();
       if (d > range + e.radius) continue;
-      if (to.normalize().dot(forward) < 0.35) continue;
+      if (to.normalize().dot(forward) < minDot) continue;
       this.hurt(e, dmg);
     }
+  }
+
+  /** Area damage with a visual flash (dragon tail strikes). */
+  blast(pos: THREE.Vector3, radius: number, dmg: number, color = 0xffd070): void {
+    for (const e of this.enemies) {
+      if (e.alive && e.center.distanceTo(pos) < radius + e.radius) this.hurt(e, dmg);
+    }
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7 }));
+    m.position.copy(pos); m.scale.setScalar(radius * 0.3);
+    this.scene.add(m);
+    this.effects.push({ mesh: m, life: 0.3, max: 0.3, grow: radius * 2 });
   }
 
   fireball(origin: THREE.Vector3, dir: THREE.Vector3, dmg: number): void {

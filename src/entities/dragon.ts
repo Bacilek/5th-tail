@@ -3,7 +3,7 @@ import type { DragonSpec, TailType } from '../data/dragons';
 
 export interface Dragon {
   group: THREE.Group;
-  update(t: number): void;
+  update(t: number, flap?: number): void;
 }
 
 function wingGeometry(side: number): THREE.BufferGeometry {
@@ -131,11 +131,11 @@ export function createDragon(spec: DragonSpec): Dragon {
 
   return {
     group: root,
-    update(t: number) {
-      const flap = Math.sin(t * 2.2) * 0.45;
+    update(t: number, amount = 1) {
+      const flap = Math.sin(t * 2.2) * 0.45 * amount + (1 - amount) * 1.1;
       wings[0].rotation.z = flap; wings[1].rotation.z = -flap;
       segs.forEach((s, i) => { s.rotation.y = Math.sin(t * 1.5 - i * 0.5) * 0.1; });
-      g.position.y = Math.sin(t * 2.2) * 0.25;
+      g.position.y = Math.sin(t * 2.2) * 0.25 * amount;
     },
   };
 }

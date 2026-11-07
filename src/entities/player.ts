@@ -143,6 +143,15 @@ export class Player {
     this.airPeak = this.pos.y; this.grounded = true; this.wasGrounded = true;
   }
 
+  useStaminaRaw(n: number): boolean { return this.useStamina(n); }
+  delayMagickaRegen(): void { this.magickaDelay = 1.5; }
+
+  /** Hide first-person hands (while riding a dragon). */
+  hideHands(b: boolean): void {
+    this.fpMount[0].visible = this.fpMount[1].visible = !b && !this.thirdPerson;
+    this.avatar.visible = b || this.thirdPerson;
+  }
+
   get eye(): THREE.Vector3 { return new THREE.Vector3(this.pos.x, this.pos.y + EYE, this.pos.z); }
 
   get forward(): THREE.Vector3 {
