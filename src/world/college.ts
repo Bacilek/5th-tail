@@ -47,10 +47,14 @@ function tower(g: THREE.Group, cx: number, cz: number, r: number, h: number, y: 
   addBox(cx, cz, r * 1.8, r * 1.8, y + h);
 }
 
-function banner(g: THREE.Group, x: number, y: number, z: number, color: number, rotY = 0, h = 6): void {
+export function banner(g: THREE.Group, x: number, y: number, z: number, color: number, rotY = 0, h = 6): void {
   const b = new THREE.Mesh(new THREE.PlaneGeometry(2, h), new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, flatShading: true }));
   b.position.set(x, y, z); b.rotation.y = rotY;
   g.add(b);
+}
+
+export function floorRect(g: THREE.Group, r: Rect, y: number, color: number): void {
+  floor(g, r, y, color);
 }
 
 function floor(g: THREE.Group, r: Rect, y: number, color: number): void {
@@ -86,14 +90,14 @@ const cloth = new THREE.MeshStandardMaterial({ color: 0x8a3a30, flatShading: tru
 const linen = new THREE.MeshStandardMaterial({ color: 0xc9c2b0, flatShading: true });
 const bookMat = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
 
-function prop(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, mat: THREE.Material, solid = true): void {
+export function prop(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, mat: THREE.Material, solid = true): void {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   m.position.set(cx, y + h / 2, cz); m.castShadow = m.receiveShadow = true; g.add(m);
   if (solid) addBox(cx, cz, w, d, y + h);
 }
 
 /** Enterable building: hollow walls with a 4.4 m door, visual roof slab, simple furniture. The roof has no collider. */
-function hall(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, roofH: number, door: Door = 's', kind: Kind = 'table', mat: THREE.Material = stone): void {
+export function hall(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, roofH: number, door: Door = 's', kind: Kind = 'table', mat: THREE.Material = stone): void {
   const r: Rect = { x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2 };
   const gx: [number, number][] = [[cx - 2.2, cx + 2.2]], gz: [number, number][] = [[cz - 2.2, cz + 2.2]];
   ring(g, r, y, 1.2, h, { n: door === 'n' ? gx : [], s: door === 's' ? gx : [], w: door === 'w' ? gz : [], e: door === 'e' ? gz : [] }, mat);
@@ -123,14 +127,14 @@ function hall(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: n
   }
 }
 
-function torch(g: THREE.Group, x: number, y: number, z: number): void {
+export function torch(g: THREE.Group, x: number, y: number, z: number): void {
   const post = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.4, 5), darkStone);
   post.position.set(x, y + 1.2, z); post.castShadow = true; g.add(post);
   const f = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.8, 5), new THREE.MeshBasicMaterial({ color: 0xffa040 }));
   f.position.set(x, y + 2.8, z); g.add(f);
 }
 
-function label(g: THREE.Group, text: string, color: string, x: number, y: number, z: number, w = 16): void {
+export function label(g: THREE.Group, text: string, color: string, x: number, y: number, z: number, w = 16): void {
   const l = makeLabel(text, color, w); l.position.set(x, y, z); g.add(l);
 }
 

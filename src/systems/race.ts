@@ -13,6 +13,7 @@ export class Race {
   running = false;
   private time = 0;
   best = Infinity;
+  completed = false;
   onMessage: (title: string, sub: string) => void = () => {};
 
   constructor(scene: THREE.Scene) {
@@ -62,6 +63,7 @@ export class Race {
     if (this.next >= this.hoops.length) {
       this.running = false; this.next = 0;
       this.best = Math.min(this.best, this.time);
+      this.completed = true;
       this.refresh(false);
       this.onMessage('Race finished!', `${this.time.toFixed(1)} s (best ${this.best.toFixed(1)} s)`);
     } else {

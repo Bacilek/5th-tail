@@ -2,20 +2,25 @@ import * as THREE from 'three';
 import { heightAt } from '../world/terrain';
 
 export interface Pickup {
-  item: 'scroll' | 'herb';
+  item: 'scroll' | 'herb' | 'fish';
   quest: string;
   mesh: THREE.Object3D;
   base: number;
   taken: boolean;
 }
 
-const POSITIONS: { item: 'scroll' | 'herb'; quest: string; x: number; z: number }[] = [
+const POSITIONS: { item: 'scroll' | 'herb' | 'fish'; quest: string; x: number; z: number }[] = [
   { item: 'scroll', quest: 'q_scrolls', x: -20, z: 18 },
   { item: 'scroll', quest: 'q_scrolls', x: 20, z: -80 },
   { item: 'scroll', quest: 'q_scrolls', x: -26, z: 70 },
   { item: 'herb', quest: 'q_herbs', x: -18, z: 87 },
   { item: 'herb', quest: 'q_herbs', x: 18, z: 93 },
   { item: 'herb', quest: 'q_herbs', x: -18, z: 97 },
+  { item: 'scroll', quest: 'q_archive2', x: -110, z: -36 },
+  { item: 'scroll', quest: 'q_archive2', x: -92, z: -37 },
+  { item: 'fish', quest: 'q_fish', x: -108, z: 66 },
+  { item: 'fish', quest: 'q_fish', x: -72, z: 106 },
+  { item: 'fish', quest: 'q_fish', x: -88, z: 94 },
 ];
 
 export function buildPickups(scene: THREE.Scene): Pickup[] {
@@ -26,6 +31,12 @@ export function buildPickups(scene: THREE.Scene): Pickup[] {
       const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.6, 8), new THREE.MeshStandardMaterial({ color: 0xe8d9a8, emissive: 0x665522, flatShading: true }));
       roll.rotation.z = Math.PI / 2;
       g.add(roll);
+      mesh = g;
+    } else if (p.item === 'fish') {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), new THREE.MeshStandardMaterial({ color: 0x9ab0c8, emissive: 0x2a3a50, flatShading: true }));
+      body.scale.set(1.8, 0.7, 0.7);
+      g.add(body);
       mesh = g;
     } else {
       const m = new THREE.MeshStandardMaterial({ color: 0x4fd06a, emissive: 0x1a5a2a, flatShading: true });

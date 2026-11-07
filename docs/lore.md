@@ -28,3 +28,8 @@ Violet Sorrengail, Xaden Riorson, Dain Aetos, Rhiannon Matthias, Ridoc Gamlyn, S
 - Parapet starts from a high tower; only Riders cross it; each quadrant has its own campus; Conscription Day class choice.
 - Broom flight: still open – ask before building.
 - Magic in-game: only Riders have (signet) magic; other classes fight with steel/medicine.
+
+## Invented / uncertain in the expansion
+- Dragon rarity weights and acceptance chances (data/dragons.ts) are invented; only "daggertails are rare and deadly" is from the books (?).
+- Gauntlet layout, Flight Field size, Basgiath Village, Venin Camp are invented. Gauntlet is real; its obstacles here are not canon.
+- Mira, Imogen, Garrick, Commandant Sorrengail are canon names; their dialogue and placement are invented.

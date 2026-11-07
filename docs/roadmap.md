@@ -7,3 +7,11 @@
 5. [ ] Split-screen + gamepad (deferred by user - not needed now)
 6. [ ] Face photo -> character (MediaPipe, local)
 7. [ ] Polish: audio, atmosphere, optional realistic style
+
+## Expansion batch (user feedback after milestone 4)
+- [x] Gauntlet as obstacle corridor (hurdles, sweeper bars, stepped wall, pendulum), big Flight Field meadow
+- [x] Threshing: weighted species rarity + per-species acceptance (rejection burns the rider)
+- [x] Enterable buildings (hollow walls, doors, furniture), Archives and Administration keep too
+- [x] Procedural audio: ambient music, NPC babble, sfx (M mutes)
+- [x] New areas: Basgiath Village (with inn), Venin Camp; wandering NPCs
+- [x] 8 new quests incl. talk/chain/multi-objective; new NPCs (Imogen, Garrick, Mira, Commandant Sorrengail canon; Tavik, Hesper, Pell invented)

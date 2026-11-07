@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { heightAt, COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, type Rect } from './terrain';
-const KEEP_OUT: Rect[] = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD];
+import { heightAt, COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, VILLAGE, CAMP, type Rect } from './terrain';
+const KEEP_OUT: Rect[] = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, VILLAGE, CAMP];
 import { fbm, mulberry } from '../engine/noise';
 
 export function buildTrees(): THREE.Group {

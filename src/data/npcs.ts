@@ -8,6 +8,7 @@ export interface NpcDef {
   hair: number;
   chat: string[];
   invented?: boolean;
+  wander?: number; // wander radius around home
 }
 
 // Canon names per docs/lore.md; dialogue lines are original (not quoted from the books).
@@ -26,4 +27,24 @@ export const NPCS: NpcDef[] = [
     chat: ['Nice landing. Okay, you fell on it, but it counts.', 'Rumor says the cat in the lower college has opinions on every rider.'] },
   { id: 'xaden', name: 'Xaden', role: 'Wingleader', x: 122, z: -22, cloth: 0x0e0e14, hair: 0x0a0a0a,
     chat: ['Make yourself useful or make yourself scarce.'] },
+  { id: 'imogen', name: 'Imogen', role: 'Rider', x: 116, z: -8, cloth: 0x2a2f45, hair: 0x2a1a1a,
+    chat: ['If you want respect here, finish the Gauntlet.'] },
+  { id: 'garrick', name: 'Garrick', role: 'Rider', x: 110, z: -46, cloth: 0x2a2f45, hair: 0x4a3a28,
+    chat: ['I do not talk much. It saves breath for the flight field.'] },
+  { id: 'mira', name: 'Mira', role: 'Rider', x: 94, z: 4, cloth: 0x2a2f45, hair: 0x3a2a1a,
+    chat: ['Survived the Parapet? Good. That was the easy part.'] },
+  { id: 'commandant', name: 'Commandant Sorrengail', role: 'Commandant', x: 0, z: -24, cloth: 0x1a1a22, hair: 0x2a2a2a,
+    chat: ['The college does not waste what it cannot replace.'] },
+  { id: 'tavik', name: 'Tavik', role: 'Merchant (invented)', x: -99, z: 87, cloth: 0x8a4a2a, hair: 0x5a3a20, invented: true,
+    chat: ['Roots, fish, rope, rumor. Best prices south of the college.'] },
+  { id: 'hesper', name: 'Hesper', role: 'Innkeeper (invented)', x: -90, z: 109, cloth: 0x7a5a3a, hair: 0x9a9a9a, invented: true,
+    chat: ['Cadets drink here when they think nobody from the college can see.'] },
+  { id: 'pell', name: 'Pell', role: 'Villager (invented)', x: -90, z: 84, cloth: 0x4a6a5a, hair: 0x2a1a10, invented: true, wander: 14,
+    chat: ['Dragons overhead again. You get used to it. Mostly.'] },
+  { id: 'cadet1', name: 'Cadet', role: 'First-year', x: 6, z: 14, cloth: 0x3a3a4a, hair: 0x4a2a1a, wander: 12,
+    chat: ['Is it true what they say about the Parapet?'] },
+  { id: 'cadet2', name: 'Cadet', role: 'First-year', x: -8, z: -8, cloth: 0x3a3a4a, hair: 0x1a1a1a, wander: 12,
+    chat: ['I am just trying to find my quadrant before sundown.'] },
+  { id: 'cadet3', name: 'Cadet', role: 'First-year', x: -20, z: 0, cloth: 0x3a3a4a, hair: 0x6a5a3a, wander: 10,
+    chat: ['Everyone says to pick Scribe if you want to live long.'] },
 ];

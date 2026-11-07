@@ -48,6 +48,19 @@ export class QuestLog {
   }
 
   kill(): void { this.bump('kill'); }
+
+  /** Called when the player talks to an NPC: completes matching 'talk' objectives. */
+  talk(npc: string): void {
+    let changed = false;
+    for (const [id, s] of this.state) {
+      if (s.status !== 'active') continue;
+      this.def(id).objectives.forEach((o, i) => {
+        if (o.type === 'talk' && o.npc === npc && s.prog[i] < 1) { s.prog[i] = 1; changed = true; }
+      });
+      this.recheck(id);
+    }
+    if (changed) this.onChange();
+  }
   collect(item: string): void { this.bump('collect', item); }
 
   /** Checks 'reach' objectives (call every frame). */

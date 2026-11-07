@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { Input } from './engine/input';
 import {
-  buildTerrain, heightAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y, FIELD,
+  buildTerrain, heightAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, CAMP, VILLAGE, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y, FIELD,
 } from './world/terrain';
+import { buildVillage, buildCamp } from './world/areas';
 import { makeLabel, buildCollege, buildParapet, buildHealers, buildInfantry, buildScribes, buildCitadel } from './world/college';
 import { buildSky } from './world/sky';
 import { buildTrees } from './world/trees';
@@ -49,7 +50,7 @@ sun.shadow.bias = -0.0005;
 scene.add(sun, sun.target);
 const SUN_OFFSET = new THREE.Vector3(-80, 120, 60);
 
-scene.add(buildTerrain(), buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildTrees());
+scene.add(buildTerrain(), buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildVillage(), buildCamp(), buildTrees());
 
 // Decorative dragons circling the Citadel ridge (species/tails from Fourth Wing lore)
 const circling: { d: Dragon; r: number; alt: number; speed: number; phase: number }[] = [];
@@ -70,7 +71,15 @@ for (const [x, z] of [[-20, 130], [20, 140], [0, 160], [-70, 90], [75, 70], [-60
   scene.add(e.group);
   combat.enemies.push(e);
 }
+// Venin camp: scouts plus a commander
+for (const [x, z] of [[84, 118], [108, 116], [92, 140], [112, 138], [98, 108]]) {
+  const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e);
+}
+{
+  const cmd = new Enemy(96, 108); cmd.hp = 180; cmd.group.scale.setScalar(1.35); scene.add(cmd.group); combat.enemies.push(cmd);
+}
 let kills = 0;
+let gauntletDone = false;
 const broom = new Broom(scene);
 const race = new Race(scene);
 const gauntlet = new Gauntlet();
@@ -93,6 +102,7 @@ quests.onChange = ((prev) => () => { prev(); hud.setKills(kills, quests.gold); }
 
 function talkTo(npc: Npc): void {
   const id = npc.def.id, name = npc.def.name;
+  quests.talk(id);
   const ready = QUESTS.find((q) => (q.turnIn ?? q.giver) === id && quests.status(q.id) === 'ready');
   if (ready) {
     panels.open(name, ready.outro, [{ label: 'Thank you.', cb: () => { const g = quests.turnIn(ready.id); hud.announce('Quest complete', `${ready.title}  +${g} gold`, 4); audio.quest(); } }]);
@@ -283,12 +293,16 @@ renderer.setAnimationLoop(() => {
       player.update(dt, input);
       mount?.update(dt, input, player, camera);
     }
-    gauntlet.update(dt, t, player);
+    if (gauntlet.update(dt, t, player)) gauntletDone = true;
     threshing.update(dt, t, player);
     race.update(dt, player.pos, broom.active);
     hud.setRaceLine(race.label || gauntlet.label);
     story();
     // quest world logic
+    quests.reach('gauntletDone', gauntletDone);
+    quests.reach('raceDone', race.completed);
+    quests.reach('campFound', inRect(CAMP, player.pos.x, player.pos.z));
+    quests.reach('villageFound', inRect(VILLAGE, player.pos.x, player.pos.z));
     quests.reach('flyTower', !!mount?.mounted && mount.pos.distanceTo(new THREE.Vector3(TOWER.x, TOWER.top, TOWER.z)) < 14);
     for (const pk of pickups) {
       const st = quests.status(pk.quest);
@@ -305,7 +319,7 @@ renderer.setAnimationLoop(() => {
     combat.update(dt);
   }
 
-  npcs.forEach((n) => n.update(t, player.pos));
+  npcs.forEach((n) => n.update(t, player.pos, dt));
   cat.update(dt, t, player.pos);
   circling.forEach((c, i) => {
     const a = c.phase + t * c.speed;

@@ -18,6 +18,9 @@ export const MESA: Rect = { x0: 86, x1: 190, z0: -62, z1: 14 };
 export const GAUNTLET: Rect = { x0: 128, x1: 190, z0: -30, z1: -14 };
 // Flight Field: big open meadow east of the Gauntlet, level with the Citadel (Threshing, flight practice)
 export const FIELD: Rect = { x0: 192, x1: 276, z0: -125, z1: 95 };
+// Basgiath village (south-west) and a Venin camp (south-east), both flattened pads
+export const VILLAGE: Rect = { x0: -120, x1: -60, z0: 62, z1: 112 };
+export const CAMP: Rect = { x0: 70, x1: 122, z0: 100, z1: 150 };
 export const CITADEL: Rect = { x0: 90, x1: 126, z0: -52, z1: 8 };
 export const CITADEL_Y = 58.5;
 // Conscription Tower and the Parapet (stone span, ~60 m up, 1.2 m wide, no rails)
@@ -38,7 +41,7 @@ export function onParapet(x: number, y: number, z: number): boolean {
   return y > 50 && x > PARAPET.x0 + 2 && x < PARAPET.x1 && Math.abs(z - PARAPET.z) < 3;
 }
 
-const FLAT_RECTS = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD];
+const FLAT_RECTS = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, VILLAGE, CAMP];
 
 export function heightAt(x: number, z: number): number {
   if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r * 0.85) return TOWER.top;
@@ -57,6 +60,7 @@ export function heightAt(x: number, z: number): number {
   h += (CITADEL_Y - h) * mk;
   const fk = 1 - smoothstep(0, 22, rectDist(FIELD, x, z));
   h += (CITADEL_Y - h) * fk;
+  for (const r of [VILLAGE, CAMP]) h += (PLATEAU - h) * (1 - smoothstep(0, 15, rectDist(r, x, z)));
 
   if (Math.abs(z - PARAPET.z) < PARAPET.half && x > PARAPET.x0 && x < PARAPET.x1) h = Math.max(h, PARAPET.y);
   return h;
