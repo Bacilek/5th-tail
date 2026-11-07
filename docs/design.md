@@ -5,5 +5,6 @@
 - Dragon bond replaces Skyrim Shouts: each species has own attack/utility ability, mountable flight, summoned via bond. Signet = player's personal power (chosen at creation).
 - Classes (from lore quadrants): Rider, Scribe, Healer, Infantry.
 - Companion: cat Broccoli.
-- Broom: HP-style flight, hoops/race; shares flight controller with dragons.
+- Intro: cross the Parapet (narrow span over a ravine) -> sorting into a wing.
+- Broom (optional, ask): HP-style flight, hoops/race; shares flight controller with dragons.
 - Bonus: split-screen, face photo -> head texture.

@@ -12,5 +12,7 @@ Sources: fan wikis/guides (empyreanriders.com, the-empyrean-series.fandom.com, s
 Violet Sorrengail, Xaden Riorson, Dain Aetos, Rhiannon Matthias, Ridoc Gamlyn, Sawyer, Imogen, Liam Mairi, Jesinia (Archives), Gen. Lilith Sorrengail, Col. Panchek, Amber Mavis, Markham, Kaori, Varrish (roles to verify).
 ## Cat
 - Broccoli: sources conflict on owner (Ridoc vs. someone else) (?). In-game: neutral companion cat that follows the player.
-## Harry Potter additions
-Dragons: Hungarian Horntail, Welsh Green, Swedish Short-Snout, Chinese Fireball. Broom flight.
+## Decisions (partner input, 2026-11-07)
+- NO Harry Potter dragons. Only Fourth Wing dragons and their species/tail types. All terminology from the books.
+- Must include: **crossing the Parapet** and **sorting into wings/sections** at Basgiath.
+- Broom flight: still open (HP element) – ask before building.

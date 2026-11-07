@@ -1,6 +1,6 @@
 # 5th Tail
 
-Browser 3D action-RPG for two players (Marek + partner): **Skyrim gameplay** (1st/3rd person toggle, two hands with weapon/spell each, health/magicka/stamina) in the **Fourth Wing / Empyrean** world (Navarre, Basgiath War College, dragon bonds) with **Harry Potter** flavor (HP dragons, broom flight). Language of chat with the user: Czech. Code/docs: English.
+Browser 3D action-RPG for two players (Marek + partner): **Skyrim gameplay** (1st/3rd person toggle, two hands with weapon/spell each, health/magicka/stamina) in the **Fourth Wing / Empyrean** world (Navarre, Basgiath War College, dragon bonds) with a little Harry Potter flavor (broom flight only – NO HP dragons; all dragons and terminology strictly from Fourth Wing). Language of chat with the user: Czech. Code/docs: English.
 
 ## Priorities
 environment/gameplay/visible models > NPCs/quests > multiplayer. Story is irrelevant for now.
