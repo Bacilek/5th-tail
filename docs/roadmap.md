@@ -4,6 +4,6 @@
 2. [~] Dragon bond (builds, untested in browser): Threshing at flight field, random bonded dragon; R summon, F mount, mouse flight, fire breath (LMB), tail strike per tail type (RMB), boost. TODO: species behaviours, dragon health, landing polish
 3. [~] NPC dialog (F), 5 quests (scrolls, herbs, Venin, Dain orders, Xaden flight), quest log (J) + tracker, gold, cat Broccoli (adopt, follows). Builds; untested in browser
 4. [~] Broom flight (B) + 9-hoop race; untested in browser
-5. [ ] Split-screen + gamepad
+5. [ ] Split-screen + gamepad (deferred by user - not needed now)
 6. [ ] Face photo -> character (MediaPipe, local)
 7. [ ] Polish: audio, atmosphere, optional realistic style

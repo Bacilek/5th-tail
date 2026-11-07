@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { heightAt } from '../world/terrain';
 
 const HOOPS: [number, number, number][] = [
   [0, 24, 50], [-35, 30, 85], [-70, 34, 40], [-75, 28, -20], [-40, 40, -85],
@@ -18,7 +19,7 @@ export class Race {
     const geo = new THREE.TorusGeometry(5, 0.35, 8, 24);
     HOOPS.forEach((p, i) => {
       const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffd060, transparent: true, opacity: 0.9 }));
-      m.position.set(...p);
+      m.position.set(p[0], Math.max(p[1], heightAt(p[0], p[2]) + 9), p[2]); // keep hoops clear of terrain
       const n = HOOPS[(i + 1) % HOOPS.length], prev = HOOPS[(i + HOOPS.length - 1) % HOOPS.length];
       const dir = new THREE.Vector3(n[0] - prev[0], n[1] - prev[1], n[2] - prev[2]);
       m.lookAt(m.position.clone().add(dir));
