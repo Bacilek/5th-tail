@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { fbm, smoothstep } from '../engine/noise';
+import { tex } from '../engine/textures';
 
 export const PLATEAU = 10;
 export const MAP_HALF = 290;
@@ -109,7 +110,26 @@ export function buildTerrain(): THREE.Mesh {
     colors.set([c.r, c.g, c.b], i * 3);
   }
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
+  // texture coordinates in world space + per-vertex rock weight for the two-texture splat (grass/dirt vs. rock)
+  const uvs = new Float32Array(pos.count * 2), rockW = new Float32Array(pos.count);
+  for (let i = 0; i < pos.count; i++) {
+    uvs[i * 2] = pos.getX(i) / 7; uvs[i * 2 + 1] = pos.getZ(i) / 7;
+    rockW[i] = Math.min(1, smoothstep(0.88, 0.7, nor.getY(i)) + smoothstep(40, 90, pos.getY(i)) * 0.6);
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  geo.setAttribute('rockW', new THREE.BufferAttribute(rockW, 1));
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1, map: tex('forest_ground_04_diff') });
+  const rockMap = tex('rock_face_03_diff');
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.rockMap = { value: rockMap };
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float rockW;\nvarying float vRockW;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRockW = rockW;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform sampler2D rockMap;\nvarying float vRockW;')
+      .replace('#include <map_fragment>', 'vec4 gTex = texture2D(map, vMapUv); vec4 rTex = texture2D(rockMap, vMapUv * 0.55); diffuseColor *= mix(gTex, rTex, vRockW);');
+  };
+  const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   return mesh;
 }

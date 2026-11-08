@@ -47,3 +47,9 @@ Maintain `CREDITS.md` generated from `assets/licences.md`.
 - **Look (darker, Hogwarts-Legacy-like):** cold stone, deep shadow, warm point-lights from torches, heavy mood fog, bloom on lights, desaturated palette with ember accents. Create it with colour grading, fog, light placement, texture quality and composition rather than heavy post-processing.
 - **CC0 packs approved** (Quaternius, Kenney, Poly Haven, ambientCG, etc.) provided they match the style and do not clash; every asset logged in `assets/licences.md`.
 - **Photo-to-face** (later, M2.3.5): applies to characters we create; not required now.
+
+## Status (Phase 2 started)
+- `assets/licences.md` lists every external asset; `scripts/fetch-assets.mjs` re-downloads them (Poly Haven CC0: castle_brick_07, cobblestone_floor_04, forest_ground_04, rock_face_03, grey_roof_tiles; diffuse + normal 1k, ~8.5 MB) into `public/textures/`.
+- `src/engine/textures.ts`: texture cache, `pbr()` materials, `tileBoxUV()` (tiles every 4 m, no stretching).
+- Walls, courtyards, Parapet use the brick/cobble PBR set; the terrain blends ground and rock textures per vertex (shader patch in `buildTerrain`). Roof tiles are downloaded but not applied yet.
+- Next: roofs, wood (doors/beams), props, humanoid model + animation clips (needs a CC0 rigged character source).

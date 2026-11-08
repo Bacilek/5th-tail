@@ -146,9 +146,9 @@ Goal: moment-to-moment combat and movement feel good. See `docs/bible/09-combat-
 Goal: replace blocky placeholders with real models and a real animation system. See `13-art-assets.md`, `14-animation.md`.
 
 ## M2.1 Asset pipeline
-- [ ] M2.1.1 [MUST|M] `assets/` structure, `licences.md`, manifest JSON. *Accept: schema + docs.*
+- [x] M2.1.1 [MUST|M] `assets/` structure, `licences.md`, manifest JSON. *Accept: schema + docs.*
 - [ ] M2.1.2 [MUST|M] GLB loader with cache, instancing, Draco/meshopt. *Accept: loads a test model in-game.*
-- [ ] M2.1.3 [MUST|S] Ask owner to approve asset sources; first CC0 pack downloaded with licence logged. *Accept: pack in `assets/`, licence recorded.*
+- [x] M2.1.3 [MUST|S] Ask owner to approve asset sources; first CC0 pack downloaded with licence logged. *Accept: pack in `assets/`, licence recorded.*
 - [ ] M2.1.4 [SHOULD|M] Blender headless script template (bpy) for custom models. *Accept: script exports one prop.*
 
 ## M2.2 Humanoid rig and animations
@@ -173,7 +173,7 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 - [ ] M2.4.3 [SHOULD|M] Hatchling Andarna-style model. *Accept: small feathertail variant.*
 
 ## M2.5 Environment art
-- [ ] M2.5.1 [MUST|L] PBR materials + textures for stone, wood, grass, rock. *Accept: terrain and buildings look textured.*
+- [~] M2.5.1 [MUST|L] PBR materials + textures for stone, wood, grass, rock. *Accept: terrain and buildings look textured.* (done: CC0 stone/cobble/ground/rock textures on walls, floors, terrain; todo: roofs, wood, props)
 - [ ] M2.5.2 [MUST|L] Replace buildings with modular kit (walls, towers, roofs, doors). *Accept: Basgiath rebuilt from kit.*
 - [ ] M2.5.3 [SHOULD|L] Vegetation: wind-animated trees, grass, flowers, herbs. *Accept: instanced and swaying.*
 - [ ] M2.5.4 [SHOULD|M] Props library (furniture, books, weapons racks, banners). *Accept: interiors furnished.*

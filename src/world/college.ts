@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { addBox } from './collision';
+import { pbr, tileBoxUV } from '../engine/textures';
 import {
   PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, type Rect,
 } from './terrain';
 
-const stone = new THREE.MeshStandardMaterial({ color: 0x6b6f78, flatShading: true, roughness: 0.95 });
-const darkStone = new THREE.MeshStandardMaterial({ color: 0x4a4d57, flatShading: true, roughness: 0.95 });
+const stone = pbr('castle_brick_07', 0xa9adb8);
+const darkStone = pbr('castle_brick_07', 0x70747f);
 const roofMat = new THREE.MeshStandardMaterial({ color: 0x23283f, flatShading: true });
 const wood = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
 
@@ -25,7 +26,9 @@ export function makeLabel(text: string, color = '#ffffff', w = 16): THREE.Sprite
 /** Box standing on ground level y (extends 6 m below to hide terrain seams). */
 function block(g: THREE.Group, cx: number, cz: number, w: number, d: number, h: number, y: number, mat: THREE.Material = stone): THREE.Mesh {
   const full = h + 6;
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, full, d), mat);
+  const geo = new THREE.BoxGeometry(w, full, d);
+  if ((mat as THREE.MeshStandardMaterial).map) tileBoxUV(geo, w, full, d, 4);
+  const m = new THREE.Mesh(geo, mat);
   m.position.set(cx, y - 6 + full / 2, cz);
   m.castShadow = m.receiveShadow = true;
   g.add(m);
@@ -59,7 +62,10 @@ export function floorRect(g: THREE.Group, r: Rect, y: number, color: number): vo
 }
 
 function floor(g: THREE.Group, r: Rect, y: number, color: number): void {
-  const f = new THREE.Mesh(new THREE.PlaneGeometry(r.x1 - r.x0, r.z1 - r.z0), new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 1 }));
+  const fg = new THREE.PlaneGeometry(r.x1 - r.x0, r.z1 - r.z0);
+  const fuv = fg.attributes.uv;
+  for (let i = 0; i < fuv.count; i++) fuv.setXY(i, fuv.getX(i) * (r.x1 - r.x0) / 5, fuv.getY(i) * (r.z1 - r.z0) / 5);
+  const f = new THREE.Mesh(fg, pbr('cobblestone_floor_04', color, 1));
   f.rotation.x = -Math.PI / 2; f.position.set((r.x0 + r.x1) / 2, y + 0.03, (r.z0 + r.z1) / 2); f.receiveShadow = true;
   g.add(f);
 }
@@ -270,7 +276,9 @@ export function buildCitadel(): THREE.Group {
 export function buildParapet(): THREE.Group {
   const g = new THREE.Group();
   const len = PARAPET.x1 - PARAPET.x0;
-  const span = new THREE.Mesh(new THREE.BoxGeometry(len, 0.6, PARAPET.half * 2), darkStone);
+  const spanGeo = new THREE.BoxGeometry(len, 0.6, PARAPET.half * 2);
+  tileBoxUV(spanGeo, len, 0.6, PARAPET.half * 2, 4);
+  const span = new THREE.Mesh(spanGeo, darkStone);
   span.position.set((PARAPET.x0 + PARAPET.x1) / 2, PARAPET.y - 0.3, PARAPET.z);
   span.castShadow = span.receiveShadow = true;
   g.add(span);
