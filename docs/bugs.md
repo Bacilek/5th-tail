@@ -24,3 +24,9 @@ Found by running the production build in headless Chrome (`npm run smoke`, `node
 | O3 | minor | "The Threshing" banner stays on screen for a long time after teleporting |
 | O4 | info | Real performance on target hardware (Ryzen 7 7735HS / Radeon 680M) unknown - needs Marek's FPS report (F3 overlay not built yet, M0.3.1) |
 | O5 | minor | Threshing, dragon mount flight and broom race are not covered by automated tests yet |
+
+## Fixed (round 2)
+| ID | Severity | Description | Fix |
+| --- | --- | --- | --- |
+| B4 | **major** | A player who fell off the Parapet could be snapped back up onto the bridge from below (span treated as solid ground column) | `heightAtFor(x,z,y)`: the span only counts as ground for bodies at/above it; terrain mesh uses `baseHeight` so no ridge under the bridge |
+| B5 | minor | Parapet wind too weak (O2) | gusts +-1.7 m/s peak; walking straight now often falls (fall = respawn at tower); hint text added |

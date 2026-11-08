@@ -43,7 +43,26 @@ export function onParapet(x: number, y: number, z: number): boolean {
 
 const FLAT_RECTS = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, VILLAGE, CAMP];
 
+export function onParapetStrip(x: number, z: number): boolean {
+  return Math.abs(z - PARAPET.z) < PARAPET.half && x > PARAPET.x0 && x < PARAPET.x1;
+}
+
+/**
+ * Ground height for something at height y: the Parapet span only counts as ground for bodies standing on/above it,
+ * so a body that fell off cannot be snapped back up onto the bridge from below.
+ */
+export function heightAtFor(x: number, z: number, y: number): number {
+  const h = heightAt(x, z);
+  if (onParapetStrip(x, z) && y < PARAPET.y - 0.8) return baseHeight(x, z);
+  return h;
+}
+
 export function heightAt(x: number, z: number): number {
+  const h = baseHeight(x, z);
+  return onParapetStrip(x, z) ? Math.max(h, PARAPET.y) : h;
+}
+
+function baseHeight(x: number, z: number): number {
   if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r * 0.85) return TOWER.top;
 
   let flat = 1;
@@ -62,7 +81,6 @@ export function heightAt(x: number, z: number): number {
   h += (CITADEL_Y - h) * fk;
   for (const r of [VILLAGE, CAMP]) h += (PLATEAU - h) * (1 - smoothstep(0, 15, rectDist(r, x, z)));
 
-  if (Math.abs(z - PARAPET.z) < PARAPET.half && x > PARAPET.x0 && x < PARAPET.x1) h = Math.max(h, PARAPET.y);
   return h;
 }
 
@@ -73,7 +91,7 @@ export function buildTerrain(): THREE.Mesh {
   geo.rotateX(-Math.PI / 2);
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
-    pos.setY(i, heightAt(pos.getX(i), pos.getZ(i)));
+    pos.setY(i, baseHeight(pos.getX(i), pos.getZ(i)));
   }
   geo.computeVertexNormals();
   const nor = geo.attributes.normal;

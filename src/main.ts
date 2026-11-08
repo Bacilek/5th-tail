@@ -26,6 +26,8 @@ import { buildPickups } from './systems/pickups';
 import { Broom } from './entities/broom';
 import { Race } from './systems/race';
 import { audio } from './engine/audio';
+import { PerfOverlay } from './ui/perf';
+import { ITEMS, type ItemId } from './data/items';
 import { Minimap, type Marker } from './ui/minimap';
 import { saveCharacter, type SavedChar } from './engine/saves';
 import { Gauntlet } from './systems/gauntlet';
@@ -97,6 +99,7 @@ threshing.onMessage = (a, b) => { hud.announce(a, b, 5); if (a.includes('approac
 threshing.onBond = (b) => bondDragon(b);
 race.onMessage = (a, b) => hud.announce(a, b, 4);
 const quests = new QuestLog();
+const perf = new PerfOverlay(renderer, () => `pos ${player.pos.x.toFixed(0)}, ${player.pos.y.toFixed(0)}, ${player.pos.z.toFixed(0)}  hour ${dn.clock}`);
 const minimap = new Minimap();
 const panels = new Panels(quests);
 const npcs = NPCS.map((d) => new Npc(d));
@@ -182,7 +185,7 @@ function onChosen(id: ClassId): void {
     player.teleportToSpawn();
     stage = 'parapet';
     hud.setObjective('Cross the Parapet to the Riders Quadrant');
-    hud.announce('Conscription Day', 'Riders cross the Parapet. Many do not survive.', 6);
+    hud.announce('Conscription Day', 'Riders cross the Parapet. Many do not survive. Wind gusts push sideways: correct with A and D.', 6);
   } else {
     stage = 'go';
     const dir = { infantry: 'north', healer: 'south', scribe: 'west tunnel' }[id];
@@ -311,7 +314,7 @@ renderer.setAnimationLoop(() => {
   } else {
     // Parapet wind: strong gusts push sideways
     player.windZ = onParapet(player.pos.x, player.pos.y, player.pos.z)
-      ? 0.55 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.3 + 1)
+      ? 1.0 * Math.sin(t * 0.9) + 0.7 * Math.sin(t * 2.3 + 1)
       : 0;
     if (mount && input.wasPressed('KeyR') && !mount.mounted) { mount.summon(player); hud.announce(mount.spec.name, 'answers your call...', 3); }
     const near = mount?.mounted ? null : nearestInteractable();
@@ -401,8 +404,15 @@ renderer.setAnimationLoop(() => {
     dt,
   );
   renderer.render(scene, camera);
+  perf.tick();
   input.endFrame();
 });
 
 // debug hook for automated testing
-(window as unknown as { __game: unknown }).__game = { player, combat, heightAt, PARAPET, PLATEAU, onChosen, setHour: (h: number) => dn.setHour(h) };
+(window as unknown as { __game: unknown }).__game = { player, combat, heightAt, PARAPET, PLATEAU, onChosen, setHour: (h: number) => dn.setHour(h),
+  teleport: (x: number, z: number) => { player.pos.set(x, heightAt(x, z) + 0.2, z); player.vel.set(0, 0, 0); },
+  give: (hand: 0 | 1, item: ItemId) => { if (ITEMS[item]) { player.hands[hand] = item; player.onHandsChanged(); } },
+  startQuest: (id: string) => quests.start(id),
+  spawnEnemy: (x: number, z: number) => { const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e); },
+  perf,
+};

@@ -43,14 +43,14 @@ Goal: the game runs, can be tested automatically, saves, has a menu and a real d
 ## M0.2 Automated verification
 - [x] M0.2.1 [MUST|M] Add Playwright + headless Chromium; script that boots the game and screenshots fixed camera spots using `window.__game`. *Accept: `npm run smoke` outputs PNGs.*
 - [x] M0.2.2 [MUST|S] Assert no console errors and a minimum frame count in the smoke test. *Accept: test fails on error.*
-- [ ] M0.2.3 [MUST|S] Add debug console API (`__game.teleport`, `give`, `startQuest`, `setHour`, `spawn`). *Accept: documented in `19-qa.md`.*
+- [x] M0.2.3 [MUST|S] Add debug console API (`__game.teleport`, `give`, `startQuest`, `setHour`, `spawn`). *Accept: documented in `19-qa.md`.*
 - [ ] M0.2.4 [SHOULD|M] Vitest unit tests: quest state machine, dragon rolls, collision helpers. *Accept: `npm test` green.*
 - [ ] M0.2.5 [SHOULD|S] `npm run check` = typecheck + tests + smoke. *Accept: single command.*
 - [ ] M0.2.6 [SHOULD|M] Data validators (unknown ids in quests/npcs/pois). *Accept: fails on broken reference.*
 - [ ] M0.2.7 [DREAM|M] Screenshot diff regression. *Accept: baseline images compared with tolerance.*
 
 ## M0.3 Performance baseline
-- [ ] M0.3.1 [MUST|S] FPS/draw-call/triangle overlay (F3). *Accept: shows `renderer.info`.*
+- [x] M0.3.1 [MUST|S] FPS/draw-call/triangle overlay (F3). *Accept: shows `renderer.info`.*
 - [ ] M0.3.2 [MUST|M] Profile and fix the worst hot spots (box scan in `collision`, sky recolour per frame, shadows). *Accept: >= 60 FPS at spawn on dev machine.*
 - [ ] M0.3.3 [SHOULD|M] Quality presets Low/Med/High (shadow res, view distance, density). *Accept: settings switch live.*
 

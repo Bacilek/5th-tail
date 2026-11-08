@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Input } from '../engine/input';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
-import { heightAt, MAP_HALF } from '../world/terrain';
+import { heightAt, heightAtFor, MAP_HALF } from '../world/terrain';
 import type { Look } from '../data/look';
 import { makeLimb, animateWalk, ridePose as ridePoseFn, type Limbs } from './walkcycle';
 import { resolve, supportAt } from '../world/collision';
@@ -281,7 +281,7 @@ export class Player {
     let nx = this.pos.x + (this.vel.x + this.knock.x) * dt, nz = this.pos.z + (this.vel.z + this.knock.z) * dt;
     this.knock.multiplyScalar(Math.exp(-3.2 * dt));
     // cliffs and steep slopes block movement (no walking up walls)
-    const climb = (x: number, z: number) => heightAt(x, z) - this.pos.y > 0.9;
+    const climb = (x: number, z: number) => heightAtFor(x, z, this.pos.y) - this.pos.y > 0.9;
     if (climb(nx, nz)) {
       if (!climb(nx, this.pos.z)) nz = this.pos.z;
       else if (!climb(this.pos.x, nz)) nx = this.pos.x;
@@ -293,7 +293,7 @@ export class Player {
     this.pos.z = Math.max(-MAP_HALF + 2, Math.min(MAP_HALF - 2, this.pos.z));
     resolve(this.pos, 0.45);
 
-    const gh = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y));
+    const gh = Math.max(heightAtFor(this.pos.x, this.pos.z, this.pos.y), supportAt(this.pos.x, this.pos.z, this.pos.y));
     if (this.vel.y <= 0 && this.pos.y - gh < 0.45) {
       this.pos.y = gh; this.vel.y = 0; this.grounded = true;
     } else {
