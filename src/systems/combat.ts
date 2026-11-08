@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { settings, DIFFICULTY } from '../engine/settings';
 import type { Enemy } from '../entities/enemy';
 import { heightAt } from '../world/terrain';
 
@@ -17,7 +18,7 @@ export class Combat {
 
   private hurt(e: Enemy, dmg: number): void {
     const was = e.alive;
-    e.damage(dmg);
+    e.damage(dmg * DIFFICULTY[settings.difficulty].dealt);
     if (was && !e.alive) this.onKill(e);
   }
 

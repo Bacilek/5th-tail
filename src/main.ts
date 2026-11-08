@@ -29,7 +29,9 @@ import { audio } from './engine/audio';
 import { PerfOverlay } from './ui/perf';
 import { ITEMS, type ItemId } from './data/items';
 import { Minimap, type Marker } from './ui/minimap';
-import { saveCharacter, type SavedChar } from './engine/saves';
+import { saveCharacter, readSave, writeSave, type SavedChar, type SaveData } from './engine/saves';
+import { settings } from './engine/settings';
+import { Menus } from './ui/menu';
 import { Gauntlet } from './systems/gauntlet';
 import { Threshing, type Bond } from './systems/threshing';
 
@@ -88,6 +90,8 @@ for (const [x, z] of [[84, 118], [108, 116], [92, 140], [112, 138], [98, 108]]) 
 }
 let kills = 0;
 let gauntletDone = false;
+let wingLabel = '';
+let lastBond: { species: number; name: string } | null = null;
 const broom = new Broom(scene);
 const race = new Race(scene);
 const gauntlet = new Gauntlet();
@@ -196,15 +200,109 @@ function onChosen(id: ClassId): void {
 }
 // Quick select: remember the character's look and chosen class (quest progress is not saved)
 let currentChar: SavedChar | null = null;
-hud.showCharacterCreator((look, id) => {
-  currentChar = { id, look };
-  player.applyLook(look);
-  hud.showClassSelect(onChosen);
-}, (c) => {
-  currentChar = c;
-  player.applyLook(c.look);
-  if (c.classId) onChosen(c.classId); else hud.showClassSelect(onChosen);
+function startCreator(): void {
+  hud.showCharacterCreator((look, id) => {
+    currentChar = { id, look };
+    player.applyLook(look);
+    hud.showClassSelect(onChosen);
+  }, (c) => {
+    currentChar = c;
+    player.applyLook(c.look);
+    const sv = readSave(c.id);
+    if (sv && c.classId) applySave(sv);
+    else if (c.classId) onChosen(c.classId);
+    else hud.showClassSelect(onChosen);
+  });
+}
+
+// ---- Settings, saving, pause menu and title screen
+function applyQuality(): void {
+  const q = settings.quality;
+  renderer.setPixelRatio(q === 'low' ? 0.7 : q === 'medium' ? Math.min(devicePixelRatio, 1) : Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  const size = q === 'high' ? 2048 : 1024;
+  if (sun.shadow.mapSize.x !== size) { sun.shadow.map?.dispose(); sun.shadow.map = null; sun.shadow.mapSize.set(size, size); }
+}
+function applySettings(): void {
+  camera.fov = settings.fov;
+  camera.updateProjectionMatrix();
+  applyQuality();
+  audio.applySettings();
+}
+
+function objectiveFor(st: Stage): string {
+  if (st === 'parapet') return 'Cross the Parapet to the Riders Quadrant';
+  if (st === 'citadel' || st === 'threshing') return 'Run the Gauntlet east of the Citadel to reach the Flight Field';
+  if (st === 'go' && chosen) {
+    const dir = { infantry: 'north', healer: 'south', scribe: 'west tunnel', rider: '' }[chosen];
+    return `Report to the ${CLASSES[chosen].name} Quadrant (${dir})`;
+  }
+  return '';
+}
+
+function snapshot(): SaveData | null {
+  if (!chosen || !currentChar) return null;
+  return {
+    version: 1, charId: currentChar.id, savedAt: Date.now(), classId: chosen,
+    player: { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, health: player.health, magicka: player.magicka, stamina: player.stamina, hands: [player.hands[0], player.hands[1]] },
+    quests: quests.snapshot(), stage, wing: wingLabel, kills, hour: dn.hour,
+    takenPickups: pickups.map((p, i) => (p.taken ? i : -1)).filter((i) => i >= 0),
+    catAdopted: cat.adopted, bond: lastBond,
+    gauntlet: { done: gauntletDone, best: Number.isFinite(gauntlet.best) ? gauntlet.best : null },
+    raceBest: Number.isFinite(race.best) ? race.best : null,
+  };
+}
+
+function saveGame(): boolean {
+  const d = snapshot();
+  return d ? writeSave(d) : false;
+}
+
+function applySave(d: SaveData): void {
+  chosen = d.classId;
+  minimap.show();
+  panels.enabled = true;
+  player.setClass(d.classId);
+  player.setHands(d.player.hands[0] as ItemId, d.player.hands[1] as ItemId);
+  player.health = d.player.health; player.magicka = d.player.magicka; player.stamina = d.player.stamina;
+  player.pos.set(d.player.x, d.player.y, d.player.z); player.yaw = d.player.yaw; player.vel.set(0, 0, 0);
+  hud.showMagicka(CLASSES[d.classId].maxMagicka > 0);
+  hud.setClassLabel(`${player.name} - ${CLASSES[d.classId].name}`);
+  hud.setHands(player.hands[0], player.hands[1]);
+  quests.restore(d.quests);
+  kills = d.kills; hud.setKills(kills, quests.gold);
+  pickups.forEach((p, i) => { p.taken = d.takenPickups.includes(i); });
+  cat.adopted = d.catAdopted;
+  if (cat.adopted) cat.pos.set(player.pos.x + 2, player.pos.y, player.pos.z + 2);
+  dn.setHour(d.hour);
+  gauntletDone = d.gauntlet.done; gauntlet.best = d.gauntlet.best ?? Infinity; race.best = d.raceBest ?? Infinity;
+  if (d.bond) {
+    const sp = BOND_SPECIES[d.bond.species] ?? BOND_SPECIES[0];
+    bondDragon({ species: sp, spec: { name: d.bond.name, color: sp.hex, tail: sp.tail, size: sp.size } }, true);
+  }
+  stage = d.stage as Stage;
+  wingLabel = d.wing; if (wingLabel) hud.setWing(wingLabel);
+  hud.setObjective(objectiveFor(stage));
+  player.setSpawn(player.pos.x, player.pos.y, player.pos.z, player.yaw);
+  hud.announce('Welcome back', player.name, 3);
+  renderer.domElement.requestPointerLock();
+}
+
+const menus = new Menus({
+  onNew: () => startCreator(),
+  onSettingsChanged: () => applySettings(),
+  onResume: () => { renderer.domElement.requestPointerLock(); },
+  onSave: () => saveGame(),
+  onQuit: () => { saveGame(); location.reload(); },
 });
+document.addEventListener('pointerlockchange', () => {
+  if (!document.pointerLockElement && chosen && !panels.dialogOpen && !minimap.mapOpen && !menus.pauseOpen) menus.showPause();
+});
+addEventListener('keydown', (e) => { if (e.code === 'Escape' && menus.pauseOpen) menus.hidePause(); });
+addEventListener('beforeunload', () => { saveGame(); });
+let autosaveT = 0;
+applySettings();
+menus.showTitle();
 
 player.onRespawn = () => {
   if (chosen === 'rider') { stage = 'parapet'; hud.setObjective('Cross the Parapet to the Riders Quadrant'); }
@@ -256,13 +354,15 @@ function questMarkers(): Marker[] {
 player.onHandsChanged = () => hud.setHands(player.hands[0], player.hands[1]);
 hud.setKills(0);
 
-function bondDragon(b: Bond): void {
+function bondDragon(b: Bond, silent = false): void {
   stage = 'done';
   const spec = b.spec;
+  lastBond = { species: BOND_SPECIES.indexOf(b.species), name: spec.name };
   mount = new DragonMount(spec, scene, combat);
-  audio.roar();
   hud.setObjective('');
   hud.setDragonLine(`Dragon: ${spec.name} (${b.species.color} ${b.species.tail}tail, ${b.species.rarity}) - R summon, F mount`);
+  if (silent) return;
+  audio.roar();
   hud.announce('The Threshing', `${spec.name}, a ${b.species.color} ${b.species.tail}tail (${b.species.rarity}), has chosen you.`, 8);
 }
 
@@ -281,6 +381,7 @@ function story(): void {
       stage = 'citadel';
       const wing = Math.floor(Math.random() * 4), section = Math.floor(Math.random() * 3), squad = 1 + Math.floor(Math.random() * 3);
       const label = `${WING_NAMES[wing]} Wing - ${SECTIONS[section]} Section - Squad ${squad}`;
+      wingLabel = label;
       hud.setWing(label);
       hud.setObjective('');
       hud.announce('You crossed the Parapet', `Assigned to the ${label}`, 7);
@@ -309,7 +410,7 @@ renderer.setAnimationLoop(() => {
 
   if (!chosen) {
     player.sync(dt);
-  } else if (panels.dialogOpen || minimap.mapOpen) {
+  } else if (panels.dialogOpen || minimap.mapOpen || menus.pauseOpen) {
     player.sync(dt);
   } else {
     // Parapet wind: strong gusts push sideways
@@ -393,6 +494,7 @@ renderer.setAnimationLoop(() => {
     c.d.update(t + i);
   });
 
+  if (chosen && !menus.pauseOpen) { autosaveT += dt; if (autosaveT > 45) { autosaveT = 0; saveGame(); } }
   dn.update(dt, player.pos, camera.position);
   minimap.clock = (dn.day > 0.5 ? 'Day ' : 'Night ') + dn.clock;
 
@@ -415,5 +517,5 @@ renderer.setAnimationLoop(() => {
   startQuest: (id: string) => quests.start(id),
   bond: (i = 0) => { const sp = BOND_SPECIES[i % BOND_SPECIES.length]; bondDragon({ species: sp, spec: { name: 'Testdrake', color: sp.hex, tail: sp.tail, size: sp.size } }); },
   spawnEnemy: (x: number, z: number) => { const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e); },
-  perf,
+  perf, saveGame, snapshot, applySave, settings,
 };

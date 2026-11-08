@@ -33,7 +33,9 @@ try {
   await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
   await wait(2500);
   await shot('01-character-creator');
-  await page.click('#ccgo');
+  await page.click('#tnew');
+await wait(400);
+await page.click('#ccgo');
   await wait(800);
   await shot('02-class-select');
   await page.keyboard.press('Digit1'); // Rider

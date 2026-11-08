@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { settings } from '../engine/settings';
 import type { Input } from '../engine/input';
 import type { Player } from './player';
 import type { Combat } from '../systems/combat';
@@ -118,8 +119,8 @@ export class DragonMount {
   private fly(dt: number, input: Input, player: Player, camera: THREE.PerspectiveCamera): void {
     const g = this.dragon.group;
     if (input.locked) {
-      this.yaw -= input.dx * 0.0022;
-      this.pitch = Math.max(-1.2, Math.min(1.2, this.pitch - input.dy * 0.0022));
+      this.yaw -= input.dx * 0.0022 * settings.sens;
+      this.pitch = Math.max(-1.2, Math.min(1.2, this.pitch - input.dy * 0.0022 * settings.sens * (settings.invertY ? -1 : 1)));
     }
     const boost = input.isDown('ShiftLeft') && player.stamina > 2;
     const target = input.isDown('KeyW') ? 42 : input.isDown('KeyS') ? 5 : 26;

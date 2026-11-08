@@ -9,6 +9,17 @@ export class QuestLog {
   onChange: () => void = () => {};
   gold = 0;
 
+  snapshot(): { gold: number; entries: [string, { status: string; prog: number[] }][] } {
+    return { gold: this.gold, entries: [...this.state.entries()].map(([id, s]) => [id, { status: s.status, prog: [...s.prog] }]) };
+  }
+
+  restore(d: { gold: number; entries: [string, { status: string; prog: number[] }][] }): void {
+    this.gold = d.gold;
+    this.state.clear();
+    for (const [id, s] of d.entries) if (QUESTS.some((q) => q.id === id)) this.state.set(id, { status: s.status as Status, prog: [...s.prog] });
+    this.onChange();
+  }
+
   def(id: string): QuestDef { return QUESTS.find((q) => q.id === id)!; }
   status(id: string): Status { return this.state.get(id)?.status ?? 'none'; }
 

@@ -17,6 +17,8 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 await page.goto(`http://localhost:${PORT}/`);
 await wait(1500);
+await page.click('#tnew');
+await wait(400);
 await page.click('#ccgo');
 await page.keyboard.press('Digit1');
 await page.setViewportSize({ width: 360, height: 200 });

@@ -55,11 +55,11 @@ Goal: the game runs, can be tested automatically, saves, has a menu and a real d
 - [ ] M0.3.3 [SHOULD|M] Quality presets Low/Med/High (shadow res, view distance, density). *Accept: settings switch live.*
 
 ## M0.4 Menus, settings, saves
-- [ ] M0.4.1 [MUST|M] Title screen with New / Continue / Settings / Quit. *Accept: boot goes to title.*
-- [ ] M0.4.2 [MUST|M] Pause menu (Esc) with resume/settings/quit-to-title. *Accept: world freezes properly, pointer lock restored.*
-- [ ] M0.4.3 [MUST|L] Save system v1: player stats, class, look, inventory hands, quest states, flags, time, dragon, position, versioned JSON. *Accept: save -> reload -> same state.*
-- [ ] M0.4.4 [MUST|M] Load screen/slots per character (extends quick-select tiles). *Accept: tile loads full save.*
-- [ ] M0.4.5 [SHOULD|M] Settings: audio buses, sensitivity, FOV, invert Y, subtitles, quality. *Accept: persisted.*
+- [x] M0.4.1 [MUST|M] Title screen with New / Continue / Settings / Quit. *Accept: boot goes to title.*
+- [x] M0.4.2 [MUST|M] Pause menu (Esc) with resume/settings/quit-to-title. *Accept: world freezes properly, pointer lock restored.*
+- [x] M0.4.3 [MUST|L] Save system v1: player stats, class, look, inventory hands, quest states, flags, time, dragon, position, versioned JSON. *Accept: save -> reload -> same state.*
+- [x] M0.4.4 [MUST|M] Load screen/slots per character (extends quick-select tiles). *Accept: tile loads full save.*
+- [~] M0.4.5 [SHOULD|M] Settings: audio buses, sensitivity, FOV, invert Y, subtitles, quality. *Accept: persisted.* (done: master/music volume, sensitivity, FOV, invert Y, quality; todo: subtitles)
 - [ ] M0.4.6 [SHOULD|M] Key rebinding. *Accept: rebinds persist.*
 
 ## M0.5 Gamepad
@@ -393,7 +393,7 @@ See `18-multiplayer.md`.
 ## Additions after Marek's answers (decisions applied)
 ### Phase 0 additions
 - [ ] M0.3.4 [MUST|S] Resolution scale slider + dynamic resolution; Low preset must hold 60 FPS on Ryzen 7 7735HS / Radeon 680M. *Accept: documented FPS on that machine via F3 overlay.*
-- [ ] M0.4.7 [MUST|M] Difficulty setting in menu (damage dealt/taken, stamina cost, enemy aggression); no permadeath anywhere. *Accept: three levels + custom sliders, persisted.*
+- [x] M0.4.7 [MUST|M] Difficulty setting in menu (damage dealt/taken, stamina cost, enemy aggression); no permadeath anywhere. *Accept: three levels + custom sliders, persisted.*
 - [ ] M0.4.8 [MUST|S] Language setting scaffold (EN default, CZ second). *Accept: `t()` function exists and UI text uses it.*
 - [ ] M0.6.7 [MUST|S] Display name **Fifth Tail** in title screen, window title, installer. *Accept: no "5th Tail" in player-visible text.*
 ### Look and tone (Phase 2)

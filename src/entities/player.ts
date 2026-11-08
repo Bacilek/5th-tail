@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { settings, DIFFICULTY } from '../engine/settings';
 import type { Input } from '../engine/input';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
@@ -149,6 +150,12 @@ export class Player {
     this.onHandsChanged();
   }
 
+  /** Replace both hands (used by save loading). */
+  setHands(a: ItemId, b: ItemId): void {
+    this.hands = [a, b];
+    this.refreshHeld();
+  }
+
   setClass(id: ClassId): void {
     const c = CLASSES[id];
     this.classId = id; this.cycle = c.items;
@@ -192,9 +199,9 @@ export class Player {
     return new THREE.Vector3(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
   }
 
-  damage(n: number): void {
+  damage(n: number, raw = false): void {
     if (!this.alive) return;
-    this.health -= n;
+    this.health -= raw ? n : n * DIFFICULTY[settings.difficulty].taken;
     this.onDamaged();
     if (this.health <= 0) { this.health = 0; this.alive = false; this.deadTimer = 3; this.onDeath(); }
   }
@@ -254,8 +261,8 @@ export class Player {
       return;
     }
     if (input.locked) {
-      this.yaw -= input.dx * 0.0022;
-      this.pitch = Math.max(-1.5, Math.min(1.5, this.pitch - input.dy * 0.0022));
+      this.yaw -= input.dx * 0.0022 * settings.sens;
+      this.pitch = Math.max(-1.5, Math.min(1.5, this.pitch - input.dy * 0.0022 * settings.sens * (settings.invertY ? -1 : 1)));
     }
     if (input.wasPressed('KeyV')) this.thirdPerson = !this.thirdPerson;
     if (input.wasPressed('KeyQ')) { this.hands[0] = this.nextItem(this.hands[0]); this.refreshHeld(); }
@@ -311,7 +318,7 @@ export class Player {
       this.airPeak = this.pos.y;
     }
     this.wasGrounded = this.grounded;
-    if (this.pos.y < -30) this.damage(this.health + 1);
+    if (this.pos.y < -30) this.damage(this.health + 1, true);
 
     // regen
     this.staminaDelay -= dt; this.magickaDelay -= dt;

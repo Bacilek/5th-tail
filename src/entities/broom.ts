@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { settings } from '../engine/settings';
 import type { Input } from '../engine/input';
 import type { Player } from './player';
 import { heightAt, MAP_HALF } from '../world/terrain';
@@ -52,8 +53,8 @@ export class Broom {
 
   update(dt: number, input: Input, player: Player, camera: THREE.PerspectiveCamera): void {
     if (input.locked) {
-      this.yaw -= input.dx * 0.0022;
-      this.pitch = Math.max(-1.3, Math.min(1.3, this.pitch - input.dy * 0.0022));
+      this.yaw -= input.dx * 0.0022 * settings.sens;
+      this.pitch = Math.max(-1.3, Math.min(1.3, this.pitch - input.dy * 0.0022 * settings.sens * (settings.invertY ? -1 : 1)));
     }
     const boost = input.isDown('ShiftLeft') && player.stamina > 2;
     const wanted = boost ? 38 : input.isDown('KeyW') ? 24 : input.isDown('KeyS') ? 4 : 14;

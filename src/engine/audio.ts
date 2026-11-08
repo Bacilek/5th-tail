@@ -1,3 +1,5 @@
+import { settings } from './settings';
+
 /** Tiny procedural audio: ambient music loop, NPC "babble" voices and simple sound effects (no assets). */
 export class GameAudio {
   private ctx: AudioContext | null = null;
@@ -12,14 +14,19 @@ export class GameAudio {
     try {
       this.ctx = new AudioContext();
     } catch { return; }
-    this.master = this.ctx.createGain(); this.master.gain.value = 0.7; this.master.connect(this.ctx.destination);
-    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.18; this.musicGain.connect(this.master);
+    this.master = this.ctx.createGain(); this.master.gain.value = settings.master; this.master.connect(this.ctx.destination);
+    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.18 * settings.music; this.musicGain.connect(this.master);
     this.startMusic();
+  }
+
+  applySettings(): void {
+    if (this.master) this.master.gain.value = this.muted ? 0 : settings.master;
+    if (this.musicGain) this.musicGain.gain.value = 0.18 * settings.music;
   }
 
   toggleMute(): boolean {
     this.muted = !this.muted;
-    if (this.master) this.master.gain.value = this.muted ? 0 : 0.7;
+    this.applySettings();
     return this.muted;
   }
 
