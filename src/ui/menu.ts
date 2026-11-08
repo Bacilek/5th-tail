@@ -1,4 +1,4 @@
-import { settings, saveSettings, DIFFICULTY, type Difficulty, type Quality } from '../engine/settings';
+import { settings, saveSettings, DIFFICULTY, ACTION_LABELS, DEFAULT_KEYS, type Action, type Difficulty, type Quality } from '../engine/settings';
 import { loadCharacters } from '../engine/saves';
 
 const CSS = `
@@ -10,7 +10,9 @@ const CSS = `
 #pause h2,#settings h2{letter-spacing:5px;margin:0 0 20px}
 .mbtn{display:block;min-width:260px;margin:7px 0;padding:12px 20px;font:inherit;font-size:19px;color:#ffd98a;background:#14121add;border:1px solid #d8c9a0aa;cursor:pointer;text-align:center}
 .mbtn:hover{background:#2a2330}.mbtn[disabled]{opacity:.35;cursor:default}
-#settings{background:#000e;z-index:9}
+#settings{background:#000e;z-index:9;justify-content:flex-start;padding-top:28px;overflow:auto}
+#settings h3{margin:16px 0 4px;letter-spacing:3px;opacity:.8}
+.kbtn{min-width:150px;padding:4px 10px;font:inherit;background:#14121a;color:#ffd98a;border:1px solid #d8c9a0aa;cursor:pointer}
 #settings .row{display:flex;align-items:center;gap:14px;margin:8px 0;min-width:420px;justify-content:space-between}
 #settings label{font-size:17px}#settings input[type=range]{width:200px}
 #settings select{font:inherit;padding:4px 8px;background:#14121a;color:#f0e6d0;border:1px solid #d8c9a0aa}
@@ -120,6 +122,25 @@ export class Menus {
     row('Difficulty', select<Difficulty>(
       (Object.keys(DIFFICULTY) as Difficulty[]).map((k) => [k, DIFFICULTY[k].label] as [Difficulty, string]),
       () => settings.difficulty, (v) => { settings.difficulty = v; }));
+    const h3 = document.createElement('h3'); h3.textContent = 'CONTROLS (click, then press a key)'; el.appendChild(h3);
+    const pretty = (c: string) => c.replace('Key', '').replace('Digit', '').replace('Left', ' (L)').replace('Right', ' (R)');
+    for (const a of Object.keys(ACTION_LABELS) as Action[]) {
+      const b = document.createElement('button'); b.className = 'kbtn'; b.textContent = pretty(settings.keys[a]);
+      b.addEventListener('click', () => {
+        b.textContent = 'press a key...';
+        const on = (e: KeyboardEvent) => {
+          e.preventDefault(); e.stopPropagation();
+          if (e.code !== 'Escape') { settings.keys[a] = e.code; saveSettings(); }
+          b.textContent = pretty(settings.keys[a]);
+          removeEventListener('keydown', on, true);
+        };
+        addEventListener('keydown', on, true);
+      });
+      row(ACTION_LABELS[a], b);
+    }
+    const reset = document.createElement('button'); reset.className = 'kbtn'; reset.textContent = 'Reset';
+    reset.addEventListener('click', () => { Object.assign(settings.keys, DEFAULT_KEYS); saveSettings(); el.remove(); this.settingsEl = null; this.showSettings(); });
+    row('Reset controls to default', reset);
     row('Language', select<'en'>([['en', 'English']], () => 'en', () => {}));
     this.btn(el, 'Back', 'sback', () => { el.remove(); this.settingsEl = null; });
     document.body.appendChild(el);

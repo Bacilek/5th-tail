@@ -7,15 +7,17 @@ export type EnemyKind = 'venin' | 'soldier' | 'archer' | 'brute' | 'wolf' | 'bos
 interface KindDef {
   hp: number; speed: number; dmg: number; windup: number; reach: number; sight: number; scale: number;
   color: number; ranged?: [number, number]; staggerMul: number; label: string;
+  /** chance that a melee attack is unblockable (red telegraph: dodge it, blocking will not help) */
+  unblock: number;
 }
 
 export const KINDS: Record<EnemyKind, KindDef> = {
-  venin: { hp: 60, speed: 3.6, dmg: 10, windup: 0.55, reach: 1.9, sight: 24, scale: 1, color: 0x1b1020, staggerMul: 1, label: 'Venin' },
-  soldier: { hp: 85, speed: 3.2, dmg: 13, windup: 0.6, reach: 2.0, sight: 24, scale: 1.05, color: 0x4a3a2a, staggerMul: 0.8, label: 'Rebel soldier' },
-  archer: { hp: 45, speed: 3.0, dmg: 9, windup: 0.7, reach: 1.8, sight: 34, scale: 1, color: 0x2a3a2a, ranged: [9, 16], staggerMul: 1.2, label: 'Archer' },
-  brute: { hp: 170, speed: 2.5, dmg: 22, windup: 0.9, reach: 2.5, sight: 20, scale: 1.5, color: 0x3a1a1a, staggerMul: 0.45, label: 'Brute' },
-  wolf: { hp: 35, speed: 6.5, dmg: 8, windup: 0.3, reach: 1.5, sight: 28, scale: 1, color: 0x55524e, staggerMul: 1.3, label: 'Wolf' },
-  boss: { hp: 420, speed: 3.2, dmg: 26, windup: 0.8, reach: 2.8, sight: 40, scale: 1.7, color: 0x120816, staggerMul: 0.25, label: 'Venin Commander' },
+  venin: { hp: 60, speed: 3.6, dmg: 10, windup: 0.55, reach: 1.9, sight: 24, scale: 1, color: 0x1b1020, staggerMul: 1, label: 'Venin', unblock: 0.25 },
+  soldier: { hp: 85, speed: 3.2, dmg: 13, windup: 0.6, reach: 2.0, sight: 24, scale: 1.05, color: 0x4a3a2a, staggerMul: 0.8, label: 'Rebel soldier', unblock: 0.2 },
+  archer: { hp: 45, speed: 3.0, dmg: 9, windup: 0.7, reach: 1.8, sight: 34, scale: 1, color: 0x2a3a2a, ranged: [9, 16], staggerMul: 1.2, label: 'Archer', unblock: 0 },
+  brute: { hp: 170, speed: 2.5, dmg: 22, windup: 0.9, reach: 2.5, sight: 20, scale: 1.5, color: 0x3a1a1a, staggerMul: 0.45, label: 'Brute', unblock: 0.45 },
+  wolf: { hp: 35, speed: 6.5, dmg: 8, windup: 0.3, reach: 1.5, sight: 28, scale: 1, color: 0x55524e, staggerMul: 1.3, label: 'Wolf', unblock: 0.2 },
+  boss: { hp: 420, speed: 3.2, dmg: 26, windup: 0.8, reach: 2.8, sight: 40, scale: 1.7, color: 0x120816, staggerMul: 0.25, label: 'Venin Commander', unblock: 0.3 },
 };
 
 /** Hostile creatures: Venin, rebels, archers, brutes, wolves and a boss. Telegraphed attacks, stagger, group alerts. */
@@ -42,6 +44,11 @@ export class Enemy {
   private flankAngle = (Math.random() - 0.5) * 2.0;
   private staggerT = 0;
   private windup = 0;
+  private windupUnblock = false;
+  /** true if the attack that produced the last returned damage cannot be blocked */
+  lastUnblockable = false;
+  /** an unblockable attack is being telegraphed (slam or red windup) */
+  get telegraphUnblockable(): boolean { return (this.windup > 0 && this.windupUnblock) || this.slamT > 0; }
   private slamCd = 5;
   private slamT = 0;
   private slamRing: THREE.Mesh | null = null;
@@ -158,6 +165,11 @@ export class Enemy {
     }
   }
 
+  private startWindup(base: number): void {
+    this.windupUnblock = Math.random() < this.def.unblock;
+    this.windup = base + (this.windupUnblock ? 0.18 : 0);
+  }
+
   get telegraphing(): boolean { return this.windup > 0 || this.slamT > 0; }
 
   /** Interrupts the enemy: flinch for `dur` seconds (scaled by the enemy's stagger resistance) and shove it (kx, kz m/s). */
@@ -183,7 +195,8 @@ export class Enemy {
     }
     this.flash = Math.max(0, this.flash - dt);
     const tele = this.windup > 0 || this.slamT > 0;
-    for (const m of this.mats) m.emissive.setHex(this.flash > 0 ? 0xaa2200 : tele ? 0x9a5a00 : 0x000000);
+    const hot = this.telegraphUnblockable ? 0xff1a00 : 0x9a5a00;
+    for (const m of this.mats) m.emissive.setHex(this.flash > 0 ? 0xaa2200 : tele ? hot : 0x000000);
 
     const p = this.group.position;
     if (this.knock.lengthSq() > 0.01) {
@@ -230,7 +243,7 @@ export class Enemy {
           if (this.slamT <= 0) {
             this.cancelSlam();
             this.slamCd = enraged ? 4.5 : 6.5;
-            if (dist < 6) dmg = 24;
+            if (dist < 6) { dmg = 24; this.lastUnblockable = true; }
           }
           return dmg;
         }
@@ -251,20 +264,20 @@ export class Enemy {
             const origin = this.center;
             const dir = new THREE.Vector3(target.x - origin.x, target.y + 1.2 - origin.y, target.z - origin.z).normalize();
             this.onShoot(origin, dir);
-          } else if (dist < this.def.reach + 0.8) dmg = this.def.dmg;
+          } else if (dist < this.def.reach + 0.8) { dmg = this.def.dmg; this.lastUnblockable = this.windupUnblock; }
         }
       } else if (this.def.ranged) {
         const [near, far] = this.def.ranged;
         if (dist < near) move(p.x - dx, p.z - dz, speed);                  // back away
         else if (dist > far) move(target.x, target.z, speed);              // close in
-        else if (this.atkCd <= 0) this.windup = windupT;                   // draw and loose
+        else if (this.atkCd <= 0) { this.windupUnblock = false; this.windup = windupT; }  // draw and loose
       } else {
         // melee: approach a flanking point so groups surround the player
         const ang = Math.atan2(p.z - target.z, p.x - target.x) + this.flankAngle * Math.min(1, dist / 12);
         const r = Math.max(this.def.reach * 0.8, 0.5);
         const fx = target.x + Math.cos(ang) * r, fz = target.z + Math.sin(ang) * r;
         if (dist > this.def.reach) move(dist > 6 ? fx : target.x, dist > 6 ? fz : target.z, speed);
-        else if (this.atkCd <= 0) this.windup = windupT;
+        else if (this.atkCd <= 0) this.startWindup(windupT);
       }
     } else if (Math.hypot(this.home.x - p.x, this.home.z - p.z) > 1) {
       const hx = this.home.x - p.x, hz = this.home.z - p.z, hd = Math.hypot(hx, hz);

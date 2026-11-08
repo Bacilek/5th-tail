@@ -14,7 +14,7 @@ import { createDragon, type Dragon } from './entities/dragon';
 import { DRAGONS, TAIL_ATTACKS, BOND_SPECIES } from './data/dragons';
 import { DragonMount } from './entities/mount';
 import { CLASSES, type ClassId } from './data/classes';
-import { Combat, nearestAlive } from './systems/combat';
+import { Combat } from './systems/combat';
 import { Hud } from './ui/hud';
 import { Panels } from './ui/panels';
 import { QuestLog } from './systems/quests';
@@ -78,7 +78,7 @@ const player = new Player(camera, combat, scene);
 // Hostiles: a mixed roster along the roads and at the Venin camp (with a boss commander)
 function makeEnemy(x: number, z: number, kind: EnemyKind = 'venin'): Enemy {
   const e = new Enemy(x, z, kind);
-  e.onShoot = (origin, dir) => combat.arrow(origin, dir, 34, e.def.dmg, true);
+  e.onShoot = (origin, dir) => combat.arrow(origin, dir, 34, e.def.dmg, true, e);
   scene.add(e.group);
   combat.enemies.push(e);
   return e;
@@ -95,7 +95,7 @@ for (const [x, z, k] of [[84, 118, 'venin'], [108, 116, 'soldier'], [92, 140, 'a
   };
 }
 combat.getPlayerPos = () => player.pos;
-combat.onPlayerHit = (dmg, from) => player.damage(dmg, false, from);
+combat.onPlayerHit = (dmg, from) => player.damage(dmg, false, from); // arrows: no melee source, so a perfect block never staggers bystanders
 let kills = 0;
 let gauntletDone = false;
 let wingLabel = '';
@@ -319,11 +319,16 @@ player.onRespawn = () => {
 player.onDeath = () => { hud.announce('You died', '', 3); };
 player.onDamaged = () => { hud.flashDamage(); audio.hurt(); };
 player.onStep = () => audio.step();
-player.onBlock = (kind, from) => {
+player.onBlock = (kind, _from, source) => {
   audio.hit();
-  if (kind === 'perfect') { hud.announce('Perfect block', '', 0.8); const en = nearestAlive(combat.enemies, from); en?.stagger(1.2, 0, 0); hitStop = 0.08; }
+  if (kind === 'perfect') { hud.announce('Perfect block', '', 0.8); source?.stagger(1.2, 0, 0); hitStop = 0.08; } // only the attacker that was blocked is staggered
   else if (kind === 'break') hud.announce('Guard broken', 'Out of stamina', 1);
 };
+player.onDodge = (perfect) => {
+  audio.swing();
+  if (perfect) { hud.announce('Perfect dodge', '', 0.8); player.stamina = Math.min(player.maxStamina, player.stamina + 14); hitStop = 0.1; }
+};
+player.onDodgeStart = () => audio.swing();
 combat.onHit = (_e, power) => { audio.hit(); hitStop = power ? 0.09 : 0.04; };
 player.onAttack = (k) => { if (k === 'melee') audio.swing(); else if (k === 'fireball') audio.fire(); else if (k === 'lightning') audio.lightning(); else audio.heal(); };
 panels.onOpen = (name) => {
@@ -434,7 +439,7 @@ renderer.setAnimationLoop(() => {
     player.windZ = onParapet(player.pos.x, player.pos.y, player.pos.z)
       ? 1.0 * Math.sin(t * 0.9) + 0.7 * Math.sin(t * 2.3 + 1)
       : 0;
-    if (mount && input.wasPressed('KeyR') && !mount.mounted) { mount.summon(player); hud.announce(mount.spec.name, 'answers your call...', 3); }
+    if (mount && input.wasPressed(settings.keys.summon) && !mount.mounted) { mount.summon(player); hud.announce(mount.spec.name, 'answers your call...', 3); }
     const near = mount?.mounted ? null : nearestInteractable();
     panels.setPrompt(near ? `F - Talk to ${near.name}` : '');
     if (near && input.wasPressed('KeyF')) { near.act(); }
@@ -447,7 +452,7 @@ renderer.setAnimationLoop(() => {
         hud.announce('Mounted', `LMB fire breath - RMB ${TAIL_ATTACKS[mount.spec.tail].name} - Shift boost - F land+dismount`, 4);
       }
     }
-    if (input.wasPressed('KeyB') && !mount?.mounted) {
+    if (input.wasPressed(settings.keys.broom) && !mount?.mounted) {
       if (broom.active) {
         if (!broom.dismount(player)) hud.announce('Too high', 'Land before dismounting.', 2);
         else hud.setHands(player.hands[0], player.hands[1]);
@@ -456,7 +461,7 @@ renderer.setAnimationLoop(() => {
         hud.announce('Broom', 'Mouse steers - W/S speed - Shift boost - V camera - B land', 4);
       }
     }
-    if (broom.active && input.wasPressed('KeyV')) player.thirdPerson = !player.thirdPerson;
+    if (broom.active && input.wasPressed(settings.keys.camera)) player.thirdPerson = !player.thirdPerson;
     if (mount?.mounted || broom.active) player.tickRegen(dt);
     if (mount?.mounted) {
       mount.update(dt, input, player, camera);
@@ -495,8 +500,9 @@ renderer.setAnimationLoop(() => {
     for (const e of combat.enemies) {
       if (e.justAlerted) { e.justAlerted = false; for (const o of combat.enemies) if (o !== e && o.alive && o.group.position.distanceTo(e.group.position) < 16) o.alert(); }
       const dmg = e.update(dt, tgt, player.alive);
-      if (dmg > 0) player.damage(dmg, false, e.group.position);
+      if (dmg > 0) player.damage(dmg, false, e.group.position, e, e.lastUnblockable);
     }
+    hud.setWarning(combat.enemies.some((e) => e.alive && e.telegraphUnblockable && e.group.position.distanceTo(player.pos) < 9));
     combat.update(dt);
   }
 

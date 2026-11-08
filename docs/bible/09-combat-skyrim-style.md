@@ -77,3 +77,10 @@ Next: shields, weapon classes, enemy roles/groups, ranged enemies, boss framewor
 - **Enemies** (`src/entities/enemy.ts`): Venin, rebel soldier, archer (keeps 9-16 m, telegraphs then shoots arrows), brute (slow, 22 dmg, stagger resistant), wolf (fast, flanks), **Venin Commander boss** (ground-slam ring telegraph, enrages at 50% HP and calls reinforcements). Health bars appear once damaged; groups alert neighbours within 16 m; melee enemies approach from flanking angles; sight and lose-interest ranges.
 - Tests: `scripts/combat.mjs`, `scripts/combat2.mjs`.
 Still open: grid navigation, stealth/sneak, enemy variety visuals, tuning pass with Marek's playtest notes.
+
+## Implemented (Phase 1, third pass: Hogwarts-Legacy style defence)
+- **Dodge** (default `Alt`, rebindable in Esc -> Settings -> Controls): quick burst in the movement direction (hop back if standing), 0.3 s of invulnerability, 16 stamina, 0.7 s cooldown. Dodging right as a hit lands = **perfect dodge** (stamina refund + brief slow-mo).
+- **Two kinds of enemy melee attacks**: *blockable* (orange glow: block it or parry it) and *unblockable* (red glow + red "!" in the middle of the screen: dodge, because blocking is smashed through: guard broken, stamina loss, knockback). Chances per enemy in `KINDS.unblock`; the boss ground slam is always unblockable.
+- **Perfect block** now staggers only the attacker whose hit was blocked; blocking an arrow staggers nobody.
+- Fixes: axe blade faces forward; bow is held vertically, string and nocked arrow shown, draw pulls the string.
+- Rebindable keys: dodge, block, sprint, jump, interact, summon dragon, broom, camera.

@@ -18,9 +18,10 @@ export class Input {
       if (e.repeat || isTyping(e)) return;
       this.keys.add(e.code);
       this.pressed.add(e.code);
-      if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
+      if (e.code === 'Space' || e.code === 'Tab' || e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault();
     });
-    addEventListener('keyup', (e) => this.keys.delete(e.code));
+    addEventListener('keyup', (e) => { this.keys.delete(e.code); if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); });
+    addEventListener('blur', () => this.keys.clear());
     el.addEventListener('mousedown', (e) => {
       if (!this.locked) { el.requestPointerLock(); return; }
       this.buttons.add(e.button);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { settings, DIFFICULTY } from '../engine/settings';
+import type { Enemy } from './enemy';
 import type { Input } from '../engine/input';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
@@ -23,8 +24,9 @@ function buildHeld(id: ItemId, scale: number): THREE.Object3D {
   if (id === 'axe' || id === 'mace') {
     const haft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 5), wood);
     haft.position.y = 0.35;
-    const head = id === 'axe' ? new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.2, 0.04), metal) : new THREE.Mesh(new THREE.IcosahedronGeometry(0.11, 0), metal);
-    head.position.set(id === 'axe' ? 0.15 : 0, 0.72, 0);
+    // the axe blade faces forward (-z), not sideways
+    const head = id === 'axe' ? new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.34), metal) : new THREE.Mesh(new THREE.IcosahedronGeometry(0.11, 0), metal);
+    head.position.set(0, 0.7, id === 'axe' ? -0.14 : 0);
     g.add(haft, head);
   } else if (id === 'greatsword') {
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.02), metal);
@@ -46,9 +48,15 @@ function buildHeld(id: ItemId, scale: number): THREE.Object3D {
     boss.position.set(0, 0.2, -0.05);
     g.add(disc, boss);
   } else if (id === 'bow') {
+    // limbs run along y, the belly bulges forward (-z); the string is the chord, a nocked arrow appears while drawing
     const arc = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.02, 4, 12, Math.PI), wood);
-    arc.rotation.z = -Math.PI / 2; arc.position.y = 0.4;
-    g.add(arc);
+    arc.rotation.set(0, Math.PI / 2, -Math.PI / 2); arc.position.set(0, 0.4, 0);
+    const string = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.8, 0.008), new THREE.MeshBasicMaterial({ color: 0xe8e0c8 }));
+    string.position.set(0, 0.4, 0);
+    const nock = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.75), new THREE.MeshBasicMaterial({ color: 0xcdb98a }));
+    nock.position.set(0, 0.4, -0.1); nock.visible = false;
+    g.userData.nock = nock; g.userData.string = string;
+    g.add(arc, string, nock);
   } else if (id === 'crossbow') {
     const stock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.5), wood);
     stock.position.set(0, 0.2, -0.1);
@@ -113,7 +121,13 @@ export class Player {
   private blockT = 0;
   /** camera shake amplitude (radians), decays quickly */
   shake = 0;
-  onBlock: (kind: 'block' | 'perfect' | 'break', from: THREE.Vector3) => void = () => {};
+  onBlock: (kind: 'block' | 'perfect' | 'break', from: THREE.Vector3, source?: Enemy) => void = () => {};
+  /** perfect = dodged right as the hit landed */
+  onDodge: (perfect: boolean) => void = () => {};
+  onDodgeStart: () => void = () => {};
+  dodgeT = 0;
+  private dodgeAge = 99;
+  private dodgeCd = 0;
   private deadTimer = 0;
 
   readonly avatar = new THREE.Group();
@@ -248,18 +262,23 @@ export class Player {
     return new THREE.Vector3(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
   }
 
-  damage(n: number, raw = false, from?: THREE.Vector3): void {
+  damage(n: number, raw = false, from?: THREE.Vector3, source?: Enemy, unblockable = false): void {
     if (!this.alive) return;
+    if (!raw && this.dodgeT > 0) { this.onDodge(this.dodgeAge < 0.18); return; } // i-frames
     let dmg = raw ? n : n * DIFFICULTY[settings.difficulty].taken;
-    if (!raw && this.blocking && from) {
+    if (!raw && unblockable && this.blocking) {
+      // unblockable attacks smash through a guard
+      this.blocking = false; this.stamina = Math.max(0, this.stamina - 25); this.onBlock('break', from ?? this.pos, source);
+      if (from) { const k = new THREE.Vector3(this.pos.x - from.x, 0, this.pos.z - from.z).normalize(); this.knock.x += k.x * 7; this.knock.z += k.z * 7; }
+    } else if (!raw && this.blocking && from) {
       const to = new THREE.Vector3(from.x - this.pos.x, 0, from.z - this.pos.z).normalize();
       const f = this.forward; f.y = 0; f.normalize();
       if (to.dot(f) > 0.1) {
-        if (this.blockT < 0.3) { this.onBlock('perfect', from); this.shake = 0.01; return; } // perfect block: no damage
+        if (this.blockT < 0.3) { this.onBlock('perfect', from, source); this.shake = 0.01; return; } // perfect block: no damage
         const sh = ITEMS[this.hands[0]].kind === 'shield' || ITEMS[this.hands[1]].kind === 'shield';
         const cost = dmg * (sh ? 0.5 : 0.9);
-        if (this.stamina >= cost) { this.stamina -= cost; this.staminaDelay = 1.2; this.onBlock('block', from); dmg *= sh ? 0.08 : 0.15; }
-        else { this.stamina = 0; this.blocking = false; this.onBlock('break', from); }
+        if (this.stamina >= cost) { this.stamina -= cost; this.staminaDelay = 1.2; this.onBlock('block', from, source); dmg *= sh ? 0.08 : 0.15; }
+        else { this.stamina = 0; this.blocking = false; this.onBlock('break', from, source); }
       }
     }
     this.shake = Math.max(this.shake, Math.min(0.05, dmg * 0.003));
@@ -350,15 +369,28 @@ export class Player {
       this.yaw -= input.dx * 0.0022 * settings.sens;
       this.pitch = Math.max(-1.5, Math.min(1.5, this.pitch - input.dy * 0.0022 * settings.sens * (settings.invertY ? -1 : 1)));
     }
-    if (input.wasPressed('KeyV')) this.thirdPerson = !this.thirdPerson;
+    if (input.wasPressed(settings.keys.camera)) this.thirdPerson = !this.thirdPerson;
     if (input.wasPressed('KeyQ')) { this.hands[0] = this.nextItem(this.hands[0]); this.refreshHeld(); }
     if (input.wasPressed('KeyE')) { this.hands[1] = this.nextItem(this.hands[1]); this.refreshHeld(); }
 
+    // dodge (rebindable, default Alt): quick burst with brief invulnerability
+    this.dodgeCd -= dt; this.dodgeAge += dt; this.dodgeT = Math.max(0, this.dodgeT - dt);
+    if (input.wasPressed(settings.keys.dodge) && this.dodgeCd <= 0 && this.grounded && this.stamina >= 10) {
+      const df = (input.isDown('KeyW') ? 1 : 0) - (input.isDown('KeyS') ? 1 : 0), dr = (input.isDown('KeyD') ? 1 : 0) - (input.isDown('KeyA') ? 1 : 0);
+      const fy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
+      let wx = -fy * df + cy * dr, wz = -cy * df - fy * dr;
+      if (df === 0 && dr === 0) { wx = fy; wz = cy; } // no direction: hop backwards
+      const l = Math.hypot(wx, wz) || 1;
+      this.knock.set((wx / l) * 15, 0, (wz / l) * 15);
+      this.stamina = Math.max(0, this.stamina - 16); this.staminaDelay = 1.0;
+      this.dodgeT = 0.3; this.dodgeAge = 0; this.dodgeCd = 0.7; this.blocking = false; this.holdT[0] = this.holdT[1] = 0;
+      this.onDodgeStart();
+    }
     // movement
     const f = (input.isDown('KeyW') ? 1 : 0) - (input.isDown('KeyS') ? 1 : 0);
     const r = (input.isDown('KeyD') ? 1 : 0) - (input.isDown('KeyA') ? 1 : 0);
     const moving = f !== 0 || r !== 0;
-    const sprint = input.isDown('ShiftLeft') && moving && this.stamina > 1 && this.grounded;
+    const sprint = input.isDown(settings.keys.sprint) && moving && this.stamina > 1 && this.grounded;
     const speed = sprint ? 9.5 : 5.2;
     const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
     let wx = -sy * f + cy * r, wz = -cy * f - sy * r;
@@ -368,7 +400,7 @@ export class Player {
     this.vel.x += (wx * speed - this.vel.x) * Math.min(1, k * dt);
     this.vel.z += (wz * speed - this.vel.z) * Math.min(1, k * dt);
     if (sprint) { this.stamina = Math.max(0, this.stamina - 14 * dt); this.staminaDelay = 1.0; }
-    if (input.wasPressed('Space') && this.grounded && this.useStamina(8)) { this.vel.y = 8; this.grounded = false; }
+    if (input.wasPressed(settings.keys.jump) && this.grounded && this.useStamina(8)) { this.vel.y = 8; this.grounded = false; }
 
     this.pos.z += this.windZ * dt;
     let nx = this.pos.x + (this.vel.x + this.knock.x) * dt, nz = this.pos.z + (this.vel.z + this.knock.z) * dt;
@@ -418,7 +450,7 @@ export class Player {
       const kinds = [ITEMS[this.hands[0]].kind, ITEMS[this.hands[1]].kind];
       const hasMelee = kinds.includes('melee') || kinds.includes('shield');
       const shieldHeld = (kinds[0] === 'shield' && input.buttonDown(0)) || (kinds[1] === 'shield' && input.buttonDown(2));
-      const wantBlock = ((input.isDown('KeyX') || input.buttonDown(1)) && hasMelee || shieldHeld) && this.stamina > 1 && this.swing[0] === 0 && this.swing[1] === 0;
+      const wantBlock = ((input.isDown(settings.keys.block) || input.buttonDown(1)) && hasMelee || shieldHeld) && this.stamina > 1 && this.swing[0] === 0 && this.swing[1] === 0;
       if (wantBlock && !this.blocking) this.blockT = 0;
       this.blocking = wantBlock;
       if (this.blocking) { this.blockT += dt; this.staminaDelay = Math.max(this.staminaDelay, 0.6); }
@@ -518,6 +550,13 @@ export class Player {
       const guard = this.blocking && (melee || kind === 'shield') ? 1 : 0;
       m.position.x += -base * 0.7 * guard; m.position.y += 0.14 * guard + 0.06 * wind; m.position.z += -0.08 * guard + 0.1 * wind;
       m.rotation.set((isSpell ? 0.4 * a : -1.0 * a + 0.25) - 0.9 * wind - 1.0 * guard, 0, (h === 0 ? -1 : 1) * 0.35 * guard);
+      if (kind === 'ranged' && ITEMS[this.hands[h]].id === 'bow') {
+        // aim the bow: raise to centre, vertical, arrow nocked; string pulled back with the draw
+        const w = wind, held = m.children[0] as THREE.Object3D | undefined;
+        m.position.set(base * (1 - 0.85 * w), -0.3 + 0.1 * w, -0.55 + 0.04 * w);
+        m.rotation.set(0.05 - 0.05 * w, 0.12 * (1 - w), 0.1 * (1 - w));
+        if (held?.userData.nock) { (held.userData.nock as THREE.Object3D).visible = w > 0.05; (held.userData.nock as THREE.Object3D).position.z = -0.1 + 0.28 * w; (held.userData.string as THREE.Object3D).position.z = 0.22 * w; }
+      }
       if (melee && t > 0 && !this.blocking) {
         // sword arc: wind up (0-0.38), fast slash (0.38-0.6), recover. Power attacks are overhead chops.
         const side = h === 0 ? -1 : 1, pw = this.swingPower[h];

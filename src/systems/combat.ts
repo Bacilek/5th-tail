@@ -5,7 +5,7 @@ import { heightAt } from '../world/terrain';
 import { solidAt } from '../world/collision';
 
 interface Fireball { mesh: THREE.Mesh; vel: THREE.Vector3; life: number; dmg: number; }
-interface Arrow { mesh: THREE.Object3D; vel: THREE.Vector3; life: number; dmg: number; hostile: boolean; stuck: number; }
+interface Arrow { mesh: THREE.Object3D; vel: THREE.Vector3; life: number; dmg: number; hostile: boolean; stuck: number; owner?: Enemy; }
 interface Effect { mesh: THREE.Object3D; life: number; max: number; grow: number; }
 
 export interface HitOpts { stagger?: number; knock?: number; }
@@ -27,7 +27,7 @@ export class Combat {
   private hostileMat = new THREE.MeshBasicMaterial({ color: 0xff8a50 });
   /** set by main: where the player is (for hostile projectiles) and what happens when one hits */
   getPlayerPos: () => THREE.Vector3 = () => new THREE.Vector3(0, -999, 0);
-  onPlayerHit: (dmg: number, from: THREE.Vector3) => void = () => {};
+  onPlayerHit: (dmg: number, from: THREE.Vector3, owner?: Enemy) => void = () => {};
   private fbGeo = new THREE.SphereGeometry(0.35, 8, 6);
   private fbMat = new THREE.MeshBasicMaterial({ color: 0xff7a1a });
   onKill: (e: Enemy) => void = () => {};
@@ -71,12 +71,12 @@ export class Combat {
   }
 
   /** Player arrow/bolt/knife. Headshots (above 1.7 m) do double damage. */
-  arrow(origin: THREE.Vector3, dir: THREE.Vector3, speed: number, dmg: number, hostile = false): void {
+  arrow(origin: THREE.Vector3, dir: THREE.Vector3, speed: number, dmg: number, hostile = false, owner?: Enemy): void {
     const mesh = new THREE.Mesh(this.arrowGeo, hostile ? this.hostileMat : this.arrowMat);
     mesh.position.copy(origin);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
     this.scene.add(mesh);
-    this.arrows.push({ mesh, vel: dir.clone().normalize().multiplyScalar(speed), life: 4, dmg, hostile, stuck: 0 });
+    this.arrows.push({ mesh, vel: dir.clone().normalize().multiplyScalar(speed), life: 4, dmg, hostile, stuck: 0, owner });
   }
 
   /** Crescent flash for melee swings (power attacks are vertical chops). */
@@ -149,7 +149,7 @@ export class Combat {
       const p = a.mesh.position;
       let hit = false;
       if (a.hostile) {
-        if (p.distanceTo(new THREE.Vector3(pp.x, pp.y + 1.1, pp.z)) < 0.9) { this.onPlayerHit(a.dmg, p.clone().addScaledVector(a.vel, -0.1)); hit = true; }
+        if (p.distanceTo(new THREE.Vector3(pp.x, pp.y + 1.1, pp.z)) < 0.9) { this.onPlayerHit(a.dmg, p.clone().addScaledVector(a.vel, -0.1), a.owner); hit = true; }
       } else {
         for (const e of this.enemies) {
           if (!e.alive) continue;

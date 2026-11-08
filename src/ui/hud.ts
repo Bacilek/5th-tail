@@ -14,6 +14,7 @@ const CSS = `
 #bs{width:200px}#bs i{background:#3f9e4a}
 .hand{position:absolute;bottom:20px;font-size:14px;background:#0007;padding:4px 10px;border:1px solid #d8c9a066}
 #hl{left:20px}#hr{right:20px}
+#warn{position:absolute;left:50%;top:38%;transform:translateX(-50%);font-size:64px;font-weight:bold;color:#ff2a1a;text-shadow:0 0 14px #ff2a1a,0 2px 4px #000;display:none}
 #cross{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fff9;}
 #ann{position:absolute;left:0;right:0;top:16%;text-align:center;opacity:0;transition:opacity .6s}
 #ann h1{margin:0;font-size:38px;letter-spacing:3px}#ann p{margin:6px 0 0;font-size:18px;opacity:.9}
@@ -65,9 +66,9 @@ export class Hud {
     const root = document.createElement('div');
     root.id = 'hud';
     root.innerHTML = `
-      <div id="dmg"></div><div id="cross"></div>
+      <div id="dmg"></div><div id="cross"></div><div id="warn">!</div>
       <div id="hint"><b>WASD</b> move &middot; <b>Shift</b> sprint &middot; <b>Space</b> jump &middot; <b>V</b> 1st/3rd person<br>
-        <b>LMB</b> left hand &middot; <b>RMB</b> right hand (hold = power attack) &middot; <b>X</b>/<b>MMB</b> hold to block, then attack = bash &middot; <b>Q</b>/<b>E</b> cycle items<br><b>F</b> talk/mount &middot; <b>R</b> summon dragon &middot; <b>B</b> broom &middot; <b>J</b> quests &middot; <b>M</b> map &middot; <b>N</b> sound &middot; <b>H</b> hide this</div>
+        <b>LMB</b> left hand &middot; <b>RMB</b> right hand (hold = power attack) &middot; <b>X</b>/<b>MMB</b> hold to block, then attack = bash &middot; <b>Alt</b> dodge (red ! = unblockable) &middot; <b>Q</b>/<b>E</b> cycle items<br><b>F</b> talk/mount &middot; <b>R</b> summon dragon &middot; <b>B</b> broom &middot; <b>J</b> quests &middot; <b>M</b> map &middot; <b>N</b> sound &middot; <b>H</b> hide this</div>
       <div id="info"><div id="cls2"></div><div id="drg"></div><div id="race"></div><div id="wing"></div><div id="kills"></div></div>
       <div id="obj"></div><div id="ann"><h1></h1><p></p></div>
       <div class="hand" id="hl"></div><div class="hand" id="hr"></div>
@@ -211,6 +212,8 @@ export class Hud {
     document.body.appendChild(el);
   }
 
+  /** red '!' = an unblockable attack is coming: dodge, do not block */
+  setWarning(on: boolean): void { this.el('warn').style.display = on ? 'block' : 'none'; }
   setRaceLine(t: string): void { this.el('race').textContent = t; }
   setDragonLine(t: string): void { this.el('drg').textContent = t; }
   setObjective(t: string): void { this.el('obj').textContent = t; this.el('obj').style.display = t ? '' : 'none'; }
