@@ -117,6 +117,33 @@ export function hall(g: THREE.Group, cx: number, cz: number, w: number, d: numbe
   roof.position.set(cx, y + h + 0.7 + roofH / 2, cz); roof.castShadow = true; g.add(roof);
   const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.25, 6, 5), lantern);
   lamp.position.set(cx, y + h - 1.2, cz); g.add(lamp);
+  // interior dressing: rug, wall sconces, banners on the back wall, pillars in big halls
+  if (w * d >= 300) { // only the big halls get a real light (keeps the light count low)
+    const L = new THREE.PointLight(0xffb070, 90, Math.max(w, d) * 1.4, 1.5); L.position.set(cx, y + Math.min(h - 2, 7), cz); g.add(L);
+  }
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w - 4, 10), Math.min(d - 4, 6)), new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 1 }));
+  rug.rotation.x = -Math.PI / 2; rug.position.set(cx, y + 0.06, cz); rug.receiveShadow = true; g.add(rug);
+  const flame = new THREE.MeshBasicMaterial({ color: 0xffa040 });
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+    const sc = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.45, 5), flame);
+    sc.position.set(cx + sx * (w / 2 - 0.75), y + 2.6, cz + sz * (d / 2 - 0.75)); g.add(sc);
+  }
+  if (w >= 20 || d >= 20) {
+    const longX = w >= d, n = Math.floor((longX ? w : d) / 7);
+    for (let i = 0; i < n; i++) {
+      const t = ((i + 0.5) / n - 0.5) * (longX ? w : d) * 0.9;
+      for (const side of [-1, 1]) {
+        const px = longX ? cx + t : cx + side * (w / 2 - 2.2), pz = longX ? cz + side * (d / 2 - 2.2) : cz + t;
+        const pil = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, h, 8), darkStone);
+        pil.position.set(px, y + h / 2, pz); pil.castShadow = true; g.add(pil);
+        addCircle(px, pz, 0.6, y + h);
+      }
+    }
+  }
+  const bd = { n: [0, 1], s: [0, -1], e: [-1, 0], w: [1, 0] }[door];
+  const bx = cx + bd[0] * (w / 2 - 0.7), bz = cz + bd[1] * (d / 2 - 0.7);
+  const ban = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(2.4, Math.max(w, d) * 0.18), Math.min(h * 0.6, 6)), new THREE.MeshStandardMaterial({ color: 0x8a2a20, side: THREE.DoubleSide, roughness: 1 }));
+  ban.position.set(bx, y + h * 0.55, bz); ban.rotation.y = Math.atan2(-bd[0], -bd[1]); g.add(ban);
   // furniture in the half opposite the door, along the long axis
   const dir = { n: [0, 1], s: [0, -1], e: [-1, 0], w: [1, 0] }[door];
   const fx = cx + dir[0] * w * 0.22, fz = cz + dir[1] * d * 0.22;
