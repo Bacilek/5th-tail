@@ -45,6 +45,7 @@ function tower(g: THREE.Group, cx: number, cz: number, r: number, h: number, y: 
   roof.position.set(cx, y + h + 1.5 + h * 0.175, cz); roof.castShadow = true;
   g.add(roof);
   addBox(cx, cz, r * 1.8, r * 1.8, y + h);
+  addBox(cx, cz, r * 1.8, r * 1.8, y + h + 1.5 + h * 0.3, y + h); // cone roof (box approximation, fliers only)
 }
 
 export function banner(g: THREE.Group, x: number, y: number, z: number, color: number, rotY = 0, h = 6): void {
@@ -104,6 +105,7 @@ export function hall(g: THREE.Group, cx: number, cz: number, w: number, d: numbe
   floor(g, r, y, 0x5a4a3c);
   const slab = new THREE.Mesh(new THREE.BoxGeometry(w + 1, 0.7, d + 1), darkStone);
   slab.position.set(cx, y + h + 0.35, cz); slab.castShadow = true; g.add(slab);
+  addBox(cx, cz, w + 1, d + 1, y + h + 0.7 + roofH * 0.5, y + h); // roof volume above the walls
   const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, roofH, 4), roofMat);
   roof.rotation.y = Math.PI / 4; roof.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
   roof.position.set(cx, y + h + 0.7 + roofH / 2, cz); roof.castShadow = true; g.add(roof);
@@ -158,6 +160,7 @@ export function buildCollege(): THREE.Group {
   hall(g, 0, -32, 26, 22, 22, Y, 0.01, 's', 'table');
   const donjon = new THREE.Mesh(new THREE.BoxGeometry(16, 36, 14), darkStone);
   donjon.position.set(0, Y + 22 + 18, -32); donjon.castShadow = true; g.add(donjon);
+  addBox(0, -32, 16, 14, Y + 58, Y + 22);
   const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 14, 4), roofMat);
   keepRoof.rotation.y = Math.PI / 4; keepRoof.position.set(0, Y + 58 + 7, -32); keepRoof.castShadow = true; g.add(keepRoof);
   label(g, 'Basgiath War College', '#ffe9b0', 0, Y + 82, -32, 34);
@@ -233,6 +236,7 @@ export function buildScribes(): THREE.Group {
   hall(g, -100, -34, 34, 14, 11, Y, 0.01, 's', 'shelves', darkStone);
   const roof = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 34, 8, 1, false, 0, Math.PI), roofMat);
   roof.rotation.z = Math.PI / 2; roof.rotation.x = 0; roof.position.set(-100, Y + 11, -34); roof.castShadow = true; g.add(roof);
+  addBox(-100, -34, 34, 14, Y + 11 + 7, Y + 11);
   for (let i = 0; i < 6; i++) for (const sx of [-1, 1]) {
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 9, 6), stone);
     c.position.set(-100 + sx * (4 + i * 2.8), Y + 4.5, -26); c.castShadow = true; g.add(c);
@@ -270,6 +274,7 @@ export function buildParapet(): THREE.Group {
   span.position.set((PARAPET.x0 + PARAPET.x1) / 2, PARAPET.y - 0.3, PARAPET.z);
   span.castShadow = span.receiveShadow = true;
   g.add(span);
+  addBox((PARAPET.x0 + PARAPET.x1) / 2, PARAPET.z, len, PARAPET.half * 2, PARAPET.y, PARAPET.y - 0.6);
   label(g, 'The Parapet', '#ffd98a', 66, PARAPET.y + 8, PARAPET.z, 18);
   return g;
 }

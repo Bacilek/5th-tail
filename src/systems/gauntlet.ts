@@ -53,6 +53,8 @@ export class Gauntlet {
       const p = new THREE.Mesh(new THREE.BoxGeometry(1.6, 12, 1.6), stone);
       p.position.set(GAUNTLET.x1 - 1, Y + 6, z); p.castShadow = true; g.add(p);
     }
+    addBox(GAUNTLET.x1 - 1, CZ, 1.6, W, Y + 12.8, Y + 11.2);
+    for (const z of [GAUNTLET.z0 + 1, GAUNTLET.z1 - 1]) addBox(GAUNTLET.x1 - 1, z, 1.6, 1.6, Y + 12);
     const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, W), stone);
     lintel.position.set(GAUNTLET.x1 - 1, Y + 12, CZ); g.add(lintel);
     const b = new THREE.Mesh(new THREE.PlaneGeometry(W - 2, 3), red);

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Input } from '../engine/input';
 import type { Player } from './player';
 import { heightAt, MAP_HALF } from '../world/terrain';
-import { topAt } from '../world/collision';
+import { supportAt, resolve, ceilAt } from '../world/collision';
 
 /** Broom flight (B to mount/dismount, all classes). Mouse steers, W/S speed, Shift boost, V camera. */
 export class Broom {
@@ -28,7 +28,7 @@ export class Broom {
     scene.add(this.model);
   }
 
-  get altitude(): number { return this.pos.y - Math.max(heightAt(this.pos.x, this.pos.z), topAt(this.pos.x, this.pos.z)); }
+  get altitude(): number { return this.pos.y - Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)); }
 
   mount(player: Player): void {
     this.active = true;
@@ -44,7 +44,7 @@ export class Broom {
     if (this.altitude > 4) return false;
     this.active = false;
     this.model.visible = false;
-    player.pos.set(this.pos.x, Math.max(heightAt(this.pos.x, this.pos.z), topAt(this.pos.x, this.pos.z)), this.pos.z);
+    player.pos.set(this.pos.x, Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)), this.pos.z);
     player.vel.set(0, 0, 0);
     player.hideHands(false);
     return true;
@@ -65,7 +65,13 @@ export class Broom {
     this.pos.x = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.x));
     this.pos.z = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.z));
     this.pos.y = Math.min(this.pos.y, 300);
-    const floor = Math.max(heightAt(this.pos.x, this.pos.z), topAt(this.pos.x, this.pos.z)) + 1.0;
+    // walls, roofs and tree trunks block the broom sideways; roofs also act as a ceiling from below
+    const bx = this.pos.x, bz = this.pos.z;
+    resolve(this.pos, 1.3, 2.4, 0.9, 0);
+    if (Math.hypot(this.pos.x - bx, this.pos.z - bz) > 0.02) this.speed *= 0.6;
+    const ceil = ceilAt(this.pos.x, this.pos.z, this.pos.y - 0.9);
+    if (this.pos.y + 1.5 > ceil) this.pos.y = ceil - 1.5;
+    const floor = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 1.2, 0.5)) + 1.0;
     if (this.pos.y < floor) this.pos.y = floor;
 
     this.roll += (Math.max(-0.5, Math.min(0.5, input.dx * 0.03)) - this.roll) * Math.min(1, 5 * dt);

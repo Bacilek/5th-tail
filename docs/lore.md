@@ -41,3 +41,6 @@ Violet Sorrengail, Xaden Riorson, Dain Aetos, Rhiannon Matthias, Ridoc Gamlyn, S
 - Garrick: hulking build.
 - Mira (braid), Commandant Sorrengail (silver hair, gold epaulettes, cape), Rhiannon, Ridoc: appearance NOT found in sources (?) - plain looks/guesses.
 - Signature marks are only given to canon key NPCs; generic and invented NPCs never get them.
+
+## Signets vs. dragon type (checked)
+Fan wikis (Empyrean Riders, Audible guides) show NO consistent link between a rider's signet and the dragon's color or tail type (the same type appears with different signets; one low-quality source claims color predicts signet). So the game does not tie signets to dragon type. Corrected data: Teine is a green swordtail (Mira's dragon), Aotrom a brown swordtail (Ridoc's).
