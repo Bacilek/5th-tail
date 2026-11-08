@@ -34,7 +34,7 @@ export const PARAPET = { y: 62, z: -20, x0: 43, x1: 92, half: 0.6 };
  */
 export const STAIR = { turns: 4, perTurn: 32, r0: 6.3, r1: 9.0, y0: 10, landing: 62 };
 STAIR.y0 = PLATEAU;
-const STAIR_RISE = (TOWER.top - 0.4 - PLATEAU) / (STAIR.turns * STAIR.perTurn - 1);
+const STAIR_RISE = (TOWER.top - 0.25 - PLATEAU) / (STAIR.turns * STAIR.perTurn - 1);
 export const STAIR_STEPS = STAIR.turns * STAIR.perTurn;
 export function stairStepY(s: number): number { return PLATEAU + s * STAIR_RISE; }
 export function stairAngle(s: number): number { return Math.PI + ((s % STAIR.perTurn) + 0.5) / STAIR.perTurn * Math.PI * 2; }
@@ -48,6 +48,20 @@ export function towerStairAt(x: number, z: number, y: number, reach: number): nu
   const k = Math.min(STAIR.turns - 1, Math.floor((stepMax - base) / STAIR.perTurn));
   if (k < 0) return -Infinity;
   return stairStepY(k * STAIR.perTurn + base);
+}
+
+/** True if a body at (x,z) with feet at y would be inside a stair step it cannot step onto (> 0.55 above its feet). */
+export function stairBlocked(x: number, z: number, y: number, height = 1.8): boolean {
+  const dx = x - TOWER.x, dz = z - TOWER.z;
+  const r = Math.hypot(dx, dz);
+  if (r < STAIR.r0 - 0.1 || r > STAIR.r1 + 0.1) return false;
+  const phi = (((Math.atan2(dz, dx) - Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const base = Math.floor(phi / (Math.PI * 2) * STAIR.perTurn);
+  for (let k = 0; k < STAIR.turns; k++) {
+    const top = stairStepY(k * STAIR.perTurn + base);
+    if (top - y > 0.55 && top - 0.9 < y + height) return true;
+  }
+  return false;
 }
 
 function rectDist(r: Rect, x: number, z: number): number {
@@ -86,7 +100,7 @@ export function heightAt(x: number, z: number): number {
 }
 
 export function baseHeight(x: number, z: number): number {
-  if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r * 0.85) return TOWER.top;
+  if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r + 0.4) return TOWER.top;
 
   let flat = 1;
   for (const r of FLAT_RECTS) flat *= smoothstep(0, 20, rectDist(r, x, z));

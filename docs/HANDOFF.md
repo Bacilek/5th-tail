@@ -9,8 +9,9 @@ Master plan = `TODO.md`; design = `docs/bible/`; rules = `CLAUDE.md`.
 ## Where we are
 - Last commit: see `git log -1` (Parapet flight fix, tower spiral stair, box-hair bug fix, random Threshing dragons).
 - Done: Phase 0 (mostly), Phase 1 combat (mostly), Phase 2 in progress: PBR textures, rigged Quaternius humanoid (procedural bone animation) for player/NPCs/enemies, hair, canon NPC marks.
-- Swing animation v2 in `humanoid.ts` pose(): off-hand counter-swing, forearm snap + lunge on strike. Built but NOT visually verified (needs playtest by Marek / weapon-test side view; weapon rest pose x=2.14 (blade forward+up, verified side view with scripts/weapon-side.mjs) in `player.ts` buildHuman checked with `scripts/weapon-test.mjs [[x,y,z],...]`).
-- Next (agreed order): (1) tune swing from Marek's feedback; (2) Phase 3 world/interiors: enter buildings, tower interior, quadrant detail; (3) M5.2.1b physical quadrant choice replacing class menu (Riders climb tower -> Parapet).
+- Arm rig convention (humanoid.ts pose()): bone rot() = rotation about MODEL axes in the parent's rest frame. Upper arm: rz drops the T-pose arm (+1.5 left, -1.5 right), ry swings it forward (right +, left -); rx is only a twist. Lowerarm ry = elbow, hand ry = wrist pitch. Held blade angle is driven by target angle th (BLOCK/SWING consts). Swing/block verified in side+front screenshots with `scripts/pose-test.mjs` (state JSON arg); weapon rest pose x=2.14 on tpMount (`scripts/weapon-side.mjs`).
+- Tower: collider is now a circle (r+1.2) not a box; landing bridge has finite bottom so the stair passes under it; `stairBlocked` (terrain.ts) blocks the player walking into steps >0.55 above feet. `scripts/stair-walk.mjs` walks the spiral (slow under software GL).
+- Next (agreed order): (1) playtest feedback on swing/block/stair; (2) Phase 3 world/interiors: enter buildings, tower interior, quadrant detail; (3) M5.2.1b physical quadrant choice replacing class menu (Riders climb tower -> Parapet).
 - Open `[~]` items are listed in TODO.md (grep `\[~\]`).
 
 ## Key facts that are not obvious from code

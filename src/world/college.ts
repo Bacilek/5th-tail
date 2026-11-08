@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { addBox } from './collision';
+import { addBox, addCircle } from './collision';
 import { pbr, pbrRepeat, tileBoxUV } from '../engine/textures';
 import {
   PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, STAIR, STAIR_STEPS, stairStepY, stairAngle, type Rect,
@@ -47,7 +47,7 @@ function tower(g: THREE.Group, cx: number, cz: number, r: number, h: number, y: 
   const roof = new THREE.Mesh(new THREE.ConeGeometry(r * 1.25, h * 0.35, 8), roofMat);
   roof.position.set(cx, y + h + 1.5 + h * 0.175, cz); roof.castShadow = true;
   g.add(roof);
-  addBox(cx, cz, r * 1.8, r * 1.8, y + h);
+  addCircle(cx, cz, r * 1.05, y + h);
   addBox(cx, cz, r * 1.8, r * 1.8, y + h + 1.5 + h * 0.3, y + h); // cone roof (box approximation, fliers only)
 }
 
@@ -177,7 +177,7 @@ export function buildCollege(): THREE.Group {
   tw.position.set(TOWER.x, Y - 6 + (TOWER.top - Y + 6) / 2, TOWER.z); tw.castShadow = tw.receiveShadow = true; g.add(tw);
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.8, TOWER.r + 0.4, 1.2, 12), darkStone);
   cap.position.set(TOWER.x, TOWER.top - 0.6, TOWER.z); cap.castShadow = true; g.add(cap);
-  addBox(TOWER.x, TOWER.z, 9.6, 9.6, TOWER.top);
+  addCircle(TOWER.x, TOWER.z, TOWER.r + 1.2, TOWER.top);
   // outer spiral stair (walkable surface is analytic, see towerStairAt) + landing bridging to the top platform
   const stepGeo = new THREE.BoxGeometry(STAIR.r1 - STAIR.r0, 0.9, 1.7);
   tileBoxUV(stepGeo, STAIR.r1 - STAIR.r0, 0.9, 1.7, 3);
@@ -193,7 +193,7 @@ export function buildCollege(): THREE.Group {
   steps.castShadow = steps.receiveShadow = true; g.add(steps);
   const landing = new THREE.Mesh(new THREE.BoxGeometry(5, 0.6, 3.2), darkStone);
   landing.position.set(TOWER.x - 7, TOWER.top - 0.3, TOWER.z); landing.castShadow = true; g.add(landing);
-  addBox(TOWER.x - 7, TOWER.z, 5, 3.2, TOWER.top);
+  addBox(TOWER.x - 7, TOWER.z, 5, 3.2, TOWER.top, TOWER.top - 0.6); // bridge: finite bottom so the stair passes beneath
   label(g, 'Conscription Tower', '#ffd98a', TOWER.x, TOWER.top + 10, TOWER.z, 20);
   banner(g, TOWER.x - 5.2, TOWER.top - 8, TOWER.z, 0xa02a20, Math.PI / 2, 12);
 

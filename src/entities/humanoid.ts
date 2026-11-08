@@ -19,6 +19,10 @@ export interface HumanoidState {
   lean?: number;
 }
 
+/** Wrist/hand tuning for poses (held blade orientation). */
+const BLOCK = { thR: 1.2, thL: 1.2 };
+const SWING = { thWind: 2.3, thStrike: -0.5 };
+
 const BONES = [
   'pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'Head',
   'clavicle_l', 'upperarm_l', 'lowerarm_l', 'hand_l', 'clavicle_r', 'upperarm_r', 'lowerarm_r', 'hand_r',
@@ -227,33 +231,41 @@ export class Humanoid {
       this.rot('calf_l', Math.max(0, Math.sin(p + 1.6)) * a * 1.0);
       this.rot('calf_r', Math.max(0, -Math.sin(p + 1.6)) * a * 1.0);
     }
-    // arms hang down along the body (T-pose -> down), then swing
-    const armDown = -1.2;
-    let swingR = sw * 0.6, swingL = -sw * 0.6;
-    let rRaise = 0, lRaise = 0, rTwist = 0, spineTwist = Math.sin(p) * a * 0.12;
-    if (s.blocking) { rRaise = 1.2; lRaise = 1.4; swingR = swingL = 0; }
-    if (s.ride) { swingR = swingL = 0.5; }
+    // Arm convention (model axes, see rot): rz drops the T-pose arm to hang down, ry then swings it forward (right arm +, left arm -),
+    // lowerarm ry bends the elbow forward, hand rx tilts the held blade up. Forward angles below are all "positive = forward/up".
+    const armDown = 1.5;
+    let fR = sw * 0.6, fL = -sw * 0.6, eR = 0.25, eL = 0.25;
+    // blade angle target (rad above forward, 0.436 = rest); null = leave the wrist neutral
+    let thR: number | null = null, thL: number | null = null;
+    let spineTwist = Math.sin(p) * a * 0.12;
+    if (s.blocking) { fR = 0.75; fL = 0.95; eR = 1.5; eL = 1.6; thR = BLOCK.thR; thL = BLOCK.thL; }
+    if (s.ride) { fR = fL = 0.5; }
     let attackLean = 0, strike = 0;
     if (s.swing > 0) {
       const t = s.swing, ease = (x: number) => x * x * (3 - 2 * x);
-      const back = s.power ? -2.4 : -1.4, fwd = s.power ? 0.4 : 0.2;
-      let r: number;
-      if (t < 0.38) r = back * ease(t / 0.38);
-      else if (t < 0.6) r = back + (fwd - back) * Math.pow((t - 0.38) / 0.22, 2);
-      else r = fwd * (1 - ease((t - 0.6) / 0.4));
-      swingR = r; rRaise = 0.6;
+      const fw = s.power ? 2.7 : 2.3, fs = s.power ? 1.5 : 1.35;      // shoulder at windup / strike
+      const ew = s.power ? 1.4 : 1.2, es = 0.3;                         // elbow at windup / strike
+      const tw = SWING.thWind, ts = SWING.thStrike;                    // blade angle at windup / strike
+      const lerp = (x: number, y: number, k: number) => x + (y - x) * k;
+      let k: number, from: number;
+      let F = 0, E = 0.25, TH = 0.436;
+      if (t < 0.38) { k = ease(t / 0.38); F = lerp(0, fw, k); E = lerp(0.25, ew, k); TH = lerp(0.436, tw, k); }
+      else if (t < 0.6) { k = Math.pow((t - 0.38) / 0.22, 2); F = lerp(fw, fs, k); E = lerp(ew, es, k); TH = lerp(tw, ts, k); }
+      else { k = ease((t - 0.6) / 0.4); F = lerp(fs, 0, k); E = lerp(es, 0.25, k); TH = lerp(ts, 0.436, k); }
+      from = 0; void from;
+      fR = F; eR = E; thR = TH;
+      fL = 0.5; eL = 1.0;
       spineTwist = (t < 0.38 ? 0.3 * ease(t / 0.38) : t < 0.6 ? 0.3 - 0.7 * ((t - 0.38) / 0.22) : -0.4 * (1 - ease((t - 0.6) / 0.4)));
       attackLean = t > 0.38 && t < 0.7 ? 0.12 : 0;
-      rTwist = r * 0.0;
-      // off-hand counterbalances the strike, forearm snaps straight on the slash
-      swingL = -r * 0.35; lRaise = 0.25;
       strike = t > 0.38 && t < 0.7 ? Math.sin(((t - 0.38) / 0.32) * Math.PI) : 0;
     }
     this.rot('clavicle_l', 0); this.rot('clavicle_r', 0);
-    this.rot('upperarm_l', swingL - lRaise * 0.8, 0, side(true) * -armDown * (s.blocking ? 0.4 : 1));
-    this.rot('upperarm_r', swingR - rRaise * 0.8 + rTwist, 0, side(false) * -armDown * (s.blocking ? 0.4 : 1));
-    this.rot('lowerarm_l', -0.25 - lRaise * 0.5 - Math.max(0, -swingL) * 0.5);
-    this.rot('lowerarm_r', -0.25 - rRaise * 0.4 - Math.max(0, -swingR) * 0.5 + strike * 0.45);
+    this.rot('upperarm_l', 0, -fL, armDown);
+    this.rot('upperarm_r', 0, fR, -armDown);
+    this.rot('lowerarm_l', 0, -eL);
+    this.rot('lowerarm_r', 0, eR);
+    this.rot('hand_l', 0, thL === null ? 0 : -(thL - 0.436 - fL - eL));
+    this.rot('hand_r', 0, thR === null ? 0 : thR - 0.436 - fR - eR);
     if (strike > 0) { this.rot('thigh_l', -strike * 0.35); this.rot('thigh_r', strike * 0.2); this.rot('calf_l', strike * 0.15); }
     // spine / head
     this.rot('pelvis', 0, -spineTwist * 0.3, 0);
@@ -262,5 +274,7 @@ export class Humanoid {
     this.rot('spine_03', attackLean * 0.3, spineTwist * 0.2);
     this.rot('neck_01', 0, -spineTwist * 0.4);
     this.model.position.y = this.baseY + Math.abs(Math.sin(p)) * a * 0.035;
+    const dbg = (window as unknown as { __rot?: Record<string, [number, number, number]> }).__rot;
+    if (dbg) for (const k of Object.keys(dbg)) this.rot(k as BoneName, ...dbg[k]);
   }
 }

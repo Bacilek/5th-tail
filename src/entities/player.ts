@@ -4,7 +4,7 @@ import type { Enemy } from './enemy';
 import type { Input } from '../engine/input';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
-import { heightAt, heightAtFor, MAP_HALF } from '../world/terrain';
+import { heightAt, heightAtFor, stairBlocked, MAP_HALF } from '../world/terrain';
 import type { Look } from '../data/look';
 import { Humanoid } from './humanoid';
 import { makeLimb, animateWalk, ridePose as ridePoseFn, type Limbs } from './walkcycle';
@@ -435,7 +435,7 @@ export class Player {
     let nx = this.pos.x + (this.vel.x + this.knock.x) * dt, nz = this.pos.z + (this.vel.z + this.knock.z) * dt;
     this.knock.multiplyScalar(Math.exp(-3.2 * dt));
     // cliffs and steep slopes block movement (no walking up walls)
-    const climb = (x: number, z: number) => heightAtFor(x, z, this.pos.y) - this.pos.y > 0.9;
+    const climb = (x: number, z: number) => heightAtFor(x, z, this.pos.y) - this.pos.y > 0.9 || stairBlocked(x, z, this.pos.y);
     if (climb(nx, nz)) {
       if (!climb(nx, this.pos.z)) nz = this.pos.z;
       else if (!climb(this.pos.x, nz)) nx = this.pos.x;
