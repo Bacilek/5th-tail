@@ -1,0 +1,31 @@
+# 17 - Packaging, icon, launching like a real game
+
+Goal: double-click an icon on the desktop and the game starts in its own window, no terminal, no browser address bar.
+
+## Options
+| Option | Pros | Cons |
+| --- | --- | --- |
+| **PWA install** (Chrome "Install app") | zero extra tooling, desktop shortcut + own window, works offline with a service worker | needs a local server or hosting; limited file/FS access |
+| **Electron** | simplest to get right, full Node, easy fullscreen, gamepad support, auto-update possible | ~100-150 MB installer |
+| **Tauri** | small installers (few MB), Rust shell + system WebView2 | WebView2 on Windows (fine), extra Rust toolchain, some WebGL quirks to test |
+**Recommendation:** start with **Electron** (reliable WebGL/Chromium, saves to disk, gamepad) for the first "real icon" milestone; re-evaluate Tauri for size later. A PWA manifest is added in parallel as a cheap fallback.
+
+## Deliverables (Phase 0, small steps)
+1. Production build served from `file://` or a bundled local server; verify audio autoplay and pointer lock inside the shell.
+2. Electron main process: window (fullscreen toggle F11), menu hidden, single-instance lock, app data folder for saves.
+3. **Icon**: design a 1024x1024 master (stylised dragon scale/five-tail motif; placeholder generated procedurally via script then replaced), export `.ico` (16-256), `.icns`, PNGs; set in the packager config.
+4. Packager (electron-builder): Windows installer (NSIS) + portable exe; creates Desktop and Start Menu shortcuts.
+5. Version stamping, changelog, "About" box with credits.
+6. Optional: Steam-style launcher splash with progress bar.
+
+## Distribution
+Private: zip/installer shared with the partner. No public release because of the IP (fan work). Keep the repo private or ensure assets/text do not infringe; no book text included.
+
+## Updates
+`git pull` + `npm run package` for now; later auto-update via electron-updater from a private release feed (DREAM).
+
+## Save locations
+Desktop build: `%APPDATA%/5th-tail/saves/*.json`. Browser build: IndexedDB. Both through one `SaveStore` interface.
+
+## Troubleshooting checklist
+GPU acceleration disabled? -> fallback quality. Gamepad not detected? -> Chromium flags. Audio blocked? -> first-click start screen.

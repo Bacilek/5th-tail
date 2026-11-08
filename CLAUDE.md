@@ -19,3 +19,8 @@ TypeScript + Three.js + Vite (+ Rapier physics later). No external model downloa
 - Content is data-driven (`src/data/`): dragons, NPCs, quests, items.
 - Lore: `docs/lore.md` (flag uncertain facts). Design: `docs/design.md`. Milestones: `docs/roadmap.md`.
 - Ask the user yes/no questions when a design decision is theirs.
+
+## Master plan
+- `TODO.md` = phases -> milestones -> small steps (checkboxes). Do one step at a time, one commit per step, tick the checkbox, push.
+- `docs/bible/` = full design bible (lore, world, characters, quests, combat, audio, art, UI, tech, packaging, QA). Unknown lore goes to `docs/bible/99-open-questions.md`.
+- Phase 0 first: nothing has been verified in a real browser run yet.
