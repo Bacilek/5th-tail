@@ -61,3 +61,12 @@ States: idle, patrol, alert, search, chase, attack, retreat, flee, flank, stagge
 
 ## Feel checklist (testable)
 Attack windup/active/recovery frames; sound on swing and on hit; camera kick; stagger feels responsive; stamina exhaust is visible; every cast has anticipation + release; bars flash when empty.
+
+## Implemented in prototype (Phase 1, first pass)
+- Melee: tap = light attack (on release), **hold >= 0.5 s = power attack** (x2 damage, 2.4x stamina, stagger + knockback). Held-hand windup pose.
+- **Block**: hold `X` or middle mouse with a melee item: frontal hits cost stamina (0.9 x damage) and deal 15%; **perfect block** (first 0.3 s) = no damage and staggers the attacker; out of stamina = guard break.
+- **Bash**: attack button while blocking: short cone, small damage, long stagger, 8 m/s knockback.
+- Hit feedback: hit-stop (40-90 ms slow-mo), camera shake, enemy flinch and knockback.
+- Enemies telegraph (0.55 s warm glow) before swinging; a stagger cancels the attack.
+- Test: `node scripts/combat.mjs`.
+Next: shields, weapon classes, enemy roles/groups, ranged enemies, boss framework.

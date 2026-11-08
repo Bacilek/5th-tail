@@ -65,6 +65,13 @@ export class Player {
   private cooldown: [number, number] = [0, 0];
   private swing: [number, number] = [0, 0]; // 0..1 animation progress, 0 = idle
   private swingHit: [boolean, boolean] = [false, false];
+  private swingPower: [boolean, boolean] = [false, false];
+  private holdT: [number, number] = [0, 0];
+  blocking = false;
+  private blockT = 0;
+  /** camera shake amplitude (radians), decays quickly */
+  shake = 0;
+  onBlock: (kind: 'block' | 'perfect' | 'break', from: THREE.Vector3) => void = () => {};
   private deadTimer = 0;
 
   readonly avatar = new THREE.Group();
@@ -199,9 +206,21 @@ export class Player {
     return new THREE.Vector3(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
   }
 
-  damage(n: number, raw = false): void {
+  damage(n: number, raw = false, from?: THREE.Vector3): void {
     if (!this.alive) return;
-    this.health -= raw ? n : n * DIFFICULTY[settings.difficulty].taken;
+    let dmg = raw ? n : n * DIFFICULTY[settings.difficulty].taken;
+    if (!raw && this.blocking && from) {
+      const to = new THREE.Vector3(from.x - this.pos.x, 0, from.z - this.pos.z).normalize();
+      const f = this.forward; f.y = 0; f.normalize();
+      if (to.dot(f) > 0.1) {
+        if (this.blockT < 0.3) { this.onBlock('perfect', from); this.shake = 0.01; return; } // perfect block: no damage
+        const cost = dmg * 0.9;
+        if (this.stamina >= cost) { this.stamina -= cost; this.staminaDelay = 1.2; this.onBlock('block', from); dmg *= 0.15; }
+        else { this.stamina = 0; this.blocking = false; this.onBlock('break', from); }
+      }
+    }
+    this.shake = Math.max(this.shake, Math.min(0.05, dmg * 0.003));
+    this.health -= dmg;
     this.onDamaged();
     if (this.health <= 0) { this.health = 0; this.alive = false; this.deadTimer = 3; this.onDeath(); }
   }
@@ -229,7 +248,7 @@ export class Player {
 
   onAttack: (kind: string) => void = () => {};
 
-  private attack(h: Hand): void {
+  private attack(h: Hand, power = false): void {
     const item = ITEMS[this.hands[h]];
     if (item.kind === 'none' || this.cooldown[h] > 0 || this.swing[h] > 0) return;
     if (item.kind === 'heal') {
@@ -237,8 +256,9 @@ export class Player {
       this.onAttack('heal');
       this.swing[h] = 0.001; this.swingHit[h] = true;
     } else if (item.kind === 'melee') {
-      if (!this.useStamina(item.cost)) return;
-      this.onAttack('melee');
+      if (!this.useStamina(item.cost * (power ? 2.4 : 1))) return;
+      this.onAttack(power ? 'power' : 'melee');
+      this.swingPower[h] = power;
       this.swing[h] = 0.001; this.swingHit[h] = false;
     } else {
       if (this.magicka < item.cost) return;
@@ -250,7 +270,16 @@ export class Player {
       else this.combat.lightning(origin, dir, item.range, item.damage);
       this.swing[h] = 0.001; this.swingHit[h] = true;
     }
-    this.cooldown[h] = item.cooldown;
+    this.cooldown[h] = item.cooldown * (item.kind === 'melee' && power ? 1.6 : 1);
+  }
+
+  /** Shield bash / weapon shove while blocking: short-range stagger. */
+  private bash(h: Hand): void {
+    if (this.cooldown[h] > 0 || !this.useStamina(10)) return;
+    this.cooldown[h] = 0.6;
+    this.onAttack('bash');
+    this.combat.melee(this.eye, this.forward, 2.2, 6, 0.3, { stagger: 1.0, knock: 8 });
+    this.swing[h] = 0.001; this.swingHit[h] = true; this.swingPower[h] = false;
   }
 
   update(dt: number, input: Input): void {
@@ -328,9 +357,26 @@ export class Player {
 
     // attacks (LMB = left hand, RMB = right hand)
     if (input.locked) {
-      if (input.buttonDown(0)) this.attack(0);
-      if (input.buttonDown(2)) this.attack(1);
-    }
+      // block: hold X or the middle mouse button with a melee item in a hand
+      const hasMelee = ITEMS[this.hands[0]].kind === 'melee' || ITEMS[this.hands[1]].kind === 'melee';
+      const wantBlock = (input.isDown('KeyX') || input.buttonDown(1)) && hasMelee && this.stamina > 1 && this.swing[0] === 0 && this.swing[1] === 0;
+      if (wantBlock && !this.blocking) this.blockT = 0;
+      this.blocking = wantBlock;
+      if (this.blocking) { this.blockT += dt; this.staminaDelay = Math.max(this.staminaDelay, 0.6); }
+      for (const h of [0, 1] as Hand[]) {
+        const down = h === 0 ? input.buttonDown(0) : input.buttonDown(2);
+        const pressed = h === 0 ? input.buttonPressed(0) : input.buttonPressed(2);
+        const kind = ITEMS[this.hands[h]].kind;
+        if (kind === 'melee') {
+          if (this.blocking) { if (pressed) this.bash(h); this.holdT[h] = 0; }
+          else if (down) this.holdT[h] += dt;
+          else if (this.holdT[h] > 0) { const power = this.holdT[h] >= 0.5; this.holdT[h] = 0; this.attack(h, power); }
+        } else {
+          this.holdT[h] = 0;
+          if (down) this.attack(h);
+        }
+      }
+    } else { this.blocking = false; this.holdT[0] = this.holdT[1] = 0; }
     for (const h of [0, 1] as Hand[]) {
       this.cooldown[h] = Math.max(0, this.cooldown[h] - dt);
       if (this.swing[h] > 0) {
@@ -339,7 +385,9 @@ export class Player {
         if (!this.swingHit[h] && this.swing[h] > 0.4) {
           this.swingHit[h] = true;
           const it = ITEMS[this.hands[h]];
-          this.combat.melee(this.eye, this.forward, it.range, it.damage);
+          const pw = this.swingPower[h];
+          this.combat.melee(this.eye, this.forward, it.range * (pw ? 1.15 : 1), it.damage * (pw ? 2 : 1), pw ? 0.1 : 0.35, pw ? { stagger: 0.9, knock: 9 } : { stagger: 0.28, knock: 3 });
+          this.shake = Math.max(this.shake, pw ? 0.03 : 0.012);
         }
         if (this.swing[h] >= 1) this.swing[h] = 0;
       }
@@ -353,6 +401,7 @@ export class Player {
 
   sync(dt: number): void {
     const cam = this.camera;
+    this.shake = Math.max(0, this.shake - dt * 0.25);
     // walk cycle: phase follows ground speed; swing fades out when standing or airborne
     const sp = this.alive && this.grounded ? Math.hypot(this.vel.x, this.vel.z) : 0;
     const target = Math.min(1, sp / 4.5);
@@ -371,7 +420,7 @@ export class Player {
     if (!this.thirdPerson) {
       cam.position.copy(eye);
       cam.position.y += (Math.abs(Math.sin(this.walkPhase)) * 0.035 - 0.017) * this.walkAmt;
-      cam.rotation.set(this.pitch, this.yaw, Math.cos(this.walkPhase) * 0.004 * this.walkAmt);
+      cam.rotation.set(this.pitch + (Math.random() - 0.5) * this.shake, this.yaw + (Math.random() - 0.5) * this.shake, Math.cos(this.walkPhase) * 0.004 * this.walkAmt);
     } else {
       const cp = Math.cos(this.pitch);
       const back = new THREE.Vector3(Math.sin(this.yaw) * cp, -Math.sin(this.pitch), Math.cos(this.yaw) * cp);
@@ -390,7 +439,10 @@ export class Player {
       const ph = this.walkPhase + (h === 0 ? 0 : Math.PI);
       const bobX = Math.sin(ph) * 0.025 * this.walkAmt, bobY = (Math.abs(Math.cos(ph)) * 0.035 - 0.017) * this.walkAmt;
       m.position.set(base + bobX, -0.3 + bobY + (isSpell ? 0.05 * a : -0.1 * a), -0.55 - (isSpell ? 0.0 : 0.15 * a) + Math.sin(ph) * 0.02 * this.walkAmt);
-      m.rotation.set(isSpell ? 0.4 * a : -1.0 * a + 0.25, 0, 0);
+      const melee = ITEMS[this.hands[h]].kind === 'melee';
+      const wind = melee ? Math.min(1, this.holdT[h] / 0.5) : 0, guard = this.blocking && melee ? 1 : 0;
+      m.position.x += -base * 0.7 * guard; m.position.y += 0.14 * guard + 0.06 * wind; m.position.z += -0.08 * guard + 0.1 * wind;
+      m.rotation.set((isSpell ? 0.4 * a : -1.0 * a + 0.25) - 0.9 * wind - 1.0 * guard, 0, (h === 0 ? -1 : 1) * 0.35 * guard);
       const tm = this.tpMount[h];
       tm.rotation.set(isSpell ? -1.2 * a : -1.6 * a, 0, 0);
     }

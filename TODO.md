@@ -95,13 +95,13 @@ Goal: moment-to-moment combat and movement feel good. See `docs/bible/09-combat-
 - [ ] M1.1.5 [SHOULD|M] Swimming (water volumes). *Accept: swim, stamina, no fall damage in water.*
 
 ## M1.2 Melee
-- [ ] M1.2.1 [MUST|M] Attack state machine: windup/active/recovery with hit-frame. *Accept: hit registers at the right frame.*
-- [ ] M1.2.2 [MUST|M] Power attacks (hold). *Accept: 2x damage, stagger chance.*
-- [ ] M1.2.3 [MUST|M] Blocking + shield, stamina drain, block spark. *Accept: blocked hits reduced.*
-- [ ] M1.2.4 [MUST|S] Bash + stagger interrupting casts. *Accept: bash staggers enemy.*
-- [ ] M1.2.5 [MUST|M] Hit reactions, hit-stop, camera shake, knockback. *Accept: visible and audible impact.*
+- [~] M1.2.1 [MUST|M] Attack state machine: windup/active/recovery with hit-frame. *Accept: hit registers at the right frame.* (light/power/bash with hit frame; enemy windup telegraph added)
+- [x] M1.2.2 [MUST|M] Power attacks (hold). *Accept: 2x damage, stagger chance.*
+- [x] M1.2.3 [MUST|M] Blocking + shield, stamina drain, block spark. *Accept: blocked hits reduced.*
+- [x] M1.2.4 [MUST|S] Bash + stagger interrupting casts. *Accept: bash staggers enemy.*
+- [x] M1.2.5 [MUST|M] Hit reactions, hit-stop, camera shake, knockback. *Accept: visible and audible impact.*
 - [ ] M1.2.6 [SHOULD|M] Weapon classes (dagger/sword/axe/mace/two-hander/spear) with stats. *Accept: each plays differently.*
-- [ ] M1.2.7 [SHOULD|M] Parry/perfect block window. *Accept: timed block staggers.*
+- [x] M1.2.7 [SHOULD|M] Parry/perfect block window. *Accept: timed block staggers.*
 - [ ] M1.2.8 [SHOULD|M] Sneak attack/backstab multipliers. *Accept: x3 dagger sneak.*
 
 ## M1.3 Ranged

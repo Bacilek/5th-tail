@@ -14,7 +14,7 @@ import { createDragon, type Dragon } from './entities/dragon';
 import { DRAGONS, TAIL_ATTACKS, BOND_SPECIES } from './data/dragons';
 import { DragonMount } from './entities/mount';
 import { CLASSES, type ClassId } from './data/classes';
-import { Combat } from './systems/combat';
+import { Combat, nearestAlive } from './systems/combat';
 import { Hud } from './ui/hud';
 import { Panels } from './ui/panels';
 import { QuestLog } from './systems/quests';
@@ -311,6 +311,12 @@ player.onRespawn = () => {
 player.onDeath = () => { hud.announce('You died', '', 3); };
 player.onDamaged = () => { hud.flashDamage(); audio.hurt(); };
 player.onStep = () => audio.step();
+player.onBlock = (kind, from) => {
+  audio.hit();
+  if (kind === 'perfect') { hud.announce('Perfect block', '', 0.8); const en = nearestAlive(combat.enemies, from); en?.stagger(1.2, 0, 0); hitStop = 0.08; }
+  else if (kind === 'break') hud.announce('Guard broken', 'Out of stamina', 1);
+};
+combat.onHit = (_e, power) => { audio.hit(); hitStop = power ? 0.09 : 0.04; };
 player.onAttack = (k) => { if (k === 'melee') audio.swing(); else if (k === 'fireball') audio.fire(); else if (k === 'lightning') audio.lightning(); else audio.heal(); };
 panels.onOpen = (name) => {
   if (name === 'Broccoli') { audio.meow(); return; }
@@ -404,8 +410,11 @@ addEventListener('resize', () => {
 });
 
 const clock = new THREE.Clock();
+let hitStop = 0;
 renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const rawDt = Math.min(clock.getDelta(), 0.05);
+  const dt = hitStop > 0 ? rawDt * 0.12 : rawDt;
+  hitStop = Math.max(0, hitStop - rawDt);
   const t = clock.elapsedTime;
 
   if (!chosen) {
@@ -477,7 +486,7 @@ renderer.setAnimationLoop(() => {
     const tgt = new THREE.Vector3(player.pos.x, player.pos.y, player.pos.z);
     for (const e of combat.enemies) {
       const dmg = e.update(dt, tgt, player.alive);
-      if (dmg > 0) player.damage(dmg);
+      if (dmg > 0) player.damage(dmg, false, e.group.position);
     }
     combat.update(dt);
   }
@@ -517,5 +526,5 @@ renderer.setAnimationLoop(() => {
   startQuest: (id: string) => quests.start(id),
   bond: (i = 0) => { const sp = BOND_SPECIES[i % BOND_SPECIES.length]; bondDragon({ species: sp, spec: { name: 'Testdrake', color: sp.hex, tail: sp.tail, size: sp.size } }); },
   spawnEnemy: (x: number, z: number) => { const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e); },
-  perf, saveGame, snapshot, applySave, settings,
+  perf, saveGame, snapshot, applySave, settings, input,
 };

@@ -6,6 +6,15 @@ import { heightAt } from '../world/terrain';
 interface Fireball { mesh: THREE.Mesh; vel: THREE.Vector3; life: number; dmg: number; }
 interface Effect { mesh: THREE.Object3D; life: number; max: number; grow: number; }
 
+export interface HitOpts { stagger?: number; knock?: number; }
+
+/** Staggers the nearest enemy to a point (used by perfect blocks). */
+export function nearestAlive(enemies: Enemy[], at: THREE.Vector3): Enemy | null {
+  let best: Enemy | null = null, bd = 6;
+  for (const e of enemies) { if (!e.alive) continue; const d = e.group.position.distanceTo(at); if (d < bd) { bd = d; best = e; } }
+  return best;
+}
+
 export class Combat {
   enemies: Enemy[] = [];
   private fireballs: Fireball[] = [];
@@ -13,23 +22,31 @@ export class Combat {
   private fbGeo = new THREE.SphereGeometry(0.35, 8, 6);
   private fbMat = new THREE.MeshBasicMaterial({ color: 0xff7a1a });
   onKill: (e: Enemy) => void = () => {};
+  /** Called whenever the player's attack damages an enemy (for hit-stop, shake, sounds). */
+  onHit: (e: Enemy, power: boolean) => void = () => {};
 
   constructor(private scene: THREE.Scene) {}
 
-  private hurt(e: Enemy, dmg: number): void {
+  private hurt(e: Enemy, dmg: number, opts?: HitOpts, origin?: THREE.Vector3): void {
     const was = e.alive;
     e.damage(dmg * DIFFICULTY[settings.difficulty].dealt);
+    if (opts && e.alive) {
+      const dx = e.group.position.x - (origin?.x ?? e.group.position.x), dz = e.group.position.z - (origin?.z ?? e.group.position.z);
+      const l = Math.hypot(dx, dz) || 1;
+      e.stagger(opts.stagger ?? 0.2, (dx / l) * (opts.knock ?? 0), (dz / l) * (opts.knock ?? 0));
+    }
+    if (was) this.onHit(e, !!opts && (opts.stagger ?? 0) > 0.5);
     if (was && !e.alive) this.onKill(e);
   }
 
-  melee(origin: THREE.Vector3, forward: THREE.Vector3, range: number, dmg: number, minDot = 0.35): void {
+  melee(origin: THREE.Vector3, forward: THREE.Vector3, range: number, dmg: number, minDot = 0.35, opts?: HitOpts): void {
     for (const e of this.enemies) {
       if (!e.alive) continue;
       const to = e.center.sub(origin);
       const d = to.length();
       if (d > range + e.radius) continue;
       if (to.normalize().dot(forward) < minDot) continue;
-      this.hurt(e, dmg);
+      this.hurt(e, dmg, opts, origin);
     }
   }
 

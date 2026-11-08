@@ -56,6 +56,19 @@ export class Enemy {
     if (this.hp <= 0) { this.alive = false; this.deathT = 0; }
   }
 
+  private staggerT = 0;
+  private windup = 0;
+  private knock = new THREE.Vector3();
+  /** true while the enemy telegraphs an attack (for sounds/HUD) */
+  get telegraphing(): boolean { return this.windup > 0; }
+
+  /** Interrupts the enemy: flinch for `dur` seconds and shove it (kx, kz m/s). */
+  stagger(dur: number, kx = 0, kz = 0): void {
+    this.staggerT = Math.max(this.staggerT, dur);
+    this.windup = 0;
+    this.knock.x += kx; this.knock.z += kz;
+  }
+
   /** Returns damage dealt to the player this frame (0 if none). */
   update(dt: number, target: THREE.Vector3, targetAlive: boolean): number {
     if (!this.alive) {
@@ -64,24 +77,44 @@ export class Enemy {
       return 0;
     }
     this.flash = Math.max(0, this.flash - dt);
-    for (const m of this.mats) m.emissive.setHex(this.flash > 0 ? 0xaa2200 : 0x000000);
+    const tele = this.windup > 0;
+    for (const m of this.mats) m.emissive.setHex(this.flash > 0 ? 0xaa2200 : tele ? 0x9a5a00 : 0x000000);
 
     const p = this.group.position;
+    // knockback slide (always applies, even while staggered)
+    if (this.knock.lengthSq() > 0.01) {
+      p.x += this.knock.x * dt; p.z += this.knock.z * dt;
+      resolve(p, this.radius);
+      p.y = heightAt(p.x, p.z);
+      this.knock.multiplyScalar(Math.exp(-6 * dt));
+    }
+    if (this.staggerT > 0) {
+      this.staggerT -= dt;
+      this.group.rotation.x = Math.sin(this.staggerT * 30) * 0.12; // flinch
+      return 0;
+    }
+    this.group.rotation.x = 0;
+
     const dx = target.x - p.x, dz = target.z - p.z;
     const dist = Math.hypot(dx, dz);
     let dmg = 0;
     this.atkCd -= dt;
     if (targetAlive && dist < 45 && Math.abs(target.y - p.y) < 6) {
       this.group.rotation.y = Math.atan2(-dx, -dz);
-      if (dist > 1.9) {
+      if (this.windup > 0) {
+        this.windup -= dt;
+        if (this.windup <= 0) {
+          this.atkCd = 1.4;
+          if (dist < 2.7) dmg = 10;
+        }
+      } else if (dist > 1.9) {
         const sp = 3.6 * dt;
         p.x += (dx / dist) * sp;
         p.z += (dz / dist) * sp;
         resolve(p, this.radius);
         p.y = heightAt(p.x, p.z);
       } else if (this.atkCd <= 0) {
-        this.atkCd = 1.2;
-        dmg = 10;
+        this.windup = 0.55; // telegraph: the player can block, bash, strike first or step away
       }
     } else if (Math.hypot(this.home.x - p.x, this.home.z - p.z) > 1) {
       const hx = this.home.x - p.x, hz = this.home.z - p.z, hd = Math.hypot(hx, hz);
