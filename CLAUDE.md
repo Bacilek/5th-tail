@@ -24,3 +24,7 @@ TypeScript + Three.js + Vite (+ Rapier physics later). No external model downloa
 - `TODO.md` = phases -> milestones -> small steps (checkboxes). Do one step at a time, one commit per step, tick the checkbox, push.
 - `docs/bible/` = full design bible (lore, world, characters, quests, combat, audio, art, UI, tech, packaging, QA). Unknown lore goes to `docs/bible/99-open-questions.md`.
 - Phase 0 first: nothing has been verified in a real browser run yet.
+
+## Session handoff (survives /clear)
+- FIRST read `docs/HANDOFF.md` (current state, next steps, non-obvious facts), then the relevant TODO.md section.
+- After every milestone/commit: rewrite `docs/HANDOFF.md` to current state only (remove stale items), tick TODO.md, commit + push. The user may /clear at any time between milestones, so never leave needed context only in chat.
