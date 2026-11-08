@@ -71,6 +71,18 @@ export class Npc {
         this.group.add(spike);
       }
     }
+    if (has('crownBraid')) {
+      const crown = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 6, 14), hair);
+      crown.rotation.x = Math.PI / 2; crown.position.y = 1.86;
+      this.group.add(crown);
+    }
+    if (has('silverTips')) {
+      const upper = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.07), hair);
+      upper.position.set(0, 1.55, 0.2);
+      const tips = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.07), std(0xd8dce8));
+      tips.position.set(0, 1.27, 0.2);
+      this.group.add(upper, tips);
+    }
     if (has('braid')) {
       const braid = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 0.09), hair);
       braid.position.set(0.06, 1.48, 0.2); braid.rotation.x = 0.15;
@@ -129,6 +141,7 @@ export class Npc {
     });
     if (def.build === 'tall') this.group.scale.setScalar(1.1);
     else if (def.build === 'hulking') this.group.scale.set(1.35, 1.15, 1.35);
+    else if (def.build === 'small') this.group.scale.setScalar(0.93);
     const lab = makeLabel(def.name, def.marks ? '#ffd98a' : '#ffffff', 5);
     lab.position.y = 2.5;
     this.group.add(lab);

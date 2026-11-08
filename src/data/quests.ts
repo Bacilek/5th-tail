@@ -121,4 +121,12 @@ export const QUESTS: QuestDef[] = [
     objectives: [{ type: 'talk', npc: 'hesper', text: 'Tell the innkeeper Hesper what the Commandant said' }],
     gold: 150,
   },
+  {
+    id: 'q_violet', title: 'An Overdue Volume', giver: 'violet', turnIn: 'jesinia', requires: 'q_scrolls',
+    intro: 'I borrowed a book on dragon anatomy from Jesinia a month ago and never returned it. It is on my bunk. Would you take it to her? The Archives are west of the lower college, below ground.',
+    remind: 'Jesinia is in the Archives, in the Scribe quadrant, west of the lower college.',
+    outro: 'Late, but not a page bent. Tell her she owes me two more favours and a cup of tea.',
+    objectives: [{ type: 'talk', npc: 'jesinia', text: 'Return the book to Jesinia in the Archives' }],
+    gold: 55,
+  },
 ];
