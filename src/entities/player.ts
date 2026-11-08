@@ -19,7 +19,49 @@ function buildHeld(id: ItemId, scale: number): THREE.Object3D {
   const g = new THREE.Group();
   const metal = new THREE.MeshStandardMaterial({ color: 0xdfe3ea, emissive: 0x2c3036, flatShading: true, metalness: 0.25, roughness: 0.4 });
   const grip = new THREE.MeshStandardMaterial({ color: 0x3a2a1e, flatShading: true });
-  if (id === 'sword' || id === 'dagger') {
+  const wood = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
+  if (id === 'axe' || id === 'mace') {
+    const haft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 5), wood);
+    haft.position.y = 0.35;
+    const head = id === 'axe' ? new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.2, 0.04), metal) : new THREE.Mesh(new THREE.IcosahedronGeometry(0.11, 0), metal);
+    head.position.set(id === 'axe' ? 0.15 : 0, 0.72, 0);
+    g.add(haft, head);
+  } else if (id === 'greatsword') {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.02), metal);
+    blade.position.y = 0.95;
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.06), grip);
+    guard.position.y = 0.18;
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3, 5), grip);
+    g.add(blade, guard, handle);
+  } else if (id === 'spear') {
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.0, 5), wood);
+    shaft.position.y = 0.7;
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.3, 4), metal);
+    tip.position.y = 1.85;
+    g.add(shaft, tip);
+  } else if (id === 'shield') {
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 10), new THREE.MeshStandardMaterial({ color: 0x7a2a22, flatShading: true }));
+    disc.rotation.x = Math.PI / 2; disc.position.y = 0.2;
+    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), metal);
+    boss.position.set(0, 0.2, -0.05);
+    g.add(disc, boss);
+  } else if (id === 'bow') {
+    const arc = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.02, 4, 12, Math.PI), wood);
+    arc.rotation.z = -Math.PI / 2; arc.position.y = 0.4;
+    g.add(arc);
+  } else if (id === 'crossbow') {
+    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.5), wood);
+    stock.position.set(0, 0.2, -0.1);
+    const lath = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.04), metal);
+    lath.position.set(0, 0.2, -0.3);
+    g.add(stock, lath);
+  } else if (id === 'knives') {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.01), metal);
+    blade.position.y = 0.2;
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.1, 5), grip);
+    handle.position.y = 0.05;
+    g.add(blade, handle);
+  } else if (id === 'sword' || id === 'dagger') {
     const len = id === 'sword' ? 0.95 : 0.45;
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.06, len, 0.015), metal);
     blade.position.y = len / 2 + 0.12;
@@ -214,8 +256,9 @@ export class Player {
       const f = this.forward; f.y = 0; f.normalize();
       if (to.dot(f) > 0.1) {
         if (this.blockT < 0.3) { this.onBlock('perfect', from); this.shake = 0.01; return; } // perfect block: no damage
-        const cost = dmg * 0.9;
-        if (this.stamina >= cost) { this.stamina -= cost; this.staminaDelay = 1.2; this.onBlock('block', from); dmg *= 0.15; }
+        const sh = ITEMS[this.hands[0]].kind === 'shield' || ITEMS[this.hands[1]].kind === 'shield';
+        const cost = dmg * (sh ? 0.5 : 0.9);
+        if (this.stamina >= cost) { this.stamina -= cost; this.staminaDelay = 1.2; this.onBlock('block', from); dmg *= sh ? 0.08 : 0.15; }
         else { this.stamina = 0; this.blocking = false; this.onBlock('break', from); }
       }
     }
@@ -250,7 +293,7 @@ export class Player {
 
   private attack(h: Hand, power = false): void {
     const item = ITEMS[this.hands[h]];
-    if (item.kind === 'none' || this.cooldown[h] > 0 || this.swing[h] > 0) return;
+    if (item.kind === 'none' || item.kind === 'shield' || item.kind === 'ranged' || this.cooldown[h] > 0 || this.swing[h] > 0) return;
     if (item.kind === 'heal') {
       this.health = Math.min(this.maxHealth, this.health + item.damage);
       this.onAttack('heal');
@@ -273,12 +316,26 @@ export class Player {
     this.cooldown[h] = item.cooldown * (item.kind === 'melee' && power ? 1.6 : 1);
   }
 
+  /** Releases a bow/crossbow/throwing knife. draw 0..1 */
+  private shoot(h: Hand, draw: number): void {
+    const item = ITEMS[this.hands[h]];
+    if (this.cooldown[h] > 0 || !this.useStamina(item.cost)) return;
+    this.cooldown[h] = item.cooldown;
+    const dir = this.forward;
+    const origin = this.eye.addScaledVector(dir, 0.6);
+    const speed = item.id === 'knives' ? 42 : 28 + 52 * draw;
+    this.combat.arrow(origin, dir, speed, item.damage * (item.draw ? 0.35 + 0.65 * draw : 1));
+    this.onAttack(item.id === 'knives' ? 'melee' : 'bow');
+    this.swing[h] = 0.001; this.swingHit[h] = true; this.swingPower[h] = false;
+  }
+
   /** Shield bash / weapon shove while blocking: short-range stagger. */
   private bash(h: Hand): void {
     if (this.cooldown[h] > 0 || !this.useStamina(10)) return;
     this.cooldown[h] = 0.6;
     this.onAttack('bash');
-    this.combat.melee(this.eye, this.forward, 2.2, 6, 0.3, { stagger: 1.0, knock: 8 });
+    const shielded = ITEMS[this.hands[h]].kind === 'shield' || ITEMS[this.hands[1 - h as Hand]].kind === 'shield';
+    this.combat.melee(this.eye, this.forward, 2.4, shielded ? 9 : 6, 0.3, { stagger: shielded ? 1.4 : 1.0, knock: shielded ? 10 : 8 });
     this.swing[h] = 0.001; this.swingHit[h] = true; this.swingPower[h] = false;
   }
 
@@ -357,20 +414,34 @@ export class Player {
 
     // attacks (LMB = left hand, RMB = right hand)
     if (input.locked) {
-      // block: hold X or the middle mouse button with a melee item in a hand
-      const hasMelee = ITEMS[this.hands[0]].kind === 'melee' || ITEMS[this.hands[1]].kind === 'melee';
-      const wantBlock = (input.isDown('KeyX') || input.buttonDown(1)) && hasMelee && this.stamina > 1 && this.swing[0] === 0 && this.swing[1] === 0;
+      // block: hold X / middle mouse with a melee weapon or shield, or just hold the attack button of a hand with a shield
+      const kinds = [ITEMS[this.hands[0]].kind, ITEMS[this.hands[1]].kind];
+      const hasMelee = kinds.includes('melee') || kinds.includes('shield');
+      const shieldHeld = (kinds[0] === 'shield' && input.buttonDown(0)) || (kinds[1] === 'shield' && input.buttonDown(2));
+      const wantBlock = ((input.isDown('KeyX') || input.buttonDown(1)) && hasMelee || shieldHeld) && this.stamina > 1 && this.swing[0] === 0 && this.swing[1] === 0;
       if (wantBlock && !this.blocking) this.blockT = 0;
       this.blocking = wantBlock;
       if (this.blocking) { this.blockT += dt; this.staminaDelay = Math.max(this.staminaDelay, 0.6); }
       for (const h of [0, 1] as Hand[]) {
         const down = h === 0 ? input.buttonDown(0) : input.buttonDown(2);
         const pressed = h === 0 ? input.buttonPressed(0) : input.buttonPressed(2);
-        const kind = ITEMS[this.hands[h]].kind;
-        if (kind === 'melee') {
+        const item = ITEMS[this.hands[h]];
+        if (item.kind === 'melee') {
           if (this.blocking) { if (pressed) this.bash(h); this.holdT[h] = 0; }
           else if (down) this.holdT[h] += dt;
           else if (this.holdT[h] > 0) { const power = this.holdT[h] >= 0.5; this.holdT[h] = 0; this.attack(h, power); }
+        } else if (item.kind === 'shield') {
+          this.holdT[h] = 0;
+          // tap the shield hand while the other hand blocks = bash
+          if (pressed && this.blocking && !shieldHeld) this.bash(h);
+        } else if (item.kind === 'ranged') {
+          if (this.blocking) { this.holdT[h] = 0; continue; }
+          if (down) this.holdT[h] += dt;
+          else if (this.holdT[h] > 0) {
+            const need = item.draw ?? 0, q = need > 0 ? Math.min(1, this.holdT[h] / need) : 1;
+            this.holdT[h] = 0;
+            if (item.id === 'crossbow' ? q >= 1 : q >= 0.3) this.shoot(h, q);
+          }
         } else {
           this.holdT[h] = 0;
           if (down) this.attack(h);
@@ -386,7 +457,9 @@ export class Player {
           this.swingHit[h] = true;
           const it = ITEMS[this.hands[h]];
           const pw = this.swingPower[h];
-          this.combat.melee(this.eye, this.forward, it.range * (pw ? 1.15 : 1), it.damage * (pw ? 2 : 1), pw ? 0.1 : 0.35, pw ? { stagger: 0.9, knock: 9 } : { stagger: 0.28, knock: 3 });
+          const st = it.stagger ?? 0.28, kn = it.knock ?? 3;
+          this.combat.melee(this.eye, this.forward, it.range * (pw ? 1.15 : 1), it.damage * (pw ? 2 : 1), pw ? Math.min(0.1, it.arc ?? 0.35) : (it.arc ?? 0.35), pw ? { stagger: 0.9 + st, knock: 6 + kn * 1.5 } : { stagger: st, knock: kn });
+          this.combat.slashFx(this.eye, this.forward, pw);
           this.shake = Math.max(this.shake, pw ? 0.03 : 0.012);
         }
         if (this.swing[h] >= 1) this.swing[h] = 0;
@@ -439,10 +512,27 @@ export class Player {
       const ph = this.walkPhase + (h === 0 ? 0 : Math.PI);
       const bobX = Math.sin(ph) * 0.025 * this.walkAmt, bobY = (Math.abs(Math.cos(ph)) * 0.035 - 0.017) * this.walkAmt;
       m.position.set(base + bobX, -0.3 + bobY + (isSpell ? 0.05 * a : -0.1 * a), -0.55 - (isSpell ? 0.0 : 0.15 * a) + Math.sin(ph) * 0.02 * this.walkAmt);
-      const melee = ITEMS[this.hands[h]].kind === 'melee';
-      const wind = melee ? Math.min(1, this.holdT[h] / 0.5) : 0, guard = this.blocking && melee ? 1 : 0;
+      const kind = ITEMS[this.hands[h]].kind, melee = kind === 'melee';
+      const drawT = ITEMS[this.hands[h]].draw ?? 0.5;
+      const wind = melee ? Math.min(1, this.holdT[h] / 0.5) : kind === 'ranged' ? Math.min(1, this.holdT[h] / Math.max(0.2, drawT)) : 0;
+      const guard = this.blocking && (melee || kind === 'shield') ? 1 : 0;
       m.position.x += -base * 0.7 * guard; m.position.y += 0.14 * guard + 0.06 * wind; m.position.z += -0.08 * guard + 0.1 * wind;
       m.rotation.set((isSpell ? 0.4 * a : -1.0 * a + 0.25) - 0.9 * wind - 1.0 * guard, 0, (h === 0 ? -1 : 1) * 0.35 * guard);
+      if (melee && t > 0 && !this.blocking) {
+        // sword arc: wind up (0-0.38), fast slash (0.38-0.6), recover. Power attacks are overhead chops.
+        const side = h === 0 ? -1 : 1, pw = this.swingPower[h];
+        const ease = (x: number) => x * x * (3 - 2 * x);
+        const lerp = (p: number, q: number, k: number) => p + (q - p) * k;
+        const back = pw ? { rx: -2.1, rz: 0, px: 0, py: 0.22, pz: 0.06 } : { rx: -1.2, rz: side * 0.9, px: side * 0.1, py: 0.1, pz: 0.04 };
+        const fwd = pw ? { rx: 0.9, rz: 0, px: 0, py: -0.2, pz: -0.28 } : { rx: 0.5, rz: -side * 1.05, px: -side * 0.42, py: -0.12, pz: -0.2 };
+        const rest = { rx: 0.25, rz: 0, px: 0, py: 0, pz: 0 };
+        let from = rest, to = back, k = 0;
+        if (t < 0.38) { from = rest; to = back; k = ease(t / 0.38); }
+        else if (t < 0.6) { from = back; to = fwd; k = Math.pow((t - 0.38) / 0.22, 2); }
+        else { from = fwd; to = rest; k = ease((t - 0.6) / 0.4); }
+        m.rotation.set(lerp(from.rx, to.rx, k), 0, lerp(from.rz, to.rz, k));
+        m.position.set(base + bobX + lerp(from.px, to.px, k), -0.3 + lerp(from.py, to.py, k), -0.55 + lerp(from.pz, to.pz, k));
+      }
       const tm = this.tpMount[h];
       tm.rotation.set(isSpell ? -1.2 * a : -1.6 * a, 0, 0);
     }

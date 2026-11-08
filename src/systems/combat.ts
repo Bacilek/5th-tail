@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import { settings, DIFFICULTY } from '../engine/settings';
 import type { Enemy } from '../entities/enemy';
 import { heightAt } from '../world/terrain';
+import { solidAt } from '../world/collision';
 
 interface Fireball { mesh: THREE.Mesh; vel: THREE.Vector3; life: number; dmg: number; }
+interface Arrow { mesh: THREE.Object3D; vel: THREE.Vector3; life: number; dmg: number; hostile: boolean; stuck: number; }
 interface Effect { mesh: THREE.Object3D; life: number; max: number; grow: number; }
 
 export interface HitOpts { stagger?: number; knock?: number; }
@@ -19,6 +21,13 @@ export class Combat {
   enemies: Enemy[] = [];
   private fireballs: Fireball[] = [];
   private effects: Effect[] = [];
+  private arrows: Arrow[] = [];
+  private arrowGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.9, 4);
+  private arrowMat = new THREE.MeshBasicMaterial({ color: 0xcdb98a });
+  private hostileMat = new THREE.MeshBasicMaterial({ color: 0xff8a50 });
+  /** set by main: where the player is (for hostile projectiles) and what happens when one hits */
+  getPlayerPos: () => THREE.Vector3 = () => new THREE.Vector3(0, -999, 0);
+  onPlayerHit: (dmg: number, from: THREE.Vector3) => void = () => {};
   private fbGeo = new THREE.SphereGeometry(0.35, 8, 6);
   private fbMat = new THREE.MeshBasicMaterial({ color: 0xff7a1a });
   onKill: (e: Enemy) => void = () => {};
@@ -59,6 +68,26 @@ export class Combat {
     m.position.copy(pos); m.scale.setScalar(radius * 0.3);
     this.scene.add(m);
     this.effects.push({ mesh: m, life: 0.3, max: 0.3, grow: radius * 2 });
+  }
+
+  /** Player arrow/bolt/knife. Headshots (above 1.7 m) do double damage. */
+  arrow(origin: THREE.Vector3, dir: THREE.Vector3, speed: number, dmg: number, hostile = false): void {
+    const mesh = new THREE.Mesh(this.arrowGeo, hostile ? this.hostileMat : this.arrowMat);
+    mesh.position.copy(origin);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    this.scene.add(mesh);
+    this.arrows.push({ mesh, vel: dir.clone().normalize().multiplyScalar(speed), life: 4, dmg, hostile, stuck: 0 });
+  }
+
+  /** Crescent flash for melee swings (power attacks are vertical chops). */
+  slashFx(origin: THREE.Vector3, forward: THREE.Vector3, power: boolean): void {
+    const geo = new THREE.RingGeometry(0.7, 0.95, 14, 1, -1.0, 2.0);
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: power ? 0xffd9a0 : 0xe8f0ff, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false }));
+    m.position.copy(origin).addScaledVector(forward, 1.3);
+    m.lookAt(origin);
+    m.rotateZ(power ? Math.PI / 2 : (Math.random() - 0.5) * 0.8);
+    this.scene.add(m);
+    this.effects.push({ mesh: m, life: 0.16, max: 0.16, grow: 2.2 });
   }
 
   fireball(origin: THREE.Vector3, dir: THREE.Vector3, dmg: number): void {
@@ -104,7 +133,41 @@ export class Combat {
     this.effects.push({ mesh: m, life: 0.35, max: 0.35, grow: 9 });
   }
 
+  private updateArrows(dt: number): void {
+    const pp = this.getPlayerPos();
+    for (let i = this.arrows.length - 1; i >= 0; i--) {
+      const a = this.arrows[i];
+      if (a.stuck > 0) {
+        a.stuck -= dt;
+        if (a.stuck <= 0) { this.scene.remove(a.mesh); this.arrows.splice(i, 1); }
+        continue;
+      }
+      a.vel.y -= 12 * dt;
+      a.mesh.position.addScaledVector(a.vel, dt);
+      a.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), a.vel.clone().normalize());
+      a.life -= dt;
+      const p = a.mesh.position;
+      let hit = false;
+      if (a.hostile) {
+        if (p.distanceTo(new THREE.Vector3(pp.x, pp.y + 1.1, pp.z)) < 0.9) { this.onPlayerHit(a.dmg, p.clone().addScaledVector(a.vel, -0.1)); hit = true; }
+      } else {
+        for (const e of this.enemies) {
+          if (!e.alive) continue;
+          if (e.center.distanceTo(p) < 0.9 * Math.max(1, e.def.scale * 0.8)) {
+            const head = p.y > e.group.position.y + 1.7 * e.def.scale;
+            this.hurt(e, a.dmg * (head ? 2 : 1), { stagger: 0.15, knock: 1 }, p.clone().addScaledVector(a.vel, -0.1));
+            hit = true; break;
+          }
+        }
+      }
+      if (hit) { this.scene.remove(a.mesh); this.arrows.splice(i, 1); continue; }
+      if (a.life <= 0) { this.scene.remove(a.mesh); this.arrows.splice(i, 1); continue; }
+      if (p.y < heightAt(p.x, p.z) + 0.05 || solidAt(p.x, p.y, p.z)) a.stuck = 6;
+    }
+  }
+
   update(dt: number): void {
+    this.updateArrows(dt);
     for (let i = this.fireballs.length - 1; i >= 0; i--) {
       const f = this.fireballs[i];
       f.mesh.position.addScaledVector(f.vel, dt);

@@ -87,3 +87,9 @@ export function supportAt(x: number, z: number, y: number, reach = 0.5, r = 0.3)
   }
   return t;
 }
+
+/** True if the point lies inside any collider volume (used by projectiles). */
+export function solidAt(x: number, y: number, z: number): boolean {
+  for (const b of boxes) if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && y <= b.top && y >= b.bottom) return true;
+  return false;
+}

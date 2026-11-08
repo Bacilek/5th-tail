@@ -70,3 +70,10 @@ Attack windup/active/recovery frames; sound on swing and on hit; camera kick; st
 - Enemies telegraph (0.55 s warm glow) before swinging; a stagger cancels the attack.
 - Test: `node scripts/combat.mjs`.
 Next: shields, weapon classes, enemy roles/groups, ranged enemies, boss framework.
+
+## Implemented (Phase 1, second pass)
+- **Swing animation**: wind-up, fast slash arc and recovery for each hand (mirrored left/right); power attacks are overhead chops; crescent slash flash on every swing.
+- **Weapon classes** (`src/data/items.ts`): dagger, sword, axe, mace (big stagger), greatsword (slow, huge), spear (long narrow reach), **shield** (hold its hand button to block, stronger bash), **bow** (draw 0.9 s, gravity, headshot x2), **crossbow** (full draw 1.2 s), **throwing knives** (instant). Class item cycles in `classes.ts`.
+- **Enemies** (`src/entities/enemy.ts`): Venin, rebel soldier, archer (keeps 9-16 m, telegraphs then shoots arrows), brute (slow, 22 dmg, stagger resistant), wolf (fast, flanks), **Venin Commander boss** (ground-slam ring telegraph, enrages at 50% HP and calls reinforcements). Health bars appear once damaged; groups alert neighbours within 16 m; melee enemies approach from flanking angles; sight and lose-interest ranges.
+- Tests: `scripts/combat.mjs`, `scripts/combat2.mjs`.
+Still open: grid navigation, stealth/sneak, enemy variety visuals, tuning pass with Marek's playtest notes.

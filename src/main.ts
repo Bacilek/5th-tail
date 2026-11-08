@@ -9,7 +9,7 @@ import { Sky } from './world/sky';
 import { DayNight } from './systems/daynight';
 import { buildTrees } from './world/trees';
 import { Player } from './entities/player';
-import { Enemy } from './entities/enemy';
+import { Enemy, type EnemyKind } from './entities/enemy';
 import { createDragon, type Dragon } from './entities/dragon';
 import { DRAGONS, TAIL_ATTACKS, BOND_SPECIES } from './data/dragons';
 import { DragonMount } from './entities/mount';
@@ -75,19 +75,27 @@ const hud = new Hud();
 const combat = new Combat(scene);
 const player = new Player(camera, combat, scene);
 
-// Venin lurk outside the college walls (south road + hills)
-for (const [x, z] of [[-20, 130], [20, 140], [0, 160], [-70, 90], [75, 70], [-60, -150]]) {
-  const e = new Enemy(x, z);
+// Hostiles: a mixed roster along the roads and at the Venin camp (with a boss commander)
+function makeEnemy(x: number, z: number, kind: EnemyKind = 'venin'): Enemy {
+  const e = new Enemy(x, z, kind);
+  e.onShoot = (origin, dir) => combat.arrow(origin, dir, 34, e.def.dmg, true);
   scene.add(e.group);
   combat.enemies.push(e);
+  return e;
 }
-// Venin camp: scouts plus a commander
-for (const [x, z] of [[84, 118], [108, 116], [92, 140], [112, 138], [98, 108]]) {
-  const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e);
-}
+for (const [x, z, k] of [[-20, 130, 'venin'], [20, 140, 'archer'], [0, 160, 'brute'], [-70, 90, 'wolf'], [-73, 87, 'wolf'], [75, 70, 'soldier'], [-60, -150, 'venin'], [60, 150, 'wolf']] as [number, number, EnemyKind][]) makeEnemy(x, z, k);
+for (const [x, z, k] of [[84, 118, 'venin'], [108, 116, 'soldier'], [92, 140, 'archer'], [112, 138, 'venin'], [98, 128, 'brute']] as [number, number, EnemyKind][]) makeEnemy(x, z, k);
 {
-  const cmd = new Enemy(96, 108); cmd.hp = 180; cmd.group.scale.setScalar(1.35); scene.add(cmd.group); combat.enemies.push(cmd);
+  const boss = makeEnemy(96, 108, 'boss');
+  boss.onPhase = () => {
+    hud.announce('The Commander roars', 'Reinforcements arrive!', 3);
+    audio.roar();
+    makeEnemy(boss.group.position.x - 8, boss.group.position.z + 6, 'venin').alert();
+    makeEnemy(boss.group.position.x + 8, boss.group.position.z + 6, 'archer').alert();
+  };
 }
+combat.getPlayerPos = () => player.pos;
+combat.onPlayerHit = (dmg, from) => player.damage(dmg, false, from);
 let kills = 0;
 let gauntletDone = false;
 let wingLabel = '';
@@ -485,6 +493,7 @@ renderer.setAnimationLoop(() => {
     }
     const tgt = new THREE.Vector3(player.pos.x, player.pos.y, player.pos.z);
     for (const e of combat.enemies) {
+      if (e.justAlerted) { e.justAlerted = false; for (const o of combat.enemies) if (o !== e && o.alive && o.group.position.distanceTo(e.group.position) < 16) o.alert(); }
       const dmg = e.update(dt, tgt, player.alive);
       if (dmg > 0) player.damage(dmg, false, e.group.position);
     }
@@ -525,6 +534,6 @@ renderer.setAnimationLoop(() => {
   give: (hand: 0 | 1, item: ItemId) => { if (ITEMS[item]) { player.hands[hand] = item; player.onHandsChanged(); } },
   startQuest: (id: string) => quests.start(id),
   bond: (i = 0) => { const sp = BOND_SPECIES[i % BOND_SPECIES.length]; bondDragon({ species: sp, spec: { name: 'Testdrake', color: sp.hex, tail: sp.tail, size: sp.size } }); },
-  spawnEnemy: (x: number, z: number) => { const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e); },
+  spawnEnemy: (x: number, z: number, kind: EnemyKind = 'venin') => makeEnemy(x, z, kind),
   perf, saveGame, snapshot, applySave, settings, input,
 };

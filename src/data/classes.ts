@@ -17,22 +17,22 @@ export interface ClassDef {
 export const CLASSES: Record<ClassId, ClassDef> = {
   rider: {
     id: 'rider', name: 'Rider', tagline: 'Cross the Parapet. Bond a dragon. Many do not survive.',
-    hands: ['lightning', 'dagger'], items: ['none', 'dagger', 'sword', 'lightning', 'fireball'],
+    hands: ['lightning', 'dagger'], items: ['none', 'dagger', 'sword', 'axe', 'spear', 'shield', 'bow', 'knives', 'lightning', 'fireball'],
     maxHealth: 100, maxMagicka: 100, maxStamina: 100,
   },
   infantry: {
     id: 'infantry', name: 'Infantry', tagline: 'The largest quadrant. Steel, discipline, endurance.',
-    hands: ['dagger', 'sword'], items: ['none', 'dagger', 'sword'],
+    hands: ['dagger', 'sword'], items: ['none', 'dagger', 'sword', 'axe', 'mace', 'greatsword', 'spear', 'shield', 'bow', 'crossbow', 'knives'],
     maxHealth: 130, maxMagicka: 0, maxStamina: 125,
   },
   healer: {
     id: 'healer', name: 'Healer', tagline: 'Mend the wounded. No magic - only skill.',
-    hands: ['salve', 'dagger'], items: ['none', 'dagger', 'salve'],
+    hands: ['salve', 'dagger'], items: ['none', 'dagger', 'mace', 'shield', 'knives', 'salve'],
     maxHealth: 100, maxMagicka: 0, maxStamina: 100,
   },
   scribe: {
     id: 'scribe', name: 'Scribe', tagline: 'Keepers of the Archives. Record everything.',
-    hands: ['none', 'dagger'], items: ['none', 'dagger', 'sword'],
+    hands: ['none', 'dagger'], items: ['none', 'dagger', 'sword', 'knives', 'bow'],
     maxHealth: 100, maxMagicka: 0, maxStamina: 100,
   },
 };

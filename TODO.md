@@ -95,18 +95,18 @@ Goal: moment-to-moment combat and movement feel good. See `docs/bible/09-combat-
 - [ ] M1.1.5 [SHOULD|M] Swimming (water volumes). *Accept: swim, stamina, no fall damage in water.*
 
 ## M1.2 Melee
-- [~] M1.2.1 [MUST|M] Attack state machine: windup/active/recovery with hit-frame. *Accept: hit registers at the right frame.* (light/power/bash with hit frame; enemy windup telegraph added)
+- [x] M1.2.1 [MUST|M] Attack state machine: windup/active/recovery with hit-frame. *Accept: hit registers at the right frame.* (light/power/bash with hit frame; enemy windup telegraph added)
 - [x] M1.2.2 [MUST|M] Power attacks (hold). *Accept: 2x damage, stagger chance.*
 - [x] M1.2.3 [MUST|M] Blocking + shield, stamina drain, block spark. *Accept: blocked hits reduced.*
 - [x] M1.2.4 [MUST|S] Bash + stagger interrupting casts. *Accept: bash staggers enemy.*
 - [x] M1.2.5 [MUST|M] Hit reactions, hit-stop, camera shake, knockback. *Accept: visible and audible impact.*
-- [ ] M1.2.6 [SHOULD|M] Weapon classes (dagger/sword/axe/mace/two-hander/spear) with stats. *Accept: each plays differently.*
+- [x] M1.2.6 [SHOULD|M] Weapon classes (dagger/sword/axe/mace/two-hander/spear) with stats. *Accept: each plays differently.*
 - [x] M1.2.7 [SHOULD|M] Parry/perfect block window. *Accept: timed block staggers.*
 - [ ] M1.2.8 [SHOULD|M] Sneak attack/backstab multipliers. *Accept: x3 dagger sneak.*
 
 ## M1.3 Ranged
-- [ ] M1.3.1 [MUST|M] Bow (draw, gravity arrows, ammo, headshot). *Accept: killable at range.*
-- [ ] M1.3.2 [SHOULD|M] Crossbow, thrown knives. *Accept: two extra ranged weapons.*
+- [x] M1.3.1 [MUST|M] Bow (draw, gravity arrows, ammo, headshot). *Accept: killable at range.*
+- [x] M1.3.2 [SHOULD|M] Crossbow, thrown knives. *Accept: two extra ranged weapons.*
 
 ## M1.4 Magic (signet expressions)
 - [ ] M1.4.1 [MUST|M] Cast modes: fire-and-forget, charge, concentration, ward. *Accept: each mode exists with one spell.*
@@ -117,11 +117,11 @@ Goal: moment-to-moment combat and movement feel good. See `docs/bible/09-combat-
 
 ## M1.5 Enemy AI and roster
 - [ ] M1.5.1 [MUST|L] AI state machine (patrol, alert, search, chase, attack, retreat, flee). *Accept: enemies behave in each state.*
-- [ ] M1.5.2 [MUST|M] Group alerts, flanking, ranged keep-distance, caster roles. *Accept: mixed group fights feel varied.*
-- [ ] M1.5.3 [MUST|M] Enemy types: Venin, soldier, wolf, boar, wyvern (ground). *Accept: 5 distinct enemies.*
+- [x] M1.5.2 [MUST|M] Group alerts, flanking, ranged keep-distance, caster roles. *Accept: mixed group fights feel varied.*
+- [x] M1.5.3 [MUST|M] Enemy types: Venin, soldier, wolf, boar, wyvern (ground). *Accept: 5 distinct enemies.*
 - [ ] M1.5.4 [SHOULD|L] Grid navigation with obstacle avoidance. *Accept: enemies path around buildings.*
-- [ ] M1.5.5 [SHOULD|M] Boss framework (phases, telegraphs, arena). *Accept: one boss fight.*
-- [ ] M1.5.6 [SHOULD|S] Enemy health bars, damage numbers (optional toggle). *Accept: toggled in settings.*
+- [x] M1.5.5 [SHOULD|M] Boss framework (phases, telegraphs, arena). *Accept: one boss fight.*
+- [x] M1.5.6 [SHOULD|S] Enemy health bars, damage numbers (optional toggle). *Accept: toggled in settings.*
 
 ## M1.6 Camera and feedback
 - [ ] M1.6.1 [MUST|M] Third-person camera collision and smoothing. *Accept: no clipping through walls.*
