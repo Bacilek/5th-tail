@@ -233,7 +233,7 @@ export class Humanoid {
     let rRaise = 0, lRaise = 0, rTwist = 0, spineTwist = Math.sin(p) * a * 0.12;
     if (s.blocking) { rRaise = 1.2; lRaise = 1.4; swingR = swingL = 0; }
     if (s.ride) { swingR = swingL = 0.5; }
-    let attackLean = 0;
+    let attackLean = 0, strike = 0;
     if (s.swing > 0) {
       const t = s.swing, ease = (x: number) => x * x * (3 - 2 * x);
       const back = s.power ? -2.4 : -1.4, fwd = s.power ? 0.4 : 0.2;
@@ -245,12 +245,16 @@ export class Humanoid {
       spineTwist = (t < 0.38 ? 0.3 * ease(t / 0.38) : t < 0.6 ? 0.3 - 0.7 * ((t - 0.38) / 0.22) : -0.4 * (1 - ease((t - 0.6) / 0.4)));
       attackLean = t > 0.38 && t < 0.7 ? 0.12 : 0;
       rTwist = r * 0.0;
+      // off-hand counterbalances the strike, forearm snaps straight on the slash
+      swingL = -r * 0.35; lRaise = 0.25;
+      strike = t > 0.38 && t < 0.7 ? Math.sin(((t - 0.38) / 0.32) * Math.PI) : 0;
     }
     this.rot('clavicle_l', 0); this.rot('clavicle_r', 0);
     this.rot('upperarm_l', swingL - lRaise * 0.8, 0, side(true) * -armDown * (s.blocking ? 0.4 : 1));
     this.rot('upperarm_r', swingR - rRaise * 0.8 + rTwist, 0, side(false) * -armDown * (s.blocking ? 0.4 : 1));
     this.rot('lowerarm_l', -0.25 - lRaise * 0.5 - Math.max(0, -swingL) * 0.5);
-    this.rot('lowerarm_r', -0.25 - rRaise * 0.4 - Math.max(0, -swingR) * 0.5);
+    this.rot('lowerarm_r', -0.25 - rRaise * 0.4 - Math.max(0, -swingR) * 0.5 + strike * 0.45);
+    if (strike > 0) { this.rot('thigh_l', -strike * 0.35); this.rot('thigh_r', strike * 0.2); this.rot('calf_l', strike * 0.15); }
     // spine / head
     this.rot('pelvis', 0, -spineTwist * 0.3, 0);
     this.rot('spine_01', attackLean * 0.3 + (s.ride ? 0.15 : 0), spineTwist * 0.5);
