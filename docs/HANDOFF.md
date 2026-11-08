@@ -9,7 +9,7 @@ Master plan = `TODO.md`; design = `docs/bible/`; rules = `CLAUDE.md`.
 ## Where we are
 - Last commit: see `git log -1` (Parapet flight fix, tower spiral stair, box-hair bug fix, random Threshing dragons).
 - Done: Phase 0 (mostly), Phase 1 combat (mostly), Phase 2 in progress: PBR textures, rigged Quaternius humanoid (procedural bone animation) for player/NPCs/enemies, hair, canon NPC marks.
-- Swing animation v2 in `humanoid.ts` pose(): off-hand counter-swing, forearm snap + lunge on strike. Built but NOT visually verified (needs playtest by Marek / weapon-test side view; weapon rest pose x=PI+1.0 in `player.ts` buildHuman checked with `scripts/weapon-test.mjs [[x,y,z],...]`).
+- Swing animation v2 in `humanoid.ts` pose(): off-hand counter-swing, forearm snap + lunge on strike. Built but NOT visually verified (needs playtest by Marek / weapon-test side view; weapon rest pose x=2.14 (blade forward+up, verified side view with scripts/weapon-side.mjs) in `player.ts` buildHuman checked with `scripts/weapon-test.mjs [[x,y,z],...]`).
 - Next (agreed order): (1) tune swing from Marek's feedback; (2) Phase 3 world/interiors: enter buildings, tower interior, quadrant detail; (3) M5.2.1b physical quadrant choice replacing class menu (Riders climb tower -> Parapet).
 - Open `[~]` items are listed in TODO.md (grep `\[~\]`).
 

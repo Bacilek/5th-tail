@@ -185,7 +185,7 @@ export class Player {
     this.avatar.add(h.root);
     // weapons follow the hands
     const hl = h.getBone('hand_l'), hr = h.getBone('hand_r');
-    if (hl && hr) { hl.add(this.tpMount[0]); hr.add(this.tpMount[1]); this.tpMount[0].position.set(0, 0, 0); this.tpMount[1].position.set(0, 0, 0); this.tpMount[0].scale.setScalar(1.05); this.tpMount[1].scale.setScalar(1.05); this.tpMount[0].rotation.set(Math.PI + 1.0, 0, 0); this.tpMount[1].rotation.set(Math.PI + 1.0, 0, 0); }
+    if (hl && hr) { hl.add(this.tpMount[0]); hr.add(this.tpMount[1]); this.tpMount[0].position.set(0, 0, 0); this.tpMount[1].position.set(0, 0, 0); this.tpMount[0].scale.setScalar(1.05); this.tpMount[1].scale.setScalar(1.05); this.tpMount[0].rotation.set(2.14, 0, 0); this.tpMount[1].rotation.set(2.14, 0, 0); }
   }
 
   /** Applies the character-creation look to the third-person avatar. */
