@@ -34,6 +34,7 @@ import { saveCharacter, readSave, writeSave, type SavedChar, type SaveData } fro
 import { settings } from './engine/settings';
 import { Menus } from './ui/menu';
 import { Gauntlet } from './systems/gauntlet';
+import { FlightField } from './world/field';
 import { Threshing, type Bond } from './systems/threshing';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -61,6 +62,8 @@ scene.add(sun, sun.target);
 const dn = new DayNight(sky, sun, hemi, scene);
 
 scene.add(buildTerrain(), buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildVillage(), buildCamp(), buildTrees());
+const field = new FlightField();
+scene.add(field.group);
 dn.collectLights();
 
 // Decorative dragons circling the Citadel ridge (species/tails from Fourth Wing lore)
@@ -486,6 +489,7 @@ renderer.setAnimationLoop(() => {
     }
     if (gauntlet.update(dt, t, player)) gauntletDone = true;
     threshing.update(dt, t, player);
+    field.update(t);
     race.update(dt, player.pos, broom.active);
     hud.setRaceLine(race.label || gauntlet.label);
     story();

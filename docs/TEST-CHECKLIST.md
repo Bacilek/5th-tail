@@ -1,6 +1,14 @@
 # Playtest checklist (Marek) - since the last tested build
 
-## Round 2 changes (check these first)
+## Round 3 changes: Flight Field (NEW, check first)
+- [ ] Gauntlet exit -> Flight Field: review stand (red awning), 4 tall flight poles with pennants, pale landing ring in the middle.
+- [ ] The Aeries along the east cliff: 6 stone dens, each with a sleeping dragon of a different colour (brown, orange, red, green, blue, black), torches, labels.
+- [ ] Walk into a den: you can enter between the pillars, the walls and pillars block you, dragon is breathing/moving slightly.
+- [ ] The Vale hatching ground (north-west corner): stone ring, 7 glowing eggs on straw nests; walls/eggs collide.
+- [ ] Threshing (Rider path) still works on the field and its dragons do not clip into the dens.
+- [ ] FPS on the field (F3): note numbers here -> ______ (a few new lights: Vale + big halls).
+
+## Round 2 changes (check these too)
 - [ ] Melee swings are slower with a longer cooldown (dagger/sword/greatsword feel weighty, not sluggish).
 - [ ] Spells: hold LMB/RMB to charge (hand rises), release to cast; short taps below 30% charge fizzle; full charge = 2x damage of a snap cast.
 - [ ] Character creator shows a live rotating 3D model (gender/hair/beard/outfit update it).

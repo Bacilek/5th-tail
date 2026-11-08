@@ -14,6 +14,7 @@ Master plan = `TODO.md`; design = `docs/bible/`; rules = `CLAUDE.md`.
 - Next (agreed order): (1) playtest feedback on swing/block/stair; (2) Phase 3 world/interiors: more enterable buildings (halls already enterable via hall()), quadrant detail, M3.2.2 interiors; (3) M5.2.1b physical quadrant choice replacing class menu (Riders climb tower -> Parapet).
 - Halls (`hall()` in college.ts) now have rug, sconces, back-wall banner, pillars (w or d >= 20) and a real point light only if area >= 300; `scripts/hall-shot.mjs x z yaw` screenshots inside.
 - Gauntlet is now a vertical course (gauntlet.ts): hurdles, sweeper, 8 ledges, beam under 2 pendulums, barrier wall + drop. Player test list: `docs/TEST-CHECKLIST.md` (keep it updated per milestone).
+- Flight Field extras live in `src/world/field.ts` (class FlightField, updated each frame in main.ts): Aeries (6 dens + sleeping dragons), Vale hatching ring with eggs, poles, review stand, landing ring. Dens deliberately have no PointLights (perf).
 - Open `[~]` items are listed in TODO.md (grep `\[~\]`).
 
 ## Key facts that are not obvious from code
