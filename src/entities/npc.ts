@@ -147,7 +147,7 @@ export class Npc {
     if (def.build === 'tall') this.group.scale.setScalar(1.1);
     else if (def.build === 'hulking') this.group.scale.set(1.35, 1.15, 1.35);
     else if (def.build === 'small') this.group.scale.setScalar(0.93);
-    const lab = makeLabel(def.name, def.marks ? '#ffd98a' : '#ffffff', 5);
+    const lab = makeLabel(def.name, def.marks ? '#ffd98a' : '#ffffff', 3.6);
     lab.position.y = 2.5;
     this.group.add(lab);
   }

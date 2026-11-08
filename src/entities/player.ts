@@ -16,7 +16,7 @@ type Hand = 0 | 1; // 0 = left, 1 = right
 
 function buildHeld(id: ItemId, scale: number): THREE.Object3D {
   const g = new THREE.Group();
-  const metal = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, flatShading: true, metalness: 0.7, roughness: 0.35 });
+  const metal = new THREE.MeshStandardMaterial({ color: 0xdfe3ea, emissive: 0x2c3036, flatShading: true, metalness: 0.25, roughness: 0.4 });
   const grip = new THREE.MeshStandardMaterial({ color: 0x3a2a1e, flatShading: true });
   if (id === 'sword' || id === 'dagger') {
     const len = id === 'sword' ? 0.95 : 0.45;
@@ -28,7 +28,7 @@ function buildHeld(id: ItemId, scale: number): THREE.Object3D {
     g.add(blade, guard, handle);
   } else if (id === 'fireball' || id === 'lightning') {
     const color = id === 'fireball' ? 0xff7a1a : 0xaee0ff;
-    const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 0), new THREE.MeshBasicMaterial({ color }));
+    const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.075, 1), new THREE.MeshBasicMaterial({ color }));
     orb.position.y = 0.1;
     g.add(orb);
   }
@@ -143,7 +143,7 @@ export class Player {
     for (const h of [0, 1] as Hand[]) {
       for (const mount of [this.fpMount[h], this.tpMount[h]]) {
         mount.clear();
-        mount.add(buildHeld(this.hands[h], mount === this.fpMount[h] ? 1 : 1.3));
+        mount.add(buildHeld(this.hands[h], mount === this.fpMount[h] ? 0.5 : 1.3));
       }
     }
     this.onHandsChanged();

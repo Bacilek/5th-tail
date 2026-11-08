@@ -33,16 +33,16 @@ Phases 0-8 are mostly NOT done. A playable prototype exists (see "Already done")
 Goal: the game runs, can be tested automatically, saves, has a menu and a real desktop icon.
 
 ## M0.1 Run it and fix it
-- [ ] M0.1.1 [MUST|M] Start `npm run dev`, open in Chrome, capture console errors and first screenshots (title, spawn). *Accept: list of runtime errors in `docs/bugs.md`.*
-- [ ] M0.1.2 [MUST|L] Fix all startup/runtime errors found. *Accept: character creation -> class -> spawn works with no console errors.*
-- [ ] M0.1.3 [MUST|M] Walk every area (college, quadrants, Citadel, Flight Field, village, camp) and log visual/collision bugs. *Accept: bug list with severities.*
+- [x] M0.1.1 [MUST|M] Start `npm run dev`, open in Chrome, capture console errors and first screenshots (title, spawn). *Accept: list of runtime errors in `docs/bugs.md`.*
+- [x] M0.1.2 [MUST|L] Fix all startup/runtime errors found. *Accept: character creation -> class -> spawn works with no console errors.*
+- [~] M0.1.3 [MUST|M] Walk every area (college, quadrants, Citadel, Flight Field, village, camp) and log visual/collision bugs. *Accept: bug list with severities.* (partly: smoke screenshots + walk test; see docs/bugs.md)
 - [ ] M0.1.4 [MUST|L] Fix critical/major bugs (stuck, fall-through, invisible walls, wrong heights). *Accept: bug list has no critical/major open.*
-- [ ] M0.1.5 [MUST|S] Verify Parapet crossing, Gauntlet and Threshing end-to-end; tune. *Accept: each can be completed in a run.*
+- [~] M0.1.5 [MUST|S] Verify Parapet crossing, Gauntlet and Threshing end-to-end; tune. *Accept: each can be completed in a run.* (Parapet and Gauntlet verified by walk test; Threshing pending)
 - [ ] M0.1.6 [SHOULD|M] Playtest notes from Marek/partner into `docs/playtests/`. *Accept: first playtest file exists.*
 
 ## M0.2 Automated verification
-- [ ] M0.2.1 [MUST|M] Add Playwright + headless Chromium; script that boots the game and screenshots fixed camera spots using `window.__game`. *Accept: `npm run smoke` outputs PNGs.*
-- [ ] M0.2.2 [MUST|S] Assert no console errors and a minimum frame count in the smoke test. *Accept: test fails on error.*
+- [x] M0.2.1 [MUST|M] Add Playwright + headless Chromium; script that boots the game and screenshots fixed camera spots using `window.__game`. *Accept: `npm run smoke` outputs PNGs.*
+- [x] M0.2.2 [MUST|S] Assert no console errors and a minimum frame count in the smoke test. *Accept: test fails on error.*
 - [ ] M0.2.3 [MUST|S] Add debug console API (`__game.teleport`, `give`, `startQuest`, `setHour`, `spawn`). *Accept: documented in `19-qa.md`.*
 - [ ] M0.2.4 [SHOULD|M] Vitest unit tests: quest state machine, dragon rolls, collision helpers. *Accept: `npm test` green.*
 - [ ] M0.2.5 [SHOULD|S] `npm run check` = typecheck + tests + smoke. *Accept: single command.*
