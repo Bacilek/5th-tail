@@ -3,6 +3,7 @@ import type { NpcDef } from '../data/npcs';
 import { heightAt } from '../world/terrain';
 import { makeLabel } from '../world/college';
 import { resolve } from '../world/collision';
+import { makeLimb, animateWalk, type Limbs } from './walkcycle';
 
 const SKINS = [0xf1d3b8, 0xd9b69a, 0xc08e6a, 0x9a6a46];
 
@@ -20,6 +21,16 @@ export class Npc {
   private wait = 0;
   private home: THREE.Vector3;
   private aura: THREE.Group | null = null;
+  private limbs: Limbs = { legs: [], arms: [] };
+  private walkPhase = 0;
+  private walkAmt = 0;
+  private moving = false;
+
+  private animate(dt: number): void {
+    this.walkAmt += ((this.moving ? 1 : 0) - this.walkAmt) * Math.min(1, 8 * dt);
+    if (this.moving) this.walkPhase += dt * 6.5;
+    animateWalk(this.limbs, this.walkPhase, this.walkAmt, 0.7, 0.55);
+  }
 
   constructor(public def: NpcDef) {
     this.pos = new THREE.Vector3(def.x, heightAt(def.x, def.z), def.z);
@@ -95,10 +106,9 @@ export class Npc {
     }
 
     for (const s of [-1, 1]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.8, 0.26), cloth);
-      leg.position.set(s * 0.15, 0.4, 0);
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.7, 0.16), cloth);
-      arm.position.set(s * 0.4, 1.2, 0);
+      const leg = makeLimb(0.24, 0.8, 0.26, cloth, s * 0.15, 0.8);
+      const arm = makeLimb(0.16, 0.7, 0.16, cloth, s * 0.4, 1.5);
+      this.limbs.legs.push(leg); this.limbs.arms.push(arm);
       this.group.add(leg, arm);
     }
     // shadow wielder: dark wisps swirl around the feet
@@ -125,6 +135,7 @@ export class Npc {
   }
 
   update(t: number, target: THREE.Vector3, dt = 0.016): void {
+    this.moving = false;
     if (this.aura) { this.aura.rotation.y += dt * 0.9; this.aura.position.y = Math.sin(t * 2) * 0.05; }
     const dx = target.x - this.pos.x, dz = target.z - this.pos.z;
     const near = Math.hypot(dx, dz) < 3.5;
@@ -144,11 +155,14 @@ export class Npc {
         this.pos.y = heightAt(this.pos.x, this.pos.z);
         this.group.rotation.y = Math.atan2(-gx, -gz);
         this.group.position.x = this.pos.x; this.group.position.z = this.pos.z;
-        this.group.position.y = this.pos.y + Math.abs(Math.sin(t * 6 + this.phase)) * 0.06;
+        this.group.position.y = this.pos.y;
+        this.moving = true;
+        this.animate(dt);
         return;
       }
     }
     if (Math.hypot(dx, dz) < 14) this.group.rotation.y = Math.atan2(-dx, -dz);
     this.group.position.y = this.pos.y + Math.sin(t * 1.5 + this.phase) * 0.02;
+    this.animate(dt);
   }
 }

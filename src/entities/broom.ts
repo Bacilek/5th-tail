@@ -84,6 +84,7 @@ export class Broom {
     player.avatar.position.copy(player.pos);
     player.avatar.rotation.set(0, this.yaw, 0);
     player.avatar.visible = player.thirdPerson;
+    player.ridePose();
 
     if (!player.thirdPerson) {
       camera.position.set(this.pos.x, this.pos.y + 0.8, this.pos.z);

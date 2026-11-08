@@ -154,6 +154,7 @@ export class DragonMount {
     player.avatar.position.copy(player.pos);
     player.avatar.rotation.set(0, this.yaw, 0);
     player.avatar.visible = true;
+    player.ridePose();
 
     // attacks
     const mouth = new THREE.Vector3(0, 2.2 * this.spec.size, -5.2 * this.spec.size).applyEuler(g.rotation).add(this.pos);

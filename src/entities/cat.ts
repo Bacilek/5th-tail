@@ -74,6 +74,7 @@ export class Cat {
     resolve(p, 0.25);
     p.y = heightAt(p.x, p.z);
     this.group.position.copy(p);
+    if (moving) this.group.position.y += Math.abs(Math.sin(t * 12)) * 0.05;
     this.group.rotation.y = this.yaw;
     this.tail.rotation.y = Math.sin(t * (moving ? 6 : 2)) * 0.5;
   }

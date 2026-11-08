@@ -193,6 +193,7 @@ player.onRespawn = () => {
 };
 player.onDeath = () => { hud.announce('You died', '', 3); };
 player.onDamaged = () => { hud.flashDamage(); audio.hurt(); };
+player.onStep = () => audio.step();
 player.onAttack = (k) => { if (k === 'melee') audio.swing(); else if (k === 'fireball') audio.fire(); else if (k === 'lightning') audio.lightning(); else audio.heal(); };
 panels.onOpen = (name) => {
   if (name === 'Broccoli') { audio.meow(); return; }

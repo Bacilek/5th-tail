@@ -4,6 +4,7 @@ import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
 import { heightAt, MAP_HALF } from '../world/terrain';
 import type { Look } from '../data/look';
+import { makeLimb, animateWalk, ridePose as ridePoseFn, type Limbs } from './walkcycle';
 import { resolve, supportAt } from '../world/collision';
 import type { Combat } from '../systems/combat';
 
@@ -66,6 +67,13 @@ export class Player {
   private deadTimer = 0;
 
   readonly avatar = new THREE.Group();
+  private limbs: Limbs = { legs: [], arms: [] };
+  private walkPhase = 0;
+  private walkAmt = 0;
+  private lastStepSign = 1;
+  onStep: () => void = () => {};
+  /** Call every frame while riding (broom/dragon) so the avatar sits instead of walking. */
+  ridePose(): void { ridePoseFn(this.limbs); this.walkAmt = 0; }
   private fpMount: [THREE.Group, THREE.Group] = [new THREE.Group(), new THREE.Group()];
   private tpMount: [THREE.Group, THREE.Group] = [new THREE.Group(), new THREE.Group()];
 
@@ -120,10 +128,9 @@ export class Player {
     this.lookMats = { cloth, skin, hair };
     this.avatar.add(torso, belt, head, hr, longHair);
     for (const s of [-1, 1]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.8, 0.26), cloth);
-      leg.position.set(s * 0.15, 0.4, 0);
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.7, 0.16), cloth);
-      arm.position.set(s * 0.4, 1.2, 0);
+      const leg = makeLimb(0.24, 0.8, 0.26, cloth, s * 0.15, 0.8);
+      const arm = makeLimb(0.16, 0.7, 0.16, cloth, s * 0.4, 1.5);
+      this.limbs.legs.push(leg); this.limbs.arms.push(arm);
       this.avatar.add(leg, arm);
     }
     this.avatar.traverse((o) => { o.castShadow = true; });
@@ -337,8 +344,16 @@ export class Player {
     return this.cycle[(this.cycle.indexOf(cur) + 1) % this.cycle.length];
   }
 
-  sync(_dt: number): void {
+  sync(dt: number): void {
     const cam = this.camera;
+    // walk cycle: phase follows ground speed; swing fades out when standing or airborne
+    const sp = this.alive && this.grounded ? Math.hypot(this.vel.x, this.vel.z) : 0;
+    const target = Math.min(1, sp / 4.5);
+    this.walkAmt += (target - this.walkAmt) * Math.min(1, 10 * dt);
+    this.walkPhase += sp * dt * 1.7;
+    animateWalk(this.limbs, this.walkPhase, this.walkAmt);
+    const sign = Math.sign(Math.sin(this.walkPhase)) || 1;
+    if (sign !== this.lastStepSign) { this.lastStepSign = sign; if (this.walkAmt > 0.5) this.onStep(); }
     this.avatar.visible = this.thirdPerson;
     this.fpMount[0].visible = this.fpMount[1].visible = !this.thirdPerson;
     this.avatar.position.copy(this.pos);
@@ -348,7 +363,8 @@ export class Player {
     const eye = this.eye;
     if (!this.thirdPerson) {
       cam.position.copy(eye);
-      cam.rotation.set(this.pitch, this.yaw, 0);
+      cam.position.y += (Math.abs(Math.sin(this.walkPhase)) * 0.035 - 0.017) * this.walkAmt;
+      cam.rotation.set(this.pitch, this.yaw, Math.cos(this.walkPhase) * 0.004 * this.walkAmt);
     } else {
       const cp = Math.cos(this.pitch);
       const back = new THREE.Vector3(Math.sin(this.yaw) * cp, -Math.sin(this.pitch), Math.cos(this.yaw) * cp);
@@ -364,7 +380,9 @@ export class Player {
       const a = t > 0 ? Math.sin(t * Math.PI) : 0;
       const base = h === 0 ? -0.32 : 0.32;
       const m = this.fpMount[h];
-      m.position.set(base, -0.3 + (isSpell ? 0.05 * a : -0.1 * a), -0.55 - (isSpell ? 0.0 : 0.15 * a));
+      const ph = this.walkPhase + (h === 0 ? 0 : Math.PI);
+      const bobX = Math.sin(ph) * 0.025 * this.walkAmt, bobY = (Math.abs(Math.cos(ph)) * 0.035 - 0.017) * this.walkAmt;
+      m.position.set(base + bobX, -0.3 + bobY + (isSpell ? 0.05 * a : -0.1 * a), -0.55 - (isSpell ? 0.0 : 0.15 * a) + Math.sin(ph) * 0.02 * this.walkAmt);
       m.rotation.set(isSpell ? 0.4 * a : -1.0 * a + 0.25, 0, 0);
       const tm = this.tpMount[h];
       tm.rotation.set(isSpell ? -1.2 * a : -1.6 * a, 0, 0);
