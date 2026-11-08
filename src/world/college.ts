@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { addBox, addCircle } from './collision';
 import { pbr, pbrRepeat, tileBoxUV } from '../engine/textures';
 import {
-  PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, STAIR, STAIR_STEPS, stairStepY, stairAngle, type Rect,
+  PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, TOWER_DOOR, PARAPET, STAIR, STAIR_STEPS, stairStepY, stairAngle, type Rect,
 } from './terrain';
 
 const stone = pbr('castle_brick_07', 0xa9adb8);
@@ -173,11 +173,35 @@ export function buildCollege(): THREE.Group {
   label(g, 'Administration', '#d8d8e8', 0, Y + 27, -19, 12);
 
   // Conscription Tower: tall, open platform on top = start of the Parapet
-  const tw = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.4, TOWER.r + 1.2, TOWER.top - Y + 6, 12), stone);
-  tw.position.set(TOWER.x, Y - 6 + (TOWER.top - Y + 6) / 2, TOWER.z); tw.castShadow = tw.receiveShadow = true; g.add(tw);
+  // hollow shell with an east door; interior is a ground-floor guardroom under a ceiling disc, top platform reached by the outer stair
+  const TH = TOWER.top - Y + 6, rAt = (yy: number) => TOWER.r + 1.2 - 0.8 * ((yy - (Y - 6)) / TH);
+  const shellMat = stone.clone(); shellMat.side = THREE.DoubleSide;
+  const doorTop = Y + TOWER_DOOR.height;
+  const lower = new THREE.Mesh(new THREE.CylinderGeometry(rAt(doorTop), rAt(Y - 6), doorTop - (Y - 6), 28, 1, true, Math.PI / 2 - TOWER_DOOR.angle + TOWER_DOOR.half, Math.PI * 2 - TOWER_DOOR.half * 2), shellMat);
+  lower.position.set(TOWER.x, (doorTop + Y - 6) / 2, TOWER.z);
+  const upper = new THREE.Mesh(new THREE.CylinderGeometry(rAt(TOWER.top), rAt(doorTop), TOWER.top - doorTop, 28, 1, true), shellMat);
+  upper.position.set(TOWER.x, (TOWER.top + doorTop) / 2, TOWER.z);
+  for (const m of [lower, upper]) { m.castShadow = m.receiveShadow = true; g.add(m); }
+  const inFloor = new THREE.Mesh(new THREE.CircleGeometry(6.3, 28), pbr('cobblestone_floor_04', 0x5a4a3c, 1));
+  inFloor.rotation.x = -Math.PI / 2; inFloor.position.set(TOWER.x, Y + 0.03, TOWER.z); inFloor.receiveShadow = true; g.add(inFloor);
+  const ceil = new THREE.Mesh(new THREE.CylinderGeometry(6.3, 6.3, 0.6, 28), darkStone);
+  ceil.position.set(TOWER.x, Y + 7.3, TOWER.z); g.add(ceil);
+  const lampT = new THREE.PointLight(0xffa860, 40, 14, 1.6); lampT.position.set(TOWER.x, Y + 5.5, TOWER.z); g.add(lampT);
+  prop(g, TOWER.x - 1.5, TOWER.z, 1.4, 3.2, 0.9, Y, wood);
+  torch(g, TOWER.x + 2.5, Y, TOWER.z + 3.2); torch(g, TOWER.x + 2.5, Y, TOWER.z - 3.2);
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.8, TOWER.r + 0.4, 1.2, 12), darkStone);
   cap.position.set(TOWER.x, TOWER.top - 0.6, TOWER.z); cap.castShadow = true; g.add(cap);
-  addCircle(TOWER.x, TOWER.z, TOWER.r + 1.2, TOWER.top);
+  const topDisc = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.4, TOWER.r + 0.4, 0.3, 24), darkStone);
+  topDisc.position.set(TOWER.x, TOWER.top - 0.15, TOWER.z); topDisc.receiveShadow = true; g.add(topDisc);
+  // wall collider: ring of small circles with a gap at the door; top platform is a slab with a finite bottom (hollow underneath)
+  const nC = 40, rc = 6.1;
+  for (let i = 0; i < nC; i++) {
+    const ang = (i / nC) * Math.PI * 2;
+    const da = Math.atan2(Math.sin(ang - TOWER_DOOR.angle), Math.cos(ang - TOWER_DOOR.angle));
+    if (Math.abs(da) < TOWER_DOOR.half + 0.05) continue;
+    addCircle(TOWER.x + Math.cos(ang) * rc, TOWER.z + Math.sin(ang) * rc, 0.5, TOWER.top);
+  }
+  addBox(TOWER.x, TOWER.z, 8, 8, TOWER.top, TOWER.top - 1.5);
   // outer spiral stair (walkable surface is analytic, see towerStairAt) + landing bridging to the top platform
   const stepGeo = new THREE.BoxGeometry(STAIR.r1 - STAIR.r0, 0.9, 1.7);
   tileBoxUV(stepGeo, STAIR.r1 - STAIR.r0, 0.9, 1.7, 3);

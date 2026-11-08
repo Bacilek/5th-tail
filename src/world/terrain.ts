@@ -26,6 +26,8 @@ export const CITADEL: Rect = { x0: 90, x1: 126, z0: -52, z1: 8 };
 export const CITADEL_Y = 58.5;
 // Conscription Tower and the Parapet (stone span, ~60 m up, 1.2 m wide, no rails)
 export const TOWER = { x: 40, z: -20, r: 5, top: 62 };
+/** Ground-floor door of the (hollow) Conscription Tower faces south (+z); angle = atan2(dz,dx) from the axis; half-angle in radians as seen from the tower axis. */
+export const TOWER_DOOR = { angle: Math.PI / 2, half: 0.42, height: 3.8 };
 export const PARAPET = { y: 62, z: -20, x0: 43, x1: 92, half: 0.6 };
 
 /**
@@ -100,8 +102,6 @@ export function heightAt(x: number, z: number): number {
 }
 
 export function baseHeight(x: number, z: number): number {
-  if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r + 0.4) return TOWER.top;
-
   let flat = 1;
   for (const r of FLAT_RECTS) flat *= smoothstep(0, 20, rectDist(r, x, z));
   const amp = 5 * flat;
