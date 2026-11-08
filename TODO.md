@@ -51,8 +51,8 @@ Goal: the game runs, can be tested automatically, saves, has a menu and a real d
 
 ## M0.3 Performance baseline
 - [x] M0.3.1 [MUST|S] FPS/draw-call/triangle overlay (F3). *Accept: shows `renderer.info`.*
-- [ ] M0.3.2 [MUST|M] Profile and fix the worst hot spots (box scan in `collision`, sky recolour per frame, shadows). *Accept: >= 60 FPS at spawn on dev machine.*
-- [ ] M0.3.3 [SHOULD|M] Quality presets Low/Med/High (shadow res, view distance, density). *Accept: settings switch live.*
+- [~] M0.3.2 [MUST|M] Profile and fix the worst hot spots (box scan in `collision`, sky recolour per frame, shadows). *Accept: >= 60 FPS at spawn on dev machine.* (measured 50-60 FPS, worst 18 ms on target laptop; no profiling pass yet)
+- [x] M0.3.3 [SHOULD|M] Quality presets Low/Med/High (shadow res, view distance, density). *Accept: settings switch live.* (Low/Medium/High via settings menu)
 
 ## M0.4 Menus, settings, saves
 - [x] M0.4.1 [MUST|M] Title screen with New / Continue / Settings / Quit. *Accept: boot goes to title.*

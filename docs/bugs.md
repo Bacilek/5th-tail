@@ -39,3 +39,6 @@ Found by running the production build in headless Chrome (`npm run smoke`, `node
 
 ## Verified (flight)
 Broom takes off, hugs the mesa slope and stops at the Citadel wall; dragon bonds (debug `__game.bond()`), arrives (6 game-s), can be mounted within 10 m with F and flies north.
+
+## Performance report (Marek, 2026-11-08)
+Ryzen 7 7735HS / Radeon 680M, Medium quality, F3 overlay: **50-60 FPS, worst frame 18 ms** (target met: 1080p Medium >= 50 FPS). Open O4 closed. Headroom for Phase 2 assets is limited: keep new content inside the draw-call/triangle budget (see 13-art-assets) and re-measure after each visual upgrade.
