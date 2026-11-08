@@ -177,7 +177,7 @@ export class Player {
   private buildHuman(): void {
     if (this.human) this.avatar.remove(this.human.root);
     const l = this.lookCache;
-    const h = new Humanoid({ female: l?.female, skin: l?.skin ?? 0xd9b69a, hair: l?.hair ?? 0x3a2418 });
+    const h = new Humanoid({ female: l?.female, skin: l?.skin ?? 0xd9b69a, hair: l?.hair ?? 0x3a2418, hairStyle: l?.hairStyle ?? 'short', beard: l?.beard });
     h.dress(l?.cloth ?? 0x1d2030);
     this.human = h;
     for (const c of this.avatar.children) if (c !== this.tpMount[0] && c !== this.tpMount[1]) c.visible = false;
@@ -185,7 +185,7 @@ export class Player {
     this.avatar.add(h.root);
     // weapons follow the hands
     const hl = h.getBone('hand_l'), hr = h.getBone('hand_r');
-    if (hl && hr) { hl.add(this.tpMount[0]); hr.add(this.tpMount[1]); this.tpMount[0].position.set(0, 0, 0); this.tpMount[1].position.set(0, 0, 0); this.tpMount[0].scale.setScalar(1.8); this.tpMount[1].scale.setScalar(1.8); this.tpMount[0].rotation.set(Math.PI + 0.45, 0, 0); this.tpMount[1].rotation.set(Math.PI + 0.45, 0, 0); }
+    if (hl && hr) { hl.add(this.tpMount[0]); hr.add(this.tpMount[1]); this.tpMount[0].position.set(0, 0, 0); this.tpMount[1].position.set(0, 0, 0); this.tpMount[0].scale.setScalar(1.05); this.tpMount[1].scale.setScalar(1.05); this.tpMount[0].rotation.set(Math.PI + 1.0, 0, 0); this.tpMount[1].rotation.set(Math.PI + 1.0, 0, 0); }
   }
 
   /** Applies the character-creation look to the third-person avatar. */

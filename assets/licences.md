@@ -19,3 +19,5 @@ Downloaded with `scripts/fetch-assets.mjs`.
 | Asset | Source | Licence | Files |
 | --- | --- | --- | --- |
 | Universal Base Characters [Standard] (Superhero Male / Female, rigged) | https://quaternius.itch.io/universal-base-characters (Quaternius) | CC0 | `public/models/Superhero_*_FullBody.gltf/.bin` + textures downsized to 1024 px JPG by `scripts/prep-character.mjs` (original zip is kept only in the git-ignored `assets/incoming/`) |
+
+Hairstyle meshes (Hair_SimpleParted, Hair_Long, Hair_Buns, Hair_Buzzed, Hair_BuzzedFemale, Hair_Beard) come from the same CC0 Quaternius pack; prepared with `scripts/prep-hair.mjs`.

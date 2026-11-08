@@ -160,7 +160,7 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 - [ ] M2.2.6 [SHOULD|M] Cloth/cape/hair secondary motion. *Accept: visible sway.*
 
 ## M2.3 Characters and customization
-- [~] M2.3.1 [MUST|M] Player customization on the real model (body type, hair, skin, outfit). *Accept: creator preview rotates.* (done: male/female body, skin tone, clothing colour; todo: hairstyles, faces)
+- [x] M2.3.1 [MUST|M] Player customization on the real model (body type, hair, skin, outfit). *Accept: creator preview rotates.* (done: male/female body, skin tone, clothing colour; todo: hairstyles, faces) (hair styles incl. beard)
 - [ ] M2.3.2 [MUST|L] NPC variety system (head/hair/body kits, colour variation). *Accept: no two cadets identical.*
 - [ ] M2.3.3 [MUST|M] Quadrant uniforms + armour sets. *Accept: colours match 05-factions.*
 - [ ] M2.3.4 [SHOULD|L] Canon unique looks (Violet crown braid, Xaden aura, etc.) on real models. *Accept: recognisable.*

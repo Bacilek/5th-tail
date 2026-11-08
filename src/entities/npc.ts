@@ -31,7 +31,8 @@ export class Npc {
   /** Swaps the box body for the rigged humanoid (generic NPCs only; key NPCs keep their handmade marks for now). */
   upgrade(): void {
     if (!Humanoid.ready || this.human || this.def.marks) return;
-    const h = new Humanoid({ female: this.def.female, skin: this.def.skin ?? 0xd9b69a, hair: this.def.hair });
+    const styles = this.def.female ? ['long', 'buns', 'long'] : ['short', 'buzzed', 'short', 'long'];
+    const h = new Humanoid({ female: this.def.female, skin: this.def.skin ?? 0xd9b69a, hair: this.def.hair, hairStyle: this.def.hairStyle ?? styles[hashId(this.def.id) % styles.length], beard: this.def.beard });
     h.dress(this.def.cloth);
     for (const c of this.group.children) if (!(c instanceof THREE.Sprite)) c.visible = false;
     this.group.add(h.root);

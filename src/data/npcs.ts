@@ -12,6 +12,8 @@ export interface NpcDef {
   skin?: number;
   /** use the female body model */
   female?: boolean;
+  hairStyle?: string;
+  beard?: boolean;
   eyes?: number;
   build?: 'tall' | 'hulking' | 'small';
   /** Signature marks from the books. Only key (canon) NPCs have these; generic NPCs never do. */

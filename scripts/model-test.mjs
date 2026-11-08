@@ -27,10 +27,16 @@ await page.evaluate(() => { window.__game.input.locked = true; });
 await page.evaluate(() => { const g = window.__game; g.teleport(0, 10); g.player.yaw = 0; g.player.thirdPerson = true; g.input.locked = true; });
 await wait(2500);
 await page.screenshot({ path: 'docs/shots/model-idle.png' });
-for (const [name, rx, ry, rz] of [['e', Math.PI, 0, 0.9], ['f', Math.PI, 0, -0.9], ['g', Math.PI, 0.9, 0], ['h', Math.PI, -0.9, 0]]) {
-  await page.evaluate(([rx, ry, rz]) => { const p = window.__game.player; for (const m of p.tpMount) m.rotation.set(rx, ry, rz); }, [rx, ry, rz]);
-  await wait(1200);
-  await page.screenshot({ path: 'docs/shots/mount-' + name + '.png', clip: { x: 250, y: 200, width: 300, height: 260 } });
+const looks = [
+  ['m-short', { female: false, hairStyle: 'short', hair: 0x3a2418, beard: true }],
+  ['m-long', { female: false, hairStyle: 'long', hair: 0xa6803c }],
+  ['f-long', { female: true, hairStyle: 'long', hair: 0x0e0a08 }],
+  ['f-buns', { female: true, hairStyle: 'buns', hair: 0x8a2a1e }],
+];
+for (const [name, l] of looks) {
+  await page.evaluate((l) => { window.__game.player.applyLook({ name: 'T', skin: 0xc08e6a, cloth: 0x2f4a3a, ...l }); window.__game.player.yaw = Math.PI; }, l);
+  await wait(1500);
+  await page.screenshot({ path: 'docs/shots/hair-' + name + '.png', clip: { x: 280, y: 190, width: 240, height: 250 } });
 }
 console.log('errors:', errors.length ? [...new Set(errors)].join(' | ') : 'none');
 await browser.close();

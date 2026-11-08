@@ -8,7 +8,7 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
  * Model space: +Y up, character faces +Z (the wrapper group turns it to face -Z like the rest of the game).
  */
 
-export interface HumanoidLook { female?: boolean; skin?: number; hair?: number; }
+export interface HumanoidLook { female?: boolean; skin?: number; hair?: number; hairStyle?: string; beard?: boolean; }
 export interface HumanoidState {
   speed: number;        // ground speed m/s
   swing: number;        // 0 = idle, 0..1 melee swing progress
@@ -27,6 +27,8 @@ const BONES = [
 type BoneName = typeof BONES[number];
 
 const loaded: { male?: THREE.Group; female?: THREE.Group } = {};
+const hairs: Record<string, THREE.Object3D> = {};
+const HAIR_FILES: Record<string, string> = { short: 'Hair_SimpleParted', long: 'Hair_Long', buns: 'Hair_Buns', buzzed: 'Hair_Buzzed', buzzedF: 'Hair_BuzzedFemale', beard: 'Hair_Beard' };
 
 export class Humanoid {
   readonly root = new THREE.Group();      // add this to the scene / character group
@@ -52,6 +54,7 @@ export class Humanoid {
     try {
       [loaded.male, loaded.female] = await Promise.all([load('Superhero_Male_FullBody'), load('Superhero_Female_FullBody')]);
     } catch (e) { console.warn('humanoid models failed to load, using box characters', e); }
+    await Promise.allSettled(Object.entries(HAIR_FILES).map(async ([k, f]) => { try { hairs[k] = await load(f); } catch { /* hairstyle unavailable */ } }));
   }
 
   constructor(look: HumanoidLook = {}) {
@@ -148,12 +151,41 @@ export class Humanoid {
     }
   }
 
+  private hairObjs: THREE.Object3D[] = [];
+
+  /** Attaches a hairstyle (and optional beard) to the head bone; colour tints the hair texture. */
+  setHair(style: string, color: number, beard = false, female = false): void {
+    for (const o of this.hairObjs) o.parent?.remove(o);
+    this.hairObjs = [];
+    const head = this.bone.Head;
+    if (!head) return;
+    const keys = [style === 'buzzed' && female ? 'buzzedF' : style, beard ? 'beard' : ''].filter((k) => k && k !== 'bald');
+    for (const k of keys) {
+      const src = hairs[k];
+      if (!src) continue;
+      const obj = cloneSkinned(src);
+      obj.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          const mat = (m.material as THREE.MeshStandardMaterial).clone();
+          mat.color.setHex(color); mat.side = THREE.DoubleSide;
+          m.material = mat; m.castShadow = false; m.frustumCulled = false;
+        }
+      });
+      this.model.add(obj);
+      this.model.updateMatrixWorld(true);
+      head.attach(obj);
+      this.hairObjs.push(obj);
+    }
+  }
+
   /** A bone by name (for attaching weapons etc.). */
   getBone(n: BoneName): THREE.Bone | undefined { return this.bone[n]; }
 
   setLook(look: HumanoidLook): void {
     if (this.bodyMat && look.skin !== undefined) this.bodyMat.color.setHex(look.skin);
     if (this.hairMat && look.hair !== undefined) this.hairMat.color.setHex(look.hair);
+    if (look.hairStyle !== undefined) this.setHair(look.hairStyle, look.hair ?? 0x3a2418, !!look.beard, !!look.female);
   }
 
   private static ax = new THREE.Vector3(1, 0, 0);
