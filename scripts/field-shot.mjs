@@ -15,7 +15,7 @@ await wait(1200);
 await page.click('#tnew'); await wait(300);
 await page.click('#ccgo'); await wait(300);
 await page.keyboard.press('Digit2'); await wait(800);
-const shots = [['aeries', 232, -29, -Math.PI / 2, 0.15], ['vale', 222, -88, 0, 0.3], ['field', 215, 10, -Math.PI / 2, 0.15]];
+const shots = [['village', -90, 100, 0, 0.2], ['smithy', -90, 72, 0, 0.2]];
 for (const [n, x, z, yaw, pitch] of shots) {
   await page.evaluate(([x, z, yaw, pitch]) => { const g = window.__game; g.input.locked = true; g.player.thirdPerson = true; g.teleport(x, z); g.player.yaw = yaw; g.player.pitch = pitch; }, [x, z, yaw, pitch]);
   await wait(3000);

@@ -1,6 +1,13 @@
 # Playtest checklist (Marek) - since the last tested build
 
-## Round 3 changes: Flight Field (NEW, check first)
+## Round 4 changes: Chantara village (NEW, check first)
+- [ ] Village (south-west) is now called **Chantara** everywhere (label, map POI, quest text).
+- [ ] Smithy at the north side: hearth with glowing coals + flame, anvil, trough, weapon rack; you can walk in, furniture collides.
+- [ ] Market: stalls with goods, crates, barrels, sacks, cart, notice board with notes; you can walk between them without getting stuck.
+- [ ] Inn (Hesper) and the village quests (Tavik) still work.
+- [ ] FPS in the village (F3): ______
+
+## Round 3 changes: Flight Field
 - [ ] Gauntlet exit -> Flight Field: review stand (red awning), 4 tall flight poles with pennants, pale landing ring in the middle.
 - [ ] The Aeries along the east cliff: 6 stone dens, each with a sleeping dragon of a different colour (brown, orange, red, green, blue, black), torches, labels.
 - [ ] Walk into a den: you can enter between the pillars, the walls and pillars block you, dragon is breathing/moving slightly.

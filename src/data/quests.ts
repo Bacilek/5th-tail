@@ -73,7 +73,7 @@ export const QUESTS: QuestDef[] = [
   {
     id: 'q_salve', title: 'Salve for the Village', giver: 'marren', requires: 'q_herbs',
     intro: 'The village below the walls has fever again. (Invented.) Take this salve to Tavik the merchant, he knows who needs it. Walk south-west of the college.',
-    remind: 'Basgiath Village is south-west of the lower college. Find Tavik.',
+    remind: 'Chantara village is south-west of the lower college. Find Tavik.',
     outro: 'He gave it to the children first. Good. That is what a healer is for.',
     objectives: [{ type: 'talk', npc: 'tavik', text: 'Bring the salve to Tavik in the village' }],
     gold: 45,

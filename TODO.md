@@ -210,7 +210,7 @@ Goal: a large, readable open world of Navarre with a full Basgiath. See `02-worl
 - [~] M3.2.7 [MUST|M] The Parapet polish (tower stair, wind/rain, fall cinematic). *Accept: tense and fair.* (outer spiral stair of the Conscription Tower done and walkable, tower ground floor enterable; wind rain/fall cinematic pending)
 - [~] M3.2.8 [MUST|L] Gauntlet redesign (vertical climb, 5 obstacles per lore (?)). *Accept: completable, deadline timer.*
 - [~] M3.2.9 [MUST|M] Flight Field + aeries/Vale (dragon homes, hatching ground). *Accept: dragons present.*
-- [ ] M3.2.10 [SHOULD|M] Chantara village (inn, market, forge). *Accept: living hub.*
+- [~] M3.2.10 [SHOULD|M] Chantara village (inn, market, forge). *Accept: living hub.*
 
 ## M3.3 Beyond the college
 - [ ] M3.3.1 [MUST|L] Morraine region (forests, mountains, river, roads, camps). *Accept: 4x4 km playable.*

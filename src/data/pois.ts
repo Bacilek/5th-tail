@@ -14,7 +14,7 @@ export const POIS: Poi[] = [
   { id: 'archives', name: 'Scribe Quadrant - Archives', x: -100, z: -34, kind: 'quad' },
   { id: 'healers', name: 'Healer Quadrant', x: 0, z: 78, kind: 'quad' },
   { id: 'infantry', name: 'Infantry Quadrant', x: 0, z: -100, kind: 'quad' },
-  { id: 'village', name: 'Basgiath Village', x: -90, z: 87, kind: 'village' },
+  { id: 'village', name: 'Chantara', x: -90, z: 87, kind: 'village' },
   { id: 'camp', name: 'Venin Camp', x: 96, z: 125, kind: 'camp' },
   { id: 'race', name: 'Broom Race Start', x: 0, z: 50, kind: 'race' },
 ];
