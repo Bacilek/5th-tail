@@ -25,6 +25,7 @@ import { buildPickups } from './systems/pickups';
 import { Broom } from './entities/broom';
 import { Race } from './systems/race';
 import { audio } from './engine/audio';
+import { saveCharacter, type SavedChar } from './engine/saves';
 import { Gauntlet } from './systems/gauntlet';
 import { Threshing, type Bond } from './systems/threshing';
 
@@ -162,6 +163,7 @@ hud.setObjective('');
 
 function onChosen(id: ClassId): void {
   chosen = id;
+  if (currentChar) { currentChar.classId = id; saveCharacter(currentChar); }
   panels.enabled = true;
   player.setClass(id);
   hud.showMagicka(CLASSES[id].maxMagicka > 0);
@@ -182,9 +184,16 @@ function onChosen(id: ClassId): void {
   }
   renderer.domElement.requestPointerLock();
 }
-hud.showCharacterCreator((look) => {
+// Quick select: remember the character's look and chosen class (quest progress is not saved)
+let currentChar: SavedChar | null = null;
+hud.showCharacterCreator((look, id) => {
+  currentChar = { id, look };
   player.applyLook(look);
   hud.showClassSelect(onChosen);
+}, (c) => {
+  currentChar = c;
+  player.applyLook(c.look);
+  if (c.classId) onChosen(c.classId); else hud.showClassSelect(onChosen);
 });
 
 player.onRespawn = () => {

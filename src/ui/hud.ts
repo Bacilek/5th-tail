@@ -1,4 +1,5 @@
 import { isTyping } from '../engine/input';
+import { loadCharacters, saveCharacter, deleteCharacter, type SavedChar } from '../engine/saves';
 import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
 import { DEFAULT_LOOK, SKIN_TONES, HAIR_COLORS, HAIR_STYLES, CLOTH_COLORS, type Look } from '../data/look';
@@ -27,6 +28,14 @@ const CSS = `
 #cc .ph{position:absolute;left:35px;top:20px;width:50px;height:50px;border-radius:50%;background:#d9b69a}
 #cc .pf{position:absolute;left:30px;top:10px;width:60px;height:28px;border-radius:30px 30px 6px 6px;z-index:1;opacity:.95}
 #cc .pb{position:absolute;left:25px;top:76px;width:70px;height:120px;border-radius:6px;background:#1d2030}
+#cc .cctiles{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:-8px 0 22px;max-width:92vw}
+#cc .cctile{position:relative;width:96px;height:132px;border:1px solid #d8c9a0aa;background:#14121acc;cursor:pointer;text-align:center;overflow:hidden;transition:.15s}
+#cc .cctile:hover{background:#2a2330;transform:translateY(-3px)}
+#cc .cctile .mini{transform:scale(.42);transform-origin:top left;position:absolute;left:28px;top:6px}
+#cc .cctile b{position:absolute;left:0;right:0;top:92px;font-size:13px}
+#cc .cctile small{position:absolute;left:0;right:0;top:110px;font-size:11px;opacity:.7}
+#cc .cctile u{position:absolute;right:4px;top:2px;text-decoration:none;opacity:.5;font-size:13px}
+#cc .cctile u:hover{opacity:1;color:#f88}
 #cc .ccopts{display:flex;flex-direction:column;gap:14px}
 #cc label{font-size:18px}#cc input{margin-left:10px;padding:6px 10px;font:inherit;background:#14121a;color:#f0e6d0;border:1px solid #d8c9a0aa}
 #cc .sw{display:flex;align-items:center;gap:8px}#cc .sw span{width:60px;opacity:.8}
@@ -94,13 +103,17 @@ export class Hud {
     this.el('hr').textContent = 'R: ' + ITEMS[r].name;
   }
 
-  /** Character creation: name, skin, hair, outfit. Calls onDone with the chosen look. */
-  showCharacterCreator(onDone: (look: Look) => void): void {
+  /**
+   * Character creation: name, skin, hair, outfit. Previously created characters appear as tiles on top;
+   * clicking one calls onQuick (straight into the game when it remembers a class). New characters call onDone.
+   */
+  showCharacterCreator(onDone: (look: Look, id: string) => void, onQuick: (c: SavedChar) => void): void {
     const look: Look = { ...DEFAULT_LOOK };
     const el = document.createElement('div');
     el.id = 'cc';
     const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
     el.innerHTML = `<h1>CREATE YOUR CADET</h1>
+      <div class="cctiles"></div>
       <div class="ccrow"><div class="ccprev"><div class="ph"></div><div class="pf"></div><div class="pb"></div></div>
       <div class="ccopts">
         <label>Name <input id="ccname" maxlength="16" value="${look.name}"></label>
@@ -140,9 +153,32 @@ export class Hud {
       if (done) return; done = true;
       const n = (el.querySelector('#ccname') as HTMLInputElement).value.trim();
       look.name = n || 'Cadet';
-      el.remove(); onDone(look);
+      const id = Date.now().toString(36);
+      saveCharacter({ id, look: { ...look } });
+      el.remove(); onDone(look, id);
     };
     el.querySelector('#ccgo')!.addEventListener('click', go);
+    // quick-select tiles of already created characters
+    const tiles = el.querySelector('.cctiles') as HTMLElement;
+    const renderTiles = () => {
+      tiles.innerHTML = '';
+      for (const c of loadCharacters()) {
+        const t = document.createElement('div');
+        t.className = 'cctile';
+        const cls = c.classId ? CLASSES[c.classId].name : 'no class yet';
+        t.innerHTML = `<div class="ccprev mini"><div class="ph" style="background:${hex(c.look.skin)}"></div>` +
+          `<div class="pf" style="background:${c.look.hairStyle === 'bald' ? 'transparent' : hex(c.look.hair)};height:${c.look.hairStyle === 'long' ? 86 : 28}px"></div>` +
+          `<div class="pb" style="background:${hex(c.look.cloth)}"></div></div><b></b><small>${cls}</small><u title="Delete">x</u>`;
+        (t.querySelector('b') as HTMLElement).textContent = c.look.name;
+        t.addEventListener('click', (e) => {
+          if ((e.target as HTMLElement).tagName === 'U') { deleteCharacter(c.id); renderTiles(); return; }
+          if (done) return; done = true;
+          el.remove(); onQuick(c);
+        });
+        tiles.appendChild(t);
+      }
+    };
+    renderTiles();
     paint();
     document.body.appendChild(el);
   }
