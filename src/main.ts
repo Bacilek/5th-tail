@@ -25,6 +25,7 @@ import { buildPickups } from './systems/pickups';
 import { Broom } from './entities/broom';
 import { Race } from './systems/race';
 import { audio } from './engine/audio';
+import { Minimap, type Marker } from './ui/minimap';
 import { saveCharacter, type SavedChar } from './engine/saves';
 import { Gauntlet } from './systems/gauntlet';
 import { Threshing, type Bond } from './systems/threshing';
@@ -92,6 +93,7 @@ threshing.onMessage = (a, b) => { hud.announce(a, b, 5); if (a.includes('approac
 threshing.onBond = (b) => bondDragon(b);
 race.onMessage = (a, b) => hud.announce(a, b, 4);
 const quests = new QuestLog();
+const minimap = new Minimap();
 const panels = new Panels(quests);
 const npcs = NPCS.map((d) => new Npc(d));
 npcs.forEach((n) => scene.add(n.group));
@@ -163,6 +165,7 @@ hud.setObjective('');
 
 function onChosen(id: ClassId): void {
   chosen = id;
+  minimap.show();
   if (currentChar) { currentChar.classId = id; saveCharacter(currentChar); }
   panels.enabled = true;
   player.setClass(id);
@@ -210,7 +213,39 @@ panels.onOpen = (name) => {
   audio.babble(0.75 + (h % 10) * 0.09, 10 + (h % 6));
 };
 addEventListener('pointerdown', () => audio.start());
-addEventListener('keydown', (e) => { if (isTyping(e)) return; audio.start(); if (e.code === 'KeyM') hud.announce(audio.toggleMute() ? 'Sound off' : 'Sound on', '', 1.5); });
+addEventListener('keydown', (e) => {
+  if (isTyping(e)) return;
+  audio.start();
+  if (e.code === 'KeyN') hud.announce(audio.toggleMute() ? 'Sound off' : 'Sound on', '', 1.5);
+  if (e.code === 'KeyM' && chosen && !panels.dialogOpen) {
+    minimap.toggle();
+    if (!minimap.mapOpen) renderer.domElement.requestPointerLock();
+  }
+});
+
+// waypoint beam in the world
+const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 140, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xff40c0, transparent: true, opacity: 0.4, depthWrite: false, fog: false }));
+beam.visible = false;
+scene.add(beam);
+minimap.onWaypoint = (w) => {
+  beam.visible = !!w;
+  if (w) beam.position.set(w.x, heightAt(w.x, w.z) + 70, w.z);
+};
+
+function questMarkers(): Marker[] {
+  const out: Marker[] = [];
+  for (const q of QUESTS) {
+    const st = quests.status(q.id);
+    if (st === 'none' && (!q.requires || quests.status(q.requires) === 'done')) {
+      const n = npcs.find((m) => m.def.id === q.giver);
+      if (n) out.push({ x: n.pos.x, z: n.pos.z, kind: 'give' });
+    } else if (st === 'ready') {
+      const n = npcs.find((m) => m.def.id === (q.turnIn ?? q.giver));
+      if (n) out.push({ x: n.pos.x, z: n.pos.z, kind: 'turnin' });
+    }
+  }
+  return out;
+}
 player.onHandsChanged = () => hud.setHands(player.hands[0], player.hands[1]);
 hud.setKills(0);
 
@@ -267,7 +302,7 @@ renderer.setAnimationLoop(() => {
 
   if (!chosen) {
     player.sync(dt);
-  } else if (panels.dialogOpen) {
+  } else if (panels.dialogOpen || minimap.mapOpen) {
     player.sync(dt);
   } else {
     // Parapet wind: strong gusts push sideways
@@ -354,6 +389,7 @@ renderer.setAnimationLoop(() => {
   sun.position.copy(player.pos).add(SUN_OFFSET);
   sun.target.position.copy(player.pos);
 
+  if (chosen) minimap.update({ x: player.pos.x, z: player.pos.z, yaw: player.yaw }, questMarkers());
   hud.update(
     player.health / player.maxHealth,
     player.maxMagicka > 0 ? player.magicka / player.maxMagicka : 0,

@@ -18,7 +18,7 @@ const CSS = `
 #ann{position:absolute;left:0;right:0;top:16%;text-align:center;opacity:0;transition:opacity .6s}
 #ann h1{margin:0;font-size:38px;letter-spacing:3px}#ann p{margin:6px 0 0;font-size:18px;opacity:.9}
 #hint{position:absolute;left:14px;top:12px;font-size:13px;line-height:1.5;background:#0006;padding:8px 12px;border:1px solid #d8c9a044}
-#info{position:absolute;right:14px;top:12px;text-align:right;font-size:15px;line-height:1.5}
+#info{position:absolute;right:14px;top:212px;text-align:right;font-size:15px;line-height:1.5}
 #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000a;color:#f0e6d0;font-family:Georgia,serif;pointer-events:none}
 #start h1{font-size:56px;letter-spacing:6px;margin:0}#start p{font-size:18px}
 #cc{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#000a,#000e);color:#f0e6d0;font-family:Georgia,serif;z-index:6}
@@ -67,7 +67,7 @@ export class Hud {
     root.innerHTML = `
       <div id="dmg"></div><div id="cross"></div>
       <div id="hint"><b>WASD</b> move &middot; <b>Shift</b> sprint &middot; <b>Space</b> jump &middot; <b>V</b> 1st/3rd person<br>
-        <b>LMB</b> left hand &middot; <b>RMB</b> right hand &middot; <b>Q</b>/<b>E</b> cycle left/right item<br><b>F</b> talk/mount &middot; <b>R</b> summon dragon &middot; <b>B</b> broom &middot; <b>J</b> quests &middot; <b>H</b> hide this</div>
+        <b>LMB</b> left hand &middot; <b>RMB</b> right hand &middot; <b>Q</b>/<b>E</b> cycle left/right item<br><b>F</b> talk/mount &middot; <b>R</b> summon dragon &middot; <b>B</b> broom &middot; <b>J</b> quests &middot; <b>M</b> map &middot; <b>N</b> sound &middot; <b>H</b> hide this</div>
       <div id="info"><div id="cls2"></div><div id="drg"></div><div id="race"></div><div id="wing"></div><div id="kills"></div></div>
       <div id="obj"></div><div id="ann"><h1></h1><p></p></div>
       <div class="hand" id="hl"></div><div class="hand" id="hr"></div>

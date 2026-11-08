@@ -7,7 +7,7 @@ const CSS = `
 #dlg p{margin:0 0 12px;font-size:17px;line-height:1.5}
 #dlg .ch{font-size:16px;opacity:.95;padding:3px 0;cursor:pointer}#dlg .ch:hover{color:#ffd98a}
 #prompt{position:fixed;left:50%;top:62%;transform:translateX(-50%);color:#fff;font-family:Georgia,serif;font-size:17px;text-shadow:0 1px 4px #000;display:none;z-index:3}
-#trk{position:fixed;right:14px;top:92px;text-align:right;font-family:Georgia,serif;font-size:14px;color:#f0e6d0;text-shadow:0 1px 3px #000;max-width:300px}
+#trk{position:fixed;right:14px;top:330px;text-align:right;font-family:Georgia,serif;font-size:14px;color:#f0e6d0;text-shadow:0 1px 3px #000;max-width:300px}
 #trk b{color:#ffd98a}
 #qlog{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,90vw);max-height:70vh;overflow:auto;background:#100e16f0;border:1px solid #d8c9a0aa;padding:18px 24px;color:#f0e6d0;font-family:Georgia,serif;display:none;z-index:4}
 #qlog h2{margin:0 0 10px;color:#ffd98a}#qlog .q{margin:10px 0}#qlog .q b{font-size:17px}#qlog .q div{opacity:.85;font-size:14px;margin-left:10px}
