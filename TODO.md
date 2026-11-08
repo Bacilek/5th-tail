@@ -147,12 +147,12 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 
 ## M2.1 Asset pipeline
 - [x] M2.1.1 [MUST|M] `assets/` structure, `licences.md`, manifest JSON. *Accept: schema + docs.*
-- [ ] M2.1.2 [MUST|M] GLB loader with cache, instancing, Draco/meshopt. *Accept: loads a test model in-game.*
+- [x] M2.1.2 [MUST|M] GLB loader with cache, instancing, Draco/meshopt. *Accept: loads a test model in-game.*
 - [x] M2.1.3 [MUST|S] Ask owner to approve asset sources; first CC0 pack downloaded with licence logged. *Accept: pack in `assets/`, licence recorded.*
 - [ ] M2.1.4 [SHOULD|M] Blender headless script template (bpy) for custom models. *Accept: script exports one prop.*
 
 ## M2.2 Humanoid rig and animations
-- [ ] M2.2.1 [MUST|L] Rigged humanoid (CC0 or Blender) loaded for player/NPC. *Accept: textured character in-game.*
+- [x] M2.2.1 [MUST|L] Rigged humanoid (CC0 or Blender) loaded for player/NPC. *Accept: textured character in-game.*
 - [ ] M2.2.2 [MUST|L] Animation state machine with clips (idle/walk/run/sprint/jump/fall). *Accept: transitions blend.*
 - [ ] M2.2.3 [MUST|L] Combat animations (light, power, block, bash, stagger, death). *Accept: tied to attack states.*
 - [ ] M2.2.4 [MUST|M] Cast, bow, interact, sit, work clips. *Accept: used by NPC activities.*
@@ -160,7 +160,7 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 - [ ] M2.2.6 [SHOULD|M] Cloth/cape/hair secondary motion. *Accept: visible sway.*
 
 ## M2.3 Characters and customization
-- [ ] M2.3.1 [MUST|M] Player customization on the real model (body type, hair, skin, outfit). *Accept: creator preview rotates.*
+- [~] M2.3.1 [MUST|M] Player customization on the real model (body type, hair, skin, outfit). *Accept: creator preview rotates.* (done: male/female body, skin tone, clothing colour; todo: hairstyles, faces)
 - [ ] M2.3.2 [MUST|L] NPC variety system (head/hair/body kits, colour variation). *Accept: no two cadets identical.*
 - [ ] M2.3.3 [MUST|M] Quadrant uniforms + armour sets. *Accept: colours match 05-factions.*
 - [ ] M2.3.4 [SHOULD|L] Canon unique looks (Violet crown braid, Xaden aura, etc.) on real models. *Accept: recognisable.*

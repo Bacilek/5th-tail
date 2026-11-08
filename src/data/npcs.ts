@@ -10,6 +10,8 @@ export interface NpcDef {
   invented?: boolean;
   wander?: number; // wander radius around home
   skin?: number;
+  /** use the female body model */
+  female?: boolean;
   eyes?: number;
   build?: 'tall' | 'hulking' | 'small';
   /** Signature marks from the books. Only key (canon) NPCs have these; generic NPCs never do. */

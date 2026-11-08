@@ -2,6 +2,8 @@ export type HairStyle = 'short' | 'long' | 'bald';
 
 export interface Look {
   name: string;
+  /** body model: false = male build, true = female build */
+  female?: boolean;
   skin: number;
   hair: number;
   hairStyle: HairStyle;

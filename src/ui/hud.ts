@@ -120,6 +120,7 @@ export class Hud {
         <label>Name <input id="ccname" maxlength="16" value="${look.name}"></label>
         <div class="sw" data-k="skin"><span>Skin</span></div>
         <div class="sw" data-k="hair"><span>Hair</span></div>
+        <div class="sw" data-k="female"><span>Body</span></div>
         <div class="sw" data-k="hairStyle"><span>Style</span></div>
         <div class="sw" data-k="cloth"><span>Outfit</span></div>
         <button id="ccgo">Continue to Conscription Day</button>
@@ -136,15 +137,15 @@ export class Hud {
         b.classList.toggle('sel', String(look[k]) === b.dataset.v);
       });
     };
-    const rows: [keyof Look, (number | string)[]][] = [
-      ['skin', SKIN_TONES], ['hair', HAIR_COLORS], ['hairStyle', HAIR_STYLES], ['cloth', CLOTH_COLORS],
+    const rows: [keyof Look, (number | string | boolean)[]][] = [
+      ['skin', SKIN_TONES], ['hair', HAIR_COLORS], ['female', [false, true]], ['hairStyle', HAIR_STYLES], ['cloth', CLOTH_COLORS],
     ];
     for (const [k, vals] of rows) {
       const row = el.querySelector(`.sw[data-k="${k}"]`)!;
       for (const v of vals) {
         const b = document.createElement('i');
         b.className = 'opt'; b.dataset.v = String(v);
-        if (typeof v === 'number') b.style.background = hex(v); else b.textContent = v;
+        if (typeof v === 'number') b.style.background = hex(v); else b.textContent = typeof v === 'boolean' ? (v ? 'Female' : 'Male') : v;
         b.addEventListener('click', () => { (look as unknown as Record<string, unknown>)[k] = v; paint(); });
         row.appendChild(b);
       }

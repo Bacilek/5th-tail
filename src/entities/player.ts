@@ -6,6 +6,7 @@ import { ITEMS, type ItemId } from '../data/items';
 import { CLASSES, type ClassId } from '../data/classes';
 import { heightAt, heightAtFor, MAP_HALF } from '../world/terrain';
 import type { Look } from '../data/look';
+import { Humanoid } from './humanoid';
 import { makeLimb, animateWalk, ridePose as ridePoseFn, type Limbs } from './walkcycle';
 import { resolve, supportAt } from '../world/collision';
 import type { Combat } from '../systems/combat';
@@ -137,7 +138,7 @@ export class Player {
   private lastStepSign = 1;
   onStep: () => void = () => {};
   /** Call every frame while riding (broom/dragon) so the avatar sits instead of walking. */
-  ridePose(): void { ridePoseFn(this.limbs); this.walkAmt = 0; }
+  ridePose(): void { ridePoseFn(this.limbs); this.walkAmt = 0; this.rideFlag = true; }
   private fpMount: [THREE.Group, THREE.Group] = [new THREE.Group(), new THREE.Group()];
   private tpMount: [THREE.Group, THREE.Group] = [new THREE.Group(), new THREE.Group()];
 
@@ -163,8 +164,34 @@ export class Player {
   private hairMeshes: THREE.Mesh[] = [];
   name = 'Cadet';
 
+  private human: Humanoid | null = null;
+  private lookCache: Look | null = null;
+  private rideFlag = false;
+
+  /** Replaces the box avatar with the rigged humanoid (call once the models are loaded). */
+  enableModel(): void {
+    if (!Humanoid.ready) return;
+    this.buildHuman();
+  }
+
+  private buildHuman(): void {
+    if (this.human) this.avatar.remove(this.human.root);
+    const l = this.lookCache;
+    const h = new Humanoid({ female: l?.female, skin: l?.skin ?? 0xd9b69a, hair: l?.hair ?? 0x3a2418 });
+    h.dress(l?.cloth ?? 0x1d2030);
+    this.human = h;
+    for (const c of this.avatar.children) if (c !== this.tpMount[0] && c !== this.tpMount[1]) c.visible = false;
+    h.root.visible = true;
+    this.avatar.add(h.root);
+    // weapons follow the hands
+    const hl = h.getBone('hand_l'), hr = h.getBone('hand_r');
+    if (hl && hr) { hl.add(this.tpMount[0]); hr.add(this.tpMount[1]); this.tpMount[0].position.set(0, 0, 0); this.tpMount[1].position.set(0, 0, 0); this.tpMount[0].scale.setScalar(1.8); this.tpMount[1].scale.setScalar(1.8); this.tpMount[0].rotation.set(Math.PI + 0.45, 0, 0); this.tpMount[1].rotation.set(Math.PI + 0.45, 0, 0); }
+  }
+
   /** Applies the character-creation look to the third-person avatar. */
   applyLook(look: Look): void {
+    this.lookCache = look;
+    if (Humanoid.ready) this.buildHuman();
     this.name = look.name;
     this.lookMats.cloth.color.setHex(look.cloth);
     this.lookMats.skin.color.setHex(look.skin);
@@ -513,6 +540,13 @@ export class Player {
     this.walkAmt += (target - this.walkAmt) * Math.min(1, 10 * dt);
     this.walkPhase += sp * dt * 1.7;
     animateWalk(this.limbs, this.walkPhase, this.walkAmt);
+    if (this.human) {
+      const melee = [0, 1].map((i) => this.swing[i] > 0 && ITEMS[this.hands[i as Hand]].kind === 'melee');
+      const hi: Hand = melee[1] ? 1 : 0;
+      const active = melee[0] || melee[1];
+      this.human.pose({ speed: sp, swing: active ? this.swing[hi] : 0, power: active && this.swingPower[hi], blocking: this.blocking, ride: this.rideFlag }, dt);
+      this.rideFlag = false;
+    }
     const sign = Math.sign(Math.sin(this.walkPhase)) || 1;
     if (sign !== this.lastStepSign) { this.lastStepSign = sign; if (this.walkAmt > 0.5) this.onStep(); }
     this.avatar.visible = this.thirdPerson;
@@ -573,7 +607,7 @@ export class Player {
         m.position.set(base + bobX + lerp(from.px, to.px, k), -0.3 + lerp(from.py, to.py, k), -0.55 + lerp(from.pz, to.pz, k));
       }
       const tm = this.tpMount[h];
-      tm.rotation.set(isSpell ? -1.2 * a : -1.6 * a, 0, 0);
+      if (!this.human) tm.rotation.set(isSpell ? -1.2 * a : -1.6 * a, 0, 0);
     }
   }
 }

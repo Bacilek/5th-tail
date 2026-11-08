@@ -27,6 +27,7 @@ import { Broom } from './entities/broom';
 import { Race } from './systems/race';
 import { audio } from './engine/audio';
 import { PerfOverlay } from './ui/perf';
+import { Humanoid, type HumanoidState } from './entities/humanoid';
 import { ITEMS, type ItemId } from './data/items';
 import { Minimap, type Marker } from './ui/minimap';
 import { saveCharacter, readSave, writeSave, type SavedChar, type SaveData } from './engine/saves';
@@ -422,6 +423,8 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 });
 
+const demo: { h: Humanoid; st: HumanoidState }[] = [];
+void Humanoid.preload().then(() => { player.enableModel(); npcs.forEach((n) => n.upgrade()); });
 const clock = new THREE.Clock();
 let hitStop = 0;
 renderer.setAnimationLoop(() => {
@@ -519,6 +522,7 @@ renderer.setAnimationLoop(() => {
   });
 
   if (chosen && !menus.pauseOpen) { autosaveT += dt; if (autosaveT > 45) { autosaveT = 0; saveGame(); } }
+  for (const d of demo) d.h.pose(d.st, dt);
   dn.update(dt, player.pos, camera.position);
   minimap.clock = (dn.day > 0.5 ? 'Day ' : 'Night ') + dn.clock;
 
@@ -542,4 +546,17 @@ renderer.setAnimationLoop(() => {
   bond: (i = 0) => { const sp = BOND_SPECIES[i % BOND_SPECIES.length]; bondDragon({ species: sp, spec: { name: 'Testdrake', color: sp.hex, tail: sp.tail, size: sp.size } }); },
   spawnEnemy: (x: number, z: number, kind: EnemyKind = 'venin') => makeEnemy(x, z, kind),
   perf, saveGame, snapshot, applySave, settings, input,
+  /** debug: spawn a rigged humanoid 3 m ahead of the player, with a pose state */
+  demoHumanoid: (st: Partial<HumanoidState> = {}, female = false) => {
+    const h = new Humanoid({ female, skin: 0xd9b69a, hair: 0x3a2418 });
+    h.dress(0x7a2a22);
+    const fwd = player.forward; fwd.y = 0; fwd.normalize();
+    h.root.position.set(player.pos.x + fwd.x * 3, player.pos.y, player.pos.z + fwd.z * 3);
+    h.root.rotation.y = Math.atan2(-fwd.x, -fwd.z) + Math.PI;
+    scene.add(h.root);
+    const bb = new THREE.Box3().setFromObject(h.root);
+    console.log("humanoid bbox", JSON.stringify([bb.min.toArray().map((v) => +v.toFixed(2)), bb.max.toArray().map((v) => +v.toFixed(2))]), "ready", Humanoid.ready, "player", player.pos.toArray().map((v) => +v.toFixed(1)).join(","));
+    (window as unknown as { __h?: Humanoid }).__h = h;
+    demo.push({ h, st: { speed: 0, swing: 0, power: false, blocking: false, ride: false, ...st } });
+  },
 };

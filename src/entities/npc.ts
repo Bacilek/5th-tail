@@ -4,6 +4,7 @@ import { heightAt } from '../world/terrain';
 import { makeLabel } from '../world/college';
 import { resolve } from '../world/collision';
 import { makeLimb, animateWalk, type Limbs } from './walkcycle';
+import { Humanoid } from './humanoid';
 
 const SKINS = [0xf1d3b8, 0xd9b69a, 0xc08e6a, 0x9a6a46];
 
@@ -25,6 +26,17 @@ export class Npc {
   private walkPhase = 0;
   private walkAmt = 0;
   private moving = false;
+  private human: Humanoid | null = null;
+
+  /** Swaps the box body for the rigged humanoid (generic NPCs only; key NPCs keep their handmade marks for now). */
+  upgrade(): void {
+    if (!Humanoid.ready || this.human || this.def.marks) return;
+    const h = new Humanoid({ female: this.def.female, skin: this.def.skin ?? 0xd9b69a, hair: this.def.hair });
+    h.dress(this.def.cloth);
+    for (const c of this.group.children) if (!(c instanceof THREE.Sprite)) c.visible = false;
+    this.group.add(h.root);
+    this.human = h;
+  }
 
   private animate(dt: number): void {
     this.walkAmt += ((this.moving ? 1 : 0) - this.walkAmt) * Math.min(1, 8 * dt);
@@ -176,11 +188,13 @@ export class Npc {
         this.group.position.y = this.pos.y;
         this.moving = true;
         this.animate(dt);
+        this.human?.pose({ speed: 1.6, swing: 0, power: false, blocking: false, ride: false }, dt);
         return;
       }
     }
     if (Math.hypot(dx, dz) < 14) this.group.rotation.y = Math.atan2(-dx, -dz);
     this.group.position.y = this.pos.y + Math.sin(t * 1.5 + this.phase) * 0.02;
     this.animate(dt);
+    this.human?.pose({ speed: 0, swing: 0, power: false, blocking: false, ride: false }, dt);
   }
 }
