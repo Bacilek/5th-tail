@@ -127,7 +127,7 @@ export class Hud {
         <button id="ccgo">Continue to Conscription Day</button>
       </div></div>`;
     const paint = () => {
-      const q = (s: string) => el.querySelector(s) as HTMLElement;
+      const q = (s: string) => el.querySelector('.ccrow ' + s) as HTMLElement; // scoped: saved-character tiles also contain .ph/.pf/.pb
       q('.ph').style.background = hex(look.skin);
       q('.pf').style.background = look.hairStyle === 'bald' ? 'transparent' : hex(look.hair);
       q('.pf').style.height = look.hairStyle === 'long' ? '86px' : '28px';
