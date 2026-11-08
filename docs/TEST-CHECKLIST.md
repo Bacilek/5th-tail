@@ -1,5 +1,15 @@
 # Playtest checklist (Marek) - since the last tested build
 
+## Round 2 changes (check these first)
+- [ ] Melee swings are slower with a longer cooldown (dagger/sword/greatsword feel weighty, not sluggish).
+- [ ] Spells: hold LMB/RMB to charge (hand rises), release to cast; short taps below 30% charge fizzle; full charge = 2x damage of a snap cast.
+- [ ] Character creator shows a live rotating 3D model (gender/hair/beard/outfit update it).
+- [ ] Tower top: no flickering/z-fighting texture on the platform.
+- [ ] Halls/Administration: floor no longer flickers when turning; no pillar in front of the General.
+- [ ] Hall roofs sit centred on the building and are aligned with its walls (all quadrants).
+- [ ] Gauntlet beam is wide (2.6 m); the iron balls only shove lightly (no longer knock you off).
+
+
 Run `npm run dev`, create a character, pick a quadrant. Debug: `window.__game` in the browser console (teleport(x,z), spawnEnemy...).
 
 ## Combat / animation (3rd person, V toggles)

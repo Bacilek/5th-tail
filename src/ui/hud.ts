@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+import { Humanoid } from '../entities/humanoid';
 import { isTyping } from '../engine/input';
 import { loadCharacters, saveCharacter, deleteCharacter, type SavedChar } from '../engine/saves';
 import { ITEMS, type ItemId } from '../data/items';
@@ -26,6 +28,8 @@ const CSS = `
 #cc h1{font-size:40px;letter-spacing:5px;margin:0 0 24px}
 #cc .ccrow{display:flex;gap:44px;align-items:center;flex-wrap:wrap;justify-content:center}
 #cc .ccprev{position:relative;width:120px;height:230px}
+#cc .ccrow .ccprev.live{width:240px;height:340px}
+#cc .ccrow canvas.pv3{width:240px;height:340px;display:block}
 #cc .ph{position:absolute;left:35px;top:20px;width:50px;height:50px;border-radius:50%;background:#d9b69a}
 #cc .pf{position:absolute;left:30px;top:10px;width:60px;height:28px;border-radius:30px 30px 6px 6px;z-index:1;opacity:.95}
 #cc .pb{position:absolute;left:25px;top:76px;width:70px;height:120px;border-radius:6px;background:#1d2030}
@@ -126,12 +130,49 @@ export class Hud {
         <div class="sw" data-k="cloth"><span>Outfit</span></div>
         <button id="ccgo">Continue to Conscription Day</button>
       </div></div>`;
+    // live 3D preview of the rigged humanoid (falls back to the CSS silhouette if the models did not load)
+    let live: { update: () => void; dispose: () => void } | null = null;
+    if (Humanoid.ready) {
+      const holder = el.querySelector('.ccrow .ccprev') as HTMLElement;
+      holder.classList.add('live'); holder.innerHTML = '';
+      const canvas = document.createElement('canvas'); canvas.className = 'pv3'; holder.appendChild(canvas);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(240, 340, false);
+      const scene = new THREE.Scene();
+      scene.add(new THREE.HemisphereLight(0xdde4ff, 0x40362e, 1.6));
+      const key = new THREE.DirectionalLight(0xfff0d8, 2.4); key.position.set(2, 3, 4); scene.add(key);
+      const cam = new THREE.PerspectiveCamera(28, 240 / 340, 0.1, 50); cam.position.set(0, 1.05, 5.6); cam.lookAt(0, 0.95, 0);
+      let human: Humanoid | null = null, builtKey = '', raf = 0, t0 = performance.now();
+      const rebuild = () => {
+        const k = JSON.stringify([look.female, look.skin, look.hair, look.hairStyle, look.beard, look.cloth]);
+        if (k === builtKey) return;
+        builtKey = k;
+        const rot = human ? human.root.rotation.y : 0;
+        if (human) scene.remove(human.root);
+        human = new Humanoid({ female: look.female, skin: look.skin, hair: look.hair, hairStyle: look.hairStyle, beard: look.beard });
+        human.dress(look.cloth);
+        human.root.rotation.y = rot;
+        scene.add(human.root);
+      };
+      const loop = () => {
+        if (!el.isConnected) { live?.dispose(); return; }
+        rebuild();
+        if (human) { human.pose({ speed: 0, swing: 0, power: false, blocking: false, ride: false }, 0.016); human.root.rotation.y = Math.sin((performance.now() - t0) / 1800) * 0.7; }
+        renderer.render(scene, cam);
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+      live = { update: rebuild, dispose: () => { cancelAnimationFrame(raf); renderer.dispose(); renderer.forceContextLoss(); } };
+    }
     const paint = () => {
+      if (live) live.update();
       const q = (s: string) => el.querySelector('.ccrow ' + s) as HTMLElement; // scoped: saved-character tiles also contain .ph/.pf/.pb
-      q('.ph').style.background = hex(look.skin);
-      q('.pf').style.background = look.hairStyle === 'bald' ? 'transparent' : hex(look.hair);
-      q('.pf').style.height = look.hairStyle === 'long' ? '86px' : '28px';
-      q('.pb').style.background = hex(look.cloth);
+      if (!live) {
+        q('.ph').style.background = hex(look.skin);
+        q('.pf').style.background = look.hairStyle === 'bald' ? 'transparent' : hex(look.hair);
+        q('.pf').style.height = look.hairStyle === 'long' ? '86px' : '28px';
+        q('.pb').style.background = hex(look.cloth);
+      }
       el.querySelectorAll('.sw .opt').forEach((o) => {
         const b = o as HTMLElement;
         const k = b.parentElement!.dataset.k as keyof Look;

@@ -108,12 +108,13 @@ export function hall(g: THREE.Group, cx: number, cz: number, w: number, d: numbe
   const r: Rect = { x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2 };
   const gx: [number, number][] = [[cx - 2.2, cx + 2.2]], gz: [number, number][] = [[cz - 2.2, cz + 2.2]];
   ring(g, r, y, 1.2, h, { n: door === 'n' ? gx : [], s: door === 's' ? gx : [], w: door === 'w' ? gz : [], e: door === 'e' ? gz : [] }, mat);
-  floor(g, r, y, 0x5a4a3c);
+  floor(g, r, y + 0.03, 0x5a4a3c);
   const slab = new THREE.Mesh(new THREE.BoxGeometry(w + 1, 0.7, d + 1), darkStone);
   slab.position.set(cx, y + h + 0.35, cz); slab.castShadow = true; g.add(slab);
   addBox(cx, cz, w + 1, d + 1, y + h + 0.7 + roofH * 0.5, y + h); // roof volume above the walls
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, roofH, 4), roofMat);
-  roof.rotation.y = Math.PI / 4; roof.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
+  const roofGeo = new THREE.ConeGeometry(Math.SQRT1_2, 1, 4); roofGeo.rotateY(Math.PI / 4);
+  const roof = new THREE.Mesh(roofGeo, roofMat);
+  roof.scale.set(w + 1, roofH, d + 1);
   roof.position.set(cx, y + h + 0.7 + roofH / 2, cz); roof.castShadow = true; g.add(roof);
   const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.25, 6, 5), lantern);
   lamp.position.set(cx, y + h - 1.2, cz); g.add(lamp);
@@ -122,14 +123,14 @@ export function hall(g: THREE.Group, cx: number, cz: number, w: number, d: numbe
     const L = new THREE.PointLight(0xffb070, 90, Math.max(w, d) * 1.4, 1.5); L.position.set(cx, y + Math.min(h - 2, 7), cz); g.add(L);
   }
   const rug = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w - 4, 10), Math.min(d - 4, 6)), new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 1 }));
-  rug.rotation.x = -Math.PI / 2; rug.position.set(cx, y + 0.06, cz); rug.receiveShadow = true; g.add(rug);
+  rug.rotation.x = -Math.PI / 2; rug.position.set(cx, y + 0.1, cz); rug.receiveShadow = true; g.add(rug);
   const flame = new THREE.MeshBasicMaterial({ color: 0xffa040 });
   for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
     const sc = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.45, 5), flame);
     sc.position.set(cx + sx * (w / 2 - 0.75), y + 2.6, cz + sz * (d / 2 - 0.75)); g.add(sc);
   }
   if (w >= 20 || d >= 20) {
-    const longX = w >= d, n = Math.floor((longX ? w : d) / 7);
+    const longX = w >= d, n = Math.max(2, 2 * Math.floor((longX ? w : d) / 14));
     for (let i = 0; i < n; i++) {
       const t = ((i + 0.5) / n - 0.5) * (longX ? w : d) * 0.9;
       for (const side of [-1, 1]) {
@@ -210,7 +211,7 @@ export function buildCollege(): THREE.Group {
   upper.position.set(TOWER.x, (TOWER.top + doorTop) / 2, TOWER.z);
   for (const m of [lower, upper]) { m.castShadow = m.receiveShadow = true; g.add(m); }
   const inFloor = new THREE.Mesh(new THREE.CircleGeometry(6.3, 28), pbr('cobblestone_floor_04', 0x5a4a3c, 1));
-  inFloor.rotation.x = -Math.PI / 2; inFloor.position.set(TOWER.x, Y + 0.03, TOWER.z); inFloor.receiveShadow = true; g.add(inFloor);
+  inFloor.rotation.x = -Math.PI / 2; inFloor.position.set(TOWER.x, Y + 0.06, TOWER.z); inFloor.receiveShadow = true; g.add(inFloor);
   const ceil = new THREE.Mesh(new THREE.CylinderGeometry(6.3, 6.3, 0.6, 28), darkStone);
   ceil.position.set(TOWER.x, Y + 7.3, TOWER.z); g.add(ceil);
   const lampT = new THREE.PointLight(0xffa860, 40, 14, 1.6); lampT.position.set(TOWER.x, Y + 5.5, TOWER.z); g.add(lampT);
@@ -219,7 +220,7 @@ export function buildCollege(): THREE.Group {
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.8, TOWER.r + 0.4, 1.2, 12), darkStone);
   cap.position.set(TOWER.x, TOWER.top - 0.6, TOWER.z); cap.castShadow = true; g.add(cap);
   const topDisc = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.4, TOWER.r + 0.4, 0.3, 24), darkStone);
-  topDisc.position.set(TOWER.x, TOWER.top - 0.15, TOWER.z); topDisc.receiveShadow = true; g.add(topDisc);
+  topDisc.position.set(TOWER.x, TOWER.top - 0.1, TOWER.z); topDisc.receiveShadow = true; g.add(topDisc);
   // wall collider: ring of small circles with a gap at the door; top platform is a slab with a finite bottom (hollow underneath)
   const nC = 40, rc = 6.1;
   for (let i = 0; i < nC; i++) {

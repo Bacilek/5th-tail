@@ -52,11 +52,11 @@ export class Gauntlet {
       const x = 155.5 + 2.2 * i, h = 1 + i, zc = i === 7 ? CZ : CZ + (i % 2 ? 3.2 : -3.2);
       this.block(x, zc, 2.4, 4, h);
     }
-    // 4: beam walk at +8 m under two pendulums hung from a gantry
+    // 4: wide beam (2.6 m) at +8 m under two pendulums (light shove, no fall-off by design) hung from a gantry
     const bx0 = 171.9, bx1 = 183;
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(bx1 - bx0, 0.5, 1.4), stone);
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(bx1 - bx0, 0.5, 2.6), stone);
     beam.position.set((bx0 + bx1) / 2, Y + TOP - 0.25, CZ); beam.castShadow = beam.receiveShadow = true; g.add(beam);
-    addBox((bx0 + bx1) / 2, CZ, bx1 - bx0, 1.4, Y + TOP, Y + TOP - 0.5);
+    addBox((bx0 + bx1) / 2, CZ, bx1 - bx0, 2.6, Y + TOP, Y + TOP - 0.5);
     const gantryY = Y + TOP + 9.5;
     const gantry = new THREE.Mesh(new THREE.BoxGeometry(bx1 - bx0 + 4, 0.6, 0.8), iron);
     gantry.position.set((bx0 + bx1) / 2, gantryY + 0.3, CZ); g.add(gantry);
@@ -147,13 +147,13 @@ export class Gauntlet {
         if (Math.hypot(px - p.x, pz - bz) < 1.9 && Math.abs(py + 1 - by) < 2.2) {
           // wrecking ball: hurl the player along the swing direction
           const dir = Math.sign(Math.cos(t * Math.PI * 2 / p.period)) || 1;
-          kx = (px - p.x) * 3 + 2; kz = dir * 22; ky = 3; dmg = 14; hit = true;
+          kx = 0; kz = dir * 6; ky = 0; dmg = 8; hit = true;
         }
       }
       if (hit) {
         player.damage(dmg);
         player.push(kx, ky, kz);
-        this.hitCd = 0.9;
+        this.hitCd = 1.2;
       }
     }
 

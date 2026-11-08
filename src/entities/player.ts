@@ -13,6 +13,7 @@ import type { Combat } from '../systems/combat';
 
 const EYE = 1.7;
 const GRAVITY = 24;
+const SPELL_CHARGE = 0.9; // seconds to fully charge a spell
 export const SPAWN = new THREE.Vector3(0, 0, 24);
 
 type Hand = 0 | 1; // 0 = left, 1 = right
@@ -339,7 +340,7 @@ export class Player {
 
   onAttack: (kind: string) => void = () => {};
 
-  private attack(h: Hand, power = false): void {
+  private attack(h: Hand, power = false, charge = 1): void {
     const item = ITEMS[this.hands[h]];
     if (item.kind === 'none' || item.kind === 'shield' || item.kind === 'ranged' || this.cooldown[h] > 0 || this.swing[h] > 0) return;
     if (item.kind === 'heal') {
@@ -357,11 +358,12 @@ export class Player {
       const origin = this.eye;
       const dir = this.forward;
       this.onAttack(item.id);
-      if (item.id === 'fireball') this.combat.fireball(origin.clone().addScaledVector(dir, 0.8), dir, item.damage);
-      else this.combat.lightning(origin, dir, item.range, item.damage);
+      const dmg = item.damage * (0.5 + 0.5 * charge); // a fully charged spell hits twice as hard as a snap cast
+      if (item.id === 'fireball') this.combat.fireball(origin.clone().addScaledVector(dir, 0.8), dir, dmg);
+      else this.combat.lightning(origin, dir, item.range, dmg);
       this.swing[h] = 0.001; this.swingHit[h] = true;
     }
-    this.cooldown[h] = item.cooldown * (item.kind === 'melee' && power ? 1.6 : 1);
+    this.cooldown[h] = item.cooldown * (item.kind === 'melee' ? (power ? 2.1 : 1.35) : 1.15);
   }
 
   /** Releases a bow/crossbow/throwing knife. draw 0..1 */
@@ -503,6 +505,15 @@ export class Player {
             this.holdT[h] = 0;
             if (item.id === 'crossbow' ? q >= 1 : q >= 0.3) this.shoot(h, q);
           }
+        } else if (item.kind === 'spell') {
+          // Skyrim-style: hold to charge, release to cast
+          if (this.blocking) { this.holdT[h] = 0; continue; }
+          if (down && this.cooldown[h] <= 0 && this.magicka >= item.cost) this.holdT[h] += dt;
+          else if (!down && this.holdT[h] > 0) {
+            const q = Math.min(1, this.holdT[h] / SPELL_CHARGE);
+            this.holdT[h] = 0;
+            if (q >= 0.3) this.attack(h, false, q);
+          } else if (!down) this.holdT[h] = 0;
         } else {
           this.holdT[h] = 0;
           if (down) this.attack(h);
@@ -512,7 +523,7 @@ export class Player {
     for (const h of [0, 1] as Hand[]) {
       this.cooldown[h] = Math.max(0, this.cooldown[h] - dt);
       if (this.swing[h] > 0) {
-        const dur = Math.max(0.2, ITEMS[this.hands[h]].cooldown * 0.8);
+        const dur = Math.max(0.42, ITEMS[this.hands[h]].cooldown * 1.1);
         this.swing[h] += dt / dur;
         if (!this.swingHit[h] && this.swing[h] > 0.4) {
           this.swingHit[h] = true;
@@ -582,7 +593,7 @@ export class Player {
       m.position.set(base + bobX, -0.3 + bobY + (isSpell ? 0.05 * a : -0.1 * a), -0.55 - (isSpell ? 0.0 : 0.15 * a) + Math.sin(ph) * 0.02 * this.walkAmt);
       const kind = ITEMS[this.hands[h]].kind, melee = kind === 'melee';
       const drawT = ITEMS[this.hands[h]].draw ?? 0.5;
-      const wind = melee ? Math.min(1, this.holdT[h] / 0.5) : kind === 'ranged' ? Math.min(1, this.holdT[h] / Math.max(0.2, drawT)) : 0;
+      const wind = melee ? Math.min(1, this.holdT[h] / 0.5) : kind === 'spell' ? Math.min(1, this.holdT[h] / SPELL_CHARGE) : kind === 'ranged' ? Math.min(1, this.holdT[h] / Math.max(0.2, drawT)) : 0;
       const guard = this.blocking && (melee || kind === 'shield') ? 1 : 0;
       m.position.x += -base * 0.7 * guard; m.position.y += 0.14 * guard + 0.06 * wind; m.position.z += -0.08 * guard + 0.1 * wind;
       m.rotation.set((isSpell ? 0.4 * a : -1.0 * a + 0.25) - 0.9 * wind - 1.0 * guard, 0, (h === 0 ? -1 : 1) * 0.35 * guard);

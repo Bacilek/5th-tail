@@ -29,5 +29,7 @@ Master plan = `TODO.md`; design = `docs/bible/`; rules = `CLAUDE.md`.
 1. `npm run build` + relevant test script, 2. tick TODO.md, 3. rewrite this file (current state only), 4. commit + push (trailer in CLAUDE.md), 5. short Czech summary to Marek.
 
 ## Pending feedback / ideas from Marek (clear when done)
+- Perf report: ~50 FPS, worst frame 40 ms (before halls got lights): watch light count, consider cell streaming (M3.1.2). Gauntlet should become more complex later (books: big vertical course); deadline timer + more obstacles pending.
+- Spell charge (SPELL_CHARGE in player.ts) and slower swings (dur/cooldown in player.ts attack/update) are new: tune from feedback.
 - Animations and sword swings could be better; wants playtest feedback loop after milestones.
 - Remaining model gaps: Violet two-tone hair, Imogen half-shaved hair, gold eyes, Jesinia signing, wolves/dragon still procedural.
