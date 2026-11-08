@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { heightAt } from '../world/terrain';
 import { resolve } from '../world/collision';
+import { Humanoid } from './humanoid';
 
 export type EnemyKind = 'venin' | 'soldier' | 'archer' | 'brute' | 'wolf' | 'boss';
 
@@ -44,6 +45,10 @@ export class Enemy {
   private flankAngle = (Math.random() - 0.5) * 2.0;
   private staggerT = 0;
   private windup = 0;
+  private windupTotal = 0.5;
+  private prevWindup = 0;
+  private strikeT = 0;
+  private human: Humanoid | null = null;
   private windupUnblock = false;
   /** true if the attack that produced the last returned damage cannot be blocked */
   lastUnblockable = false;
@@ -168,6 +173,7 @@ export class Enemy {
   private startWindup(base: number): void {
     this.windupUnblock = Math.random() < this.def.unblock;
     this.windup = base + (this.windupUnblock ? 0.18 : 0);
+    this.windupTotal = this.windup;
   }
 
   get telegraphing(): boolean { return this.windup > 0 || this.slamT > 0; }
@@ -186,8 +192,34 @@ export class Enemy {
     if (this.slamRing) { this.group.remove(this.slamRing); this.slamRing = null; }
   }
 
-  /** Returns damage dealt to the player this frame (0 if none). */
+  /** Swaps the box body for the rigged humanoid (not for wolves). */
+  upgrade(): void {
+    if (!Humanoid.ready || this.human || this.kind === 'wolf') return;
+    const h = new Humanoid({ female: false, skin: 0x8a7a80, hair: 0x1a1214, hairStyle: this.kind === 'boss' ? 'long' : this.kind === 'brute' ? 'bald' : 'buzzed' });
+    const top = this.def.color, tint = (c: number, f: number) => ((((c >> 16) & 255) * f) << 16) | ((((c >> 8) & 255) * f) << 8) | (((c & 255) * f) | 0);
+    h.dress(tint(top, 1.5) | 0, tint(top, 1.0) | 0, 0x1a1412);
+    for (const c of this.group.children) if (!(c instanceof THREE.Sprite)) c.visible = false;
+    this.group.scale.setScalar(this.def.scale * 0.95);
+    this.group.add(h.root);
+    this.human = h;
+  }
+
   update(dt: number, target: THREE.Vector3, targetAlive: boolean): number {
+    const x0 = this.group.position.x, z0 = this.group.position.z;
+    const dmg = this.step(dt, target, targetAlive);
+    if (this.human) {
+      if (this.prevWindup > 0 && this.windup <= 0 && this.alive) this.strikeT = 0.25;
+      this.prevWindup = this.windup;
+      this.strikeT = Math.max(0, this.strikeT - dt);
+      const swing = this.windup > 0 ? (1 - this.windup / Math.max(0.1, this.windupTotal)) * 0.38 : this.strikeT > 0 ? 0.38 + (1 - this.strikeT / 0.25) * 0.5 : 0;
+      const speed = dt > 0 ? Math.hypot(this.group.position.x - x0, this.group.position.z - z0) / dt : 0;
+      this.human.pose({ speed: this.alive ? Math.min(speed, 6) : 0, swing, power: this.kind === 'brute' || this.kind === 'boss', blocking: false, ride: false }, dt);
+    }
+    return dmg;
+  }
+
+  /** Returns damage dealt to the player this frame (0 if none). */
+  private step(dt: number, target: THREE.Vector3, targetAlive: boolean): number {
     if (!this.alive) {
       this.deathT += dt;
       this.group.rotation.x = Math.min(Math.PI / 2, this.deathT * 4);
@@ -270,7 +302,7 @@ export class Enemy {
         const [near, far] = this.def.ranged;
         if (dist < near) move(p.x - dx, p.z - dz, speed);                  // back away
         else if (dist > far) move(target.x, target.z, speed);              // close in
-        else if (this.atkCd <= 0) { this.windupUnblock = false; this.windup = windupT; }  // draw and loose
+        else if (this.atkCd <= 0) { this.windupUnblock = false; this.windup = windupT; this.windupTotal = windupT; }  // draw and loose
       } else {
         // melee: approach a flanking point so groups surround the player
         const ang = Math.atan2(p.z - target.z, p.x - target.x) + this.flankAngle * Math.min(1, dist / 12);

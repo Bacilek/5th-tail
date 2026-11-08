@@ -30,13 +30,48 @@ export class Npc {
 
   /** Swaps the box body for the rigged humanoid (generic NPCs only; key NPCs keep their handmade marks for now). */
   upgrade(): void {
-    if (!Humanoid.ready || this.human || this.def.marks) return;
+    if (!Humanoid.ready || this.human) return;
     const styles = this.def.female ? ['long', 'buns', 'long'] : ['short', 'buzzed', 'short', 'long'];
     const h = new Humanoid({ female: this.def.female, skin: this.def.skin ?? 0xd9b69a, hair: this.def.hair, hairStyle: this.def.hairStyle ?? styles[hashId(this.def.id) % styles.length], beard: this.def.beard });
     h.dress(this.def.cloth);
-    for (const c of this.group.children) if (!(c instanceof THREE.Sprite)) c.visible = false;
+    // hide the box body (keep the name label and the shadow aura)
+    for (const c of this.group.children) if (!(c instanceof THREE.Sprite) && c !== this.aura) c.visible = false;
+    if (this.def.build === 'tall') h.root.scale.setScalar(1.08);
+    else if (this.def.build === 'hulking') h.root.scale.set(1.2, 1.1, 1.2);
+    else if (this.def.build === 'small') h.root.scale.setScalar(0.94);
+    this.group.scale.setScalar(1); // body size now comes from the model
     this.group.add(h.root);
     this.human = h;
+    this.addMarks(h);
+  }
+
+  /** Signature marks of key characters, rebuilt for the rigged model (positions in model space; face looks to -z). */
+  private addMarks(h: Humanoid): void {
+    const marks = (this.def.marks ?? []) as string[];
+    const y = h.headY, k = h.root.scale.y;
+    const std = (c: number) => new THREE.MeshStandardMaterial({ color: c, flatShading: true });
+    if (marks.includes('chinScar')) {
+      const scar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.07, 0.008), new THREE.MeshBasicMaterial({ color: 0xf2e0d6 }));
+      scar.position.set(0.035, (y - 0.115) * k, -0.1 * k); scar.rotation.z = 0.5;
+      this.group.add(scar);
+    }
+    if (marks.includes('insignia')) {
+      for (const sx of [-1, 1]) {
+        const ep = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.16), new THREE.MeshStandardMaterial({ color: 0xd8b04a, metalness: 0.6, roughness: 0.4, flatShading: true }));
+        ep.position.set(sx * 0.27 * k, (y - 0.22) * k, 0);
+        this.group.add(ep);
+      }
+      const cape = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.04), std(0x101018));
+      cape.position.set(0, (y - 0.7) * k, 0.17 * k);
+      this.group.add(cape);
+    }
+    if (marks.includes('goldEyes')) {
+      for (const sx of [-1, 1]) {
+        const e = new THREE.Mesh(new THREE.SphereGeometry(0.012, 4, 3), new THREE.MeshBasicMaterial({ color: 0xffc040 }));
+        e.position.set(sx * 0.032, (y + 0.025) * k, -0.1 * k);
+        this.group.add(e);
+      }
+    }
   }
 
   private animate(dt: number): void {

@@ -27,17 +27,11 @@ await page.evaluate(() => { window.__game.input.locked = true; });
 await page.evaluate(() => { const g = window.__game; g.teleport(0, 10); g.player.yaw = 0; g.player.thirdPerson = true; g.input.locked = true; });
 await wait(2500);
 await page.screenshot({ path: 'docs/shots/model-idle.png' });
-const looks = [
-  ['m-short', { female: false, hairStyle: 'short', hair: 0x3a2418, beard: true }],
-  ['m-long', { female: false, hairStyle: 'long', hair: 0xa6803c }],
-  ['f-long', { female: true, hairStyle: 'long', hair: 0x0e0a08 }],
-  ['f-buns', { female: true, hairStyle: 'buns', hair: 0x8a2a1e }],
-];
-for (const [name, l] of looks) {
-  await page.evaluate((l) => { window.__game.player.applyLook({ name: 'T', skin: 0xc08e6a, cloth: 0x2f4a3a, ...l }); window.__game.player.yaw = Math.PI; }, l);
-  await wait(1500);
-  await page.screenshot({ path: 'docs/shots/hair-' + name + '.png', clip: { x: 280, y: 190, width: 240, height: 250 } });
-}
+await page.evaluate(() => { const g = window.__game; g.player.thirdPerson = false; g.teleport(0, 26); g.player.yaw = 0; g.spawnEnemy(-3, 14, 'venin'); g.spawnEnemy(3, 14, 'soldier'); g.spawnEnemy(0, 8, 'brute'); g.spawnEnemy(7, 10, 'archer'); });
+await wait(3500);
+await page.screenshot({ path: 'docs/shots/enemies-a.png' });
+await wait(6000);
+await page.screenshot({ path: 'docs/shots/enemies-b.png' });
 console.log('errors:', errors.length ? [...new Set(errors)].join(' | ') : 'none');
 await browser.close();
 server.kill();

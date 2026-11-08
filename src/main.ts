@@ -82,6 +82,7 @@ function makeEnemy(x: number, z: number, kind: EnemyKind = 'venin'): Enemy {
   e.onShoot = (origin, dir) => combat.arrow(origin, dir, 34, e.def.dmg, true, e);
   scene.add(e.group);
   combat.enemies.push(e);
+  e.upgrade();
   return e;
 }
 for (const [x, z, k] of [[-20, 130, 'venin'], [20, 140, 'archer'], [0, 160, 'brute'], [-70, 90, 'wolf'], [-73, 87, 'wolf'], [75, 70, 'soldier'], [-60, -150, 'venin'], [60, 150, 'wolf']] as [number, number, EnemyKind][]) makeEnemy(x, z, k);
@@ -424,7 +425,7 @@ addEventListener('resize', () => {
 });
 
 const demo: { h: Humanoid; st: HumanoidState }[] = [];
-void Humanoid.preload().then(() => { player.enableModel(); npcs.forEach((n) => n.upgrade()); });
+void Humanoid.preload().then(() => { player.enableModel(); npcs.forEach((n) => n.upgrade()); combat.enemies.forEach((e) => e.upgrade()); });
 const clock = new THREE.Clock();
 let hitStop = 0;
 renderer.setAnimationLoop(() => {

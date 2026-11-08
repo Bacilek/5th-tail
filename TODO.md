@@ -153,8 +153,8 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 
 ## M2.2 Humanoid rig and animations
 - [x] M2.2.1 [MUST|L] Rigged humanoid (CC0 or Blender) loaded for player/NPC. *Accept: textured character in-game.*
-- [ ] M2.2.2 [MUST|L] Animation state machine with clips (idle/walk/run/sprint/jump/fall). *Accept: transitions blend.*
-- [ ] M2.2.3 [MUST|L] Combat animations (light, power, block, bash, stagger, death). *Accept: tied to attack states.*
+- [~] M2.2.2 [MUST|L] Animation state machine with clips (idle/walk/run/sprint/jump/fall). *Accept: transitions blend.* (procedural bone poses: idle/walk/run/swing/block/ride)
+- [~] M2.2.3 [MUST|L] Combat animations (light, power, block, bash, stagger, death). *Accept: tied to attack states.* (swing + windup on player and enemies)
 - [ ] M2.2.4 [MUST|M] Cast, bow, interact, sit, work clips. *Accept: used by NPC activities.*
 - [ ] M2.2.5 [SHOULD|M] Head look-at, foot IK. *Accept: slopes and look targets.*
 - [ ] M2.2.6 [SHOULD|M] Cloth/cape/hair secondary motion. *Accept: visible sway.*
@@ -163,7 +163,7 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 - [x] M2.3.1 [MUST|M] Player customization on the real model (body type, hair, skin, outfit). *Accept: creator preview rotates.* (done: male/female body, skin tone, clothing colour; todo: hairstyles, faces) (hair styles incl. beard)
 - [ ] M2.3.2 [MUST|L] NPC variety system (head/hair/body kits, colour variation). *Accept: no two cadets identical.*
 - [ ] M2.3.3 [MUST|M] Quadrant uniforms + armour sets. *Accept: colours match 05-factions.*
-- [ ] M2.3.4 [SHOULD|L] Canon unique looks (Violet crown braid, Xaden aura, etc.) on real models. *Accept: recognisable.*
+- [~] M2.3.4 [SHOULD|L] Canon unique looks (Violet crown braid, Xaden aura, etc.) on real models. *Accept: recognisable.* (canon NPCs on model with hair/body/build and rebuilt marks; true two-tone hair and half-shave still to do)
 - [ ] M2.3.5 [SHOULD|L] **Face photo -> character** (MediaPipe landmarks, texture projection). *Accept: photo changes face.*
 - [ ] M2.3.6 [DREAM|M] NPC facial animation/lip-sync babble. *Accept: mouth moves with babble.*
 
