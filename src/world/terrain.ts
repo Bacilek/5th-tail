@@ -28,6 +28,28 @@ export const CITADEL_Y = 58.5;
 export const TOWER = { x: 40, z: -20, r: 5, top: 62 };
 export const PARAPET = { y: 62, z: -20, x0: 43, x1: 92, half: 0.6 };
 
+/**
+ * Outer spiral stair of the Conscription Tower (4 turns, 32 steps each, starts and ends on the west side).
+ * Analytic walkable surface: returns the highest step top at (x,z) that is at most `reach` above y, else -Infinity.
+ */
+export const STAIR = { turns: 4, perTurn: 32, r0: 6.3, r1: 9.0, y0: 10, landing: 62 };
+STAIR.y0 = PLATEAU;
+const STAIR_RISE = (TOWER.top - 0.4 - PLATEAU) / (STAIR.turns * STAIR.perTurn - 1);
+export const STAIR_STEPS = STAIR.turns * STAIR.perTurn;
+export function stairStepY(s: number): number { return PLATEAU + s * STAIR_RISE; }
+export function stairAngle(s: number): number { return Math.PI + ((s % STAIR.perTurn) + 0.5) / STAIR.perTurn * Math.PI * 2; }
+export function towerStairAt(x: number, z: number, y: number, reach: number): number {
+  const dx = x - TOWER.x, dz = z - TOWER.z;
+  const r = Math.hypot(dx, dz);
+  if (r < STAIR.r0 || r > STAIR.r1) return -Infinity;
+  const phi = (((Math.atan2(dz, dx) - Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const base = Math.floor(phi / (Math.PI * 2) * STAIR.perTurn);
+  const stepMax = Math.floor((y + reach - PLATEAU) / STAIR_RISE + 1e-6);
+  const k = Math.min(STAIR.turns - 1, Math.floor((stepMax - base) / STAIR.perTurn));
+  if (k < 0) return -Infinity;
+  return stairStepY(k * STAIR.perTurn + base);
+}
+
 function rectDist(r: Rect, x: number, z: number): number {
   const dx = Math.max(r.x0 - x, 0, x - r.x1);
   const dz = Math.max(r.z0 - z, 0, z - r.z1);
@@ -63,7 +85,7 @@ export function heightAt(x: number, z: number): number {
   return onParapetStrip(x, z) ? Math.max(h, PARAPET.y) : h;
 }
 
-function baseHeight(x: number, z: number): number {
+export function baseHeight(x: number, z: number): number {
   if (Math.hypot(x - TOWER.x, z - TOWER.z) < TOWER.r * 0.85) return TOWER.top;
 
   let flat = 1;

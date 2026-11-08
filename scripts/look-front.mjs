@@ -1,0 +1,30 @@
+import { chromium } from 'playwright-core';
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+const CHROME = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find((p) => fs.existsSync(p));
+const PORT = 4182;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { shell: true, stdio: 'ignore' });
+for (let i = 0; i < 40; i++) { try { if ((await fetch(`http://localhost:${PORT}/`)).ok) break; } catch { /* wait */ } await wait(500); }
+const browser = await chromium.launch({ executablePath: CHROME, headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 700, height: 500 } });
+const errors = [];
+page.on('pageerror', (e) => errors.push(e.message));
+await page.goto(`http://localhost:${PORT}/`);
+await wait(1200);
+await page.click('#tnew'); await wait(300);
+await page.click('#ccgo'); await wait(300);
+await page.keyboard.press('Digit2');
+await wait(1000);
+await page.evaluate(() => { const g = window.__game; g.input.locked = true; g.player.thirdPerson = false; g.teleport(0, 10); g.player.yaw = 0; g.player.pitch = 0.05;
+  document.querySelectorAll('div').forEach((d) => { if (d.id !== 'app') { /* keep HUD */ } });
+  g.demoHumanoid({}, true, { skin: 0xc08e6a, hair: 0xd8c070, hairStyle: 'long' }); g.teleport(0, 8.6); g.camera.fov = 22; g.camera.updateProjectionMatrix(); });
+await wait(2500);
+await page.screenshot({ path: 'docs/shots/front-0.png' });
+await page.evaluate(() => { const g = window.__game; g.player.yaw = 0; g.teleport(0, 10); g.demoHumanoid({}, false, { skin: 0xf1d3b8, hair: 0x8a2a1e, hairStyle: 'buns', beard: true }); g.teleport(0, 8.6); g.camera.fov = 22; g.camera.updateProjectionMatrix(); });
+await wait(2500);
+await page.screenshot({ path: 'docs/shots/front-1.png' });
+console.log('errors:', errors.length ? [...new Set(errors)].join(' | ') : 'none');
+await browser.close(); server.kill();
+try { spawn('taskkill', ['/F', '/T', '/PID', String(server.pid)], { shell: true, stdio: 'ignore' }); } catch { /* ignore */ }
+process.exit(0);

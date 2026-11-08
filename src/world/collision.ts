@@ -1,3 +1,5 @@
+import { towerStairAt } from './terrain';
+
 /** Footprint collider. `bottom` is -Infinity for ground-standing boxes; roofs/lintels have a finite bottom so fliers can pass beneath. */
 export interface Box { x0: number; x1: number; z0: number; z1: number; top: number; bottom: number; }
 
@@ -85,7 +87,7 @@ export function supportAt(x: number, z: number, y: number, reach = 0.5, r = 0.3)
   for (const b of boxes) {
     if (x >= b.x0 - r && x <= b.x1 + r && z >= b.z0 - r && z <= b.z1 + r && b.top <= y + reach) t = Math.max(t, b.top);
   }
-  return t;
+  return Math.max(t, towerStairAt(x, z, y, reach));
 }
 
 /** True if the point lies inside any collider volume (used by projectiles). */

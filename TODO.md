@@ -207,7 +207,7 @@ Goal: a large, readable open world of Navarre with a full Basgiath. See `02-worl
 - [ ] M3.2.4 [MUST|L] Infantry Quadrant (drill yards, armoury, barracks). *Accept: all visitable.*
 - [ ] M3.2.5 [MUST|L] Healers Quadrant (infirmary, gardens, morgue). *Accept: all visitable.*
 - [ ] M3.2.6 [MUST|L] Scribes Quadrant + Archives (stacks, vault, reading rooms) + central tunnel. *Accept: all visitable.*
-- [ ] M3.2.7 [MUST|M] The Parapet polish (tower stair, wind/rain, fall cinematic). *Accept: tense and fair.*
+- [~] M3.2.7 [MUST|M] The Parapet polish (tower stair, wind/rain, fall cinematic). *Accept: tense and fair.* (outer spiral stair of the Conscription Tower done and walkable; wind rain/fall cinematic pending)
 - [ ] M3.2.8 [MUST|L] Gauntlet redesign (vertical climb, 5 obstacles per lore (?)). *Accept: completable, deadline timer.*
 - [ ] M3.2.9 [MUST|M] Flight Field + aeries/Vale (dragon homes, hatching ground). *Accept: dragons present.*
 - [ ] M3.2.10 [SHOULD|M] Chantara village (inn, market, forge). *Accept: living hub.*
@@ -278,6 +278,7 @@ See `06-story-arc.md`, `07-quests.md`.
 
 ## M5.2 Act I (First Year) - vertical slice
 - [ ] M5.2.1 [MUST|L] Prologue: Conscription Day + Parapet as scripted event with squad assignment. *Accept: full prologue playable.*
+- [ ] M5.2.1b [MUST|L] Conscription Day quadrant choice happens physically: cadets walk in the assembly square, Riders climb the Tower (stair + interior) to the Parapet start, other quadrants through their gates; replaces the class menu. *Accept: no menu, choice = where you go.*
 - [ ] M5.2.2 [MUST|L] First days: squad, section leader, Battle Brief, training montage quests. *Accept: 6 quests.*
 - [ ] M5.2.3 [MUST|L] Gauntlet deadline quest chain. *Accept: win/fail flows.*
 - [ ] M5.2.4 [MUST|L] Threshing as story peak. *Accept: bonds persist.*

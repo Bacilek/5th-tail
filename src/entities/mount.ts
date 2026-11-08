@@ -5,7 +5,7 @@ import type { Player } from './player';
 import type { Combat } from '../systems/combat';
 import { createDragon, type Dragon } from './dragon';
 import { TAIL_ATTACKS, type DragonSpec } from '../data/dragons';
-import { heightAt, MAP_HALF } from '../world/terrain';
+import { baseHeight, heightAtFor, MAP_HALF } from '../world/terrain';
 import { supportAt, resolve, ceilAt } from '../world/collision';
 
 type State = 'away' | 'arriving' | 'idle' | 'mounted';
@@ -42,14 +42,14 @@ export class DragonMount {
     const cp = Math.cos(this.pitch);
     return new THREE.Vector3(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
   }
-  get altitude(): number { return this.pos.y - this.clearance - Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)); }
+  get altitude(): number { return this.pos.y - this.clearance - Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)); }
   get mounted(): boolean { return this.state === 'mounted'; }
 
   summon(player: Player): void {
     if (this.state === 'mounted') return;
     const f = player.forward; f.y = 0; f.normalize();
     const tx = player.pos.x + f.x * 12, tz = player.pos.z + f.z * 12;
-    this.arriveTo.set(tx, Math.max(heightAt(tx, tz), supportAt(tx, tz, heightAt(tx, tz) + 1, 1)) + this.clearance, tz);
+    this.arriveTo.set(tx, Math.max(baseHeight(tx, tz), supportAt(tx, tz, baseHeight(tx, tz) + 1, 1)) + this.clearance, tz);
     if (this.state === 'away') {
       this.arriveFrom.set(tx - f.x * 160 + 40, this.arriveTo.y + 80, tz - f.z * 160);
     } else {
@@ -78,11 +78,11 @@ export class DragonMount {
     this.state = 'idle';
     const side = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
     player.pos.set(this.pos.x + side.x * 3, 0, this.pos.z + side.z * 3);
-    player.pos.y = heightAt(player.pos.x, player.pos.z);
+    player.pos.y = heightAtFor(player.pos.x, player.pos.z, this.pos.y - this.clearance);
     player.vel.set(0, 0, 0);
     player.hideHands(false);
     this.pitch = 0; this.roll = 0;
-    this.pos.y = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)) + this.clearance;
+    this.pos.y = Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)) + this.clearance;
     return true;
   }
 
@@ -134,7 +134,7 @@ export class DragonMount {
     this.pos.z = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.z));
     this.pos.y = Math.min(this.pos.y, 320);
     // flying into a cliff: stop instead of being snapped up onto it
-    const aheadFloor = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3, 2)) + this.clearance;
+    const aheadFloor = Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3, 2)) + this.clearance;
     if (aheadFloor - this.pos.y > 4) { this.pos.x = prevX; this.pos.z = prevZ; this.speed *= 0.3; }
     const sz = this.spec.size;
     const dx0 = this.pos.x, dz0 = this.pos.z;
@@ -142,7 +142,7 @@ export class DragonMount {
     if (Math.hypot(this.pos.x - dx0, this.pos.z - dz0) > 0.02) this.speed *= 0.6;
     const ceil = ceilAt(this.pos.x, this.pos.z, this.pos.y - 1.5 * sz);
     if (this.pos.y + 2 * sz > ceil) this.pos.y = ceil - 2 * sz;
-    const floor = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3, 2)) + this.clearance;
+    const floor = Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3, 2)) + this.clearance;
     if (this.pos.y < floor) { this.pos.y = floor; this.speed *= 1 - Math.min(1, 2 * dt); }
 
     const targetRoll = Math.max(-0.7, Math.min(0.7, input.dx * 0.03));
@@ -188,7 +188,7 @@ export class DragonMount {
     if (player.thirdPerson || true) {
       const want = this.pos.clone().addScaledVector(fwd, -15 * this.spec.size).addScaledVector(up, 5 * this.spec.size + 1);
       this.camPos.lerp(want, Math.min(1, 7 * dt));
-      this.camPos.y = Math.max(this.camPos.y, heightAt(this.camPos.x, this.camPos.z) + 1);
+      this.camPos.y = Math.max(this.camPos.y, baseHeight(this.camPos.x, this.camPos.z) + 1);
       camera.position.copy(this.camPos);
       camera.lookAt(this.pos.clone().addScaledVector(fwd, 12).addScaledVector(up, 1.5));
     }

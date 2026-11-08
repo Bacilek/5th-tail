@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Input, isTyping } from './engine/input';
 import {
-  buildTerrain, heightAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, CAMP, VILLAGE, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y, FIELD,
+  buildTerrain, heightAt, towerStairAt, inRect, onParapet, PARAPET, TOWER, PLATEAU, CAMP, VILLAGE, HEALERS, INFANTRY, SCRIBE, CITADEL, CITADEL_Y, FIELD,
 } from './world/terrain';
 import { buildVillage, buildCamp } from './world/areas';
 import { makeLabel, buildCollege, buildParapet, buildHealers, buildInfantry, buildScribes, buildCitadel } from './world/college';
@@ -65,7 +65,9 @@ dn.collectLights();
 
 // Decorative dragons circling the Citadel ridge (species/tails from Fourth Wing lore)
 const circling: { d: Dragon; r: number; alt: number; speed: number; phase: number }[] = [];
-DRAGONS.forEach((spec, i) => {
+// only a random selection of the dragons is around on any given day (not all of them gather)
+const todaysDragons = [...DRAGONS].sort(() => Math.random() - 0.5).slice(0, 4 + Math.floor(Math.random() * 3));
+todaysDragons.forEach((spec, i) => {
   const d = createDragon(spec);
   scene.add(d.group);
   circling.push({ d, r: 70 + (i % 3) * 25, alt: 85 + i * 8, speed: (i % 2 ? 1 : -1) * (0.05 + i * 0.004), phase: i * 0.9 });
@@ -540,7 +542,7 @@ renderer.setAnimationLoop(() => {
 });
 
 // debug hook for automated testing
-(window as unknown as { __game: unknown }).__game = { player, combat, heightAt, PARAPET, PLATEAU, onChosen, setHour: (h: number) => dn.setHour(h),
+(window as unknown as { __game: unknown }).__game = { player, combat, camera, heightAt, towerStairAt, TOWER, PARAPET, PLATEAU, onChosen, setHour: (h: number) => dn.setHour(h),
   teleport: (x: number, z: number) => { player.pos.set(x, heightAt(x, z) + 0.2, z); player.vel.set(0, 0, 0); },
   give: (hand: 0 | 1, item: ItemId) => { if (ITEMS[item]) { player.hands[hand] = item; player.onHandsChanged(); } },
   startQuest: (id: string) => quests.start(id),
@@ -548,8 +550,8 @@ renderer.setAnimationLoop(() => {
   spawnEnemy: (x: number, z: number, kind: EnemyKind = 'venin') => makeEnemy(x, z, kind),
   perf, saveGame, snapshot, applySave, settings, input,
   /** debug: spawn a rigged humanoid 3 m ahead of the player, with a pose state */
-  demoHumanoid: (st: Partial<HumanoidState> = {}, female = false) => {
-    const h = new Humanoid({ female, skin: 0xd9b69a, hair: 0x3a2418 });
+  demoHumanoid: (st: Partial<HumanoidState> = {}, female = false, look: Record<string, unknown> = {}) => {
+    const h = new Humanoid({ female, skin: 0xd9b69a, hair: 0x3a2418, ...look });
     h.dress(0x7a2a22);
     const fwd = player.forward; fwd.y = 0; fwd.normalize();
     h.root.position.set(player.pos.x + fwd.x * 3, player.pos.y, player.pos.z + fwd.z * 3);

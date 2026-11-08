@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { addBox } from './collision';
 import { pbr, pbrRepeat, tileBoxUV } from '../engine/textures';
 import {
-  PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, type Rect,
+  PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, STAIR, STAIR_STEPS, stairStepY, stairAngle, type Rect,
 } from './terrain';
 
 const stone = pbr('castle_brick_07', 0xa9adb8);
@@ -173,11 +173,27 @@ export function buildCollege(): THREE.Group {
   label(g, 'Administration', '#d8d8e8', 0, Y + 27, -19, 12);
 
   // Conscription Tower: tall, open platform on top = start of the Parapet
-  const tw = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r - 0.4, TOWER.r + 1, TOWER.top - Y + 6, 10), stone);
+  const tw = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.4, TOWER.r + 1.2, TOWER.top - Y + 6, 12), stone);
   tw.position.set(TOWER.x, Y - 6 + (TOWER.top - Y + 6) / 2, TOWER.z); tw.castShadow = tw.receiveShadow = true; g.add(tw);
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r * 0.9, TOWER.r - 0.4, 1.2, 10), darkStone);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(TOWER.r + 0.8, TOWER.r + 0.4, 1.2, 12), darkStone);
   cap.position.set(TOWER.x, TOWER.top - 0.6, TOWER.z); cap.castShadow = true; g.add(cap);
-  addBox(TOWER.x, TOWER.z, 8.5, 8.5, TOWER.top);
+  addBox(TOWER.x, TOWER.z, 9.6, 9.6, TOWER.top);
+  // outer spiral stair (walkable surface is analytic, see towerStairAt) + landing bridging to the top platform
+  const stepGeo = new THREE.BoxGeometry(STAIR.r1 - STAIR.r0, 0.9, 1.7);
+  tileBoxUV(stepGeo, STAIR.r1 - STAIR.r0, 0.9, 1.7, 3);
+  const steps = new THREE.InstancedMesh(stepGeo, darkStone, STAIR_STEPS);
+  const sm = new THREE.Matrix4(), sq = new THREE.Quaternion(), sp = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let s = 0; s < STAIR_STEPS; s++) {
+    const a = stairAngle(s), rm = (STAIR.r0 + STAIR.r1) / 2;
+    sp.set(TOWER.x + Math.cos(a) * rm, stairStepY(s) - 0.45, TOWER.z + Math.sin(a) * rm);
+    sq.setFromAxisAngle(up, -a);
+    steps.setMatrixAt(s, sm.compose(sp, sq, one));
+  }
+  steps.castShadow = steps.receiveShadow = true; g.add(steps);
+  const landing = new THREE.Mesh(new THREE.BoxGeometry(5, 0.6, 3.2), darkStone);
+  landing.position.set(TOWER.x - 7, TOWER.top - 0.3, TOWER.z); landing.castShadow = true; g.add(landing);
+  addBox(TOWER.x - 7, TOWER.z, 5, 3.2, TOWER.top);
   label(g, 'Conscription Tower', '#ffd98a', TOWER.x, TOWER.top + 10, TOWER.z, 20);
   banner(g, TOWER.x - 5.2, TOWER.top - 8, TOWER.z, 0xa02a20, Math.PI / 2, 12);
 

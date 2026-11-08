@@ -31,7 +31,7 @@ export class Threshing {
     if (this.active) return;
     this.active = true; this.idx = 0; this.cands = [];
     const used: Species[] = [];
-    const n = 5;
+    const n = 4 + Math.floor(Math.random() * 4); // a random handful of the dragons turns up, not all of them
     for (let i = 0; i < n; i++) {
       const s = rollSpecies(used); used.push(s);
       const name = BOND_NAMES[Math.floor(Math.random() * BOND_NAMES.length)];

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { settings } from '../engine/settings';
 import type { Input } from '../engine/input';
 import type { Player } from './player';
-import { heightAt, MAP_HALF } from '../world/terrain';
+import { baseHeight, MAP_HALF } from '../world/terrain';
 import { supportAt, resolve, ceilAt } from '../world/collision';
 
 /** Broom flight (B to mount/dismount, all classes). Mouse steers, W/S speed, Shift boost, V camera. */
@@ -29,7 +29,7 @@ export class Broom {
     scene.add(this.model);
   }
 
-  get altitude(): number { return this.pos.y - Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)); }
+  get altitude(): number { return this.pos.y - Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)); }
 
   mount(player: Player): void {
     this.active = true;
@@ -45,7 +45,7 @@ export class Broom {
     if (this.altitude > 4) return false;
     this.active = false;
     this.model.visible = false;
-    player.pos.set(this.pos.x, Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)), this.pos.z);
+    player.pos.set(this.pos.x, Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3)), this.pos.z);
     player.vel.set(0, 0, 0);
     player.hideHands(false);
     return true;
@@ -68,7 +68,7 @@ export class Broom {
     this.pos.z = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.z));
     this.pos.y = Math.min(this.pos.y, 300);
     // flying into a cliff/steep terrain: stop instead of being teleported up onto it
-    const ahead = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 1.2, 0.5)) + 1.0;
+    const ahead = Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 1.2, 0.5)) + 1.0;
     if (ahead - this.pos.y > 2.5) { this.pos.x = prevX; this.pos.z = prevZ; this.speed *= 0.3; }
     // walls, roofs and tree trunks block the broom sideways; roofs also act as a ceiling from below
     const bx = this.pos.x, bz = this.pos.z;
@@ -76,7 +76,7 @@ export class Broom {
     if (Math.hypot(this.pos.x - bx, this.pos.z - bz) > 0.02) this.speed *= 0.6;
     const ceil = ceilAt(this.pos.x, this.pos.z, this.pos.y - 0.9);
     if (this.pos.y + 1.5 > ceil) this.pos.y = ceil - 1.5;
-    const floor = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 1.2, 0.5)) + 1.0;
+    const floor = Math.max(baseHeight(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 1.2, 0.5)) + 1.0;
     if (this.pos.y < floor) this.pos.y = floor;
 
     this.roll += (Math.max(-0.5, Math.min(0.5, input.dx * 0.03)) - this.roll) * Math.min(1, 5 * dt);
@@ -98,7 +98,7 @@ export class Broom {
     } else {
       const want = this.pos.clone().addScaledVector(fwd, -6).add(new THREE.Vector3(0, 2, 0));
       this.camPos.lerp(want, Math.min(1, 8 * dt));
-      this.camPos.y = Math.max(this.camPos.y, heightAt(this.camPos.x, this.camPos.z) + 0.8);
+      this.camPos.y = Math.max(this.camPos.y, baseHeight(this.camPos.x, this.camPos.z) + 0.8);
       camera.position.copy(this.camPos);
       camera.lookAt(this.pos.clone().addScaledVector(fwd, 6));
     }

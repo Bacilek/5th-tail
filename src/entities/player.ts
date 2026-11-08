@@ -196,8 +196,10 @@ export class Player {
     this.lookMats.cloth.color.setHex(look.cloth);
     this.lookMats.skin.color.setHex(look.skin);
     this.lookMats.hair.color.setHex(look.hair);
-    this.hairMeshes[0].visible = look.hairStyle !== 'bald';
-    this.hairMeshes[1].visible = look.hairStyle === 'long';
+    // the old box avatar stays hidden once the rigged model is in use (otherwise its hair blocks overlap the real hair)
+    const boxHair = !this.human;
+    this.hairMeshes[0].visible = boxHair && look.hairStyle !== 'bald';
+    this.hairMeshes[1].visible = boxHair && look.hairStyle === 'long';
   }
 
   private buildAvatar(): void {
