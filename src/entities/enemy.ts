@@ -207,7 +207,9 @@ export class Enemy {
   update(dt: number, target: THREE.Vector3, targetAlive: boolean): number {
     const x0 = this.group.position.x, z0 = this.group.position.z;
     const dmg = this.step(dt, target, targetAlive);
-    if (this.human) {
+    const dd = Math.hypot(x0 - target.x, z0 - target.z);
+    this.group.visible = dd < 110; // distance culling (rigged humanoids are expensive)
+    if (this.human && dd < 55) {
       if (this.prevWindup > 0 && this.windup <= 0 && this.alive) this.strikeT = 0.25;
       this.prevWindup = this.windup;
       this.strikeT = Math.max(0, this.strikeT - dt);

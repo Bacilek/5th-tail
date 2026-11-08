@@ -14,6 +14,7 @@ function hashId(s: string): number {
   return h;
 }
 
+const NPC_HIDE = 85, NPC_POSE = 40;
 export class Npc {
   readonly group = new THREE.Group();
   readonly pos: THREE.Vector3;
@@ -202,6 +203,11 @@ export class Npc {
 
   update(t: number, target: THREE.Vector3, dt = 0.016): void {
     this.moving = false;
+    // distance culling: a rigged humanoid is ~20k triangles (x2 with the shadow pass), so far NPCs are hidden and mid-range ones are not re-posed
+    const dd = Math.hypot(target.x - this.pos.x, target.z - this.pos.z);
+    this.group.visible = dd < NPC_HIDE;
+    if (dd >= NPC_HIDE) return;
+    const far = dd > NPC_POSE;
     if (this.aura) { this.aura.rotation.y += dt * 0.9; this.aura.position.y = Math.sin(t * 2) * 0.05; }
     const dx = target.x - this.pos.x, dz = target.z - this.pos.z;
     const near = Math.hypot(dx, dz) < 3.5;
@@ -223,14 +229,14 @@ export class Npc {
         this.group.position.x = this.pos.x; this.group.position.z = this.pos.z;
         this.group.position.y = this.pos.y;
         this.moving = true;
-        this.animate(dt);
-        this.human?.pose({ speed: 1.6, swing: 0, power: false, blocking: false, ride: false }, dt);
+        if (!far) this.animate(dt);
+        if (!far) this.human?.pose({ speed: 1.6, swing: 0, power: false, blocking: false, ride: false }, dt);
         return;
       }
     }
     if (Math.hypot(dx, dz) < 14) this.group.rotation.y = Math.atan2(-dx, -dz);
     this.group.position.y = this.pos.y + Math.sin(t * 1.5 + this.phase) * 0.02;
-    this.animate(dt);
-    this.human?.pose({ speed: 0, swing: 0, power: false, blocking: false, ride: false }, dt);
+    if (!far) this.animate(dt);
+    if (!far) this.human?.pose({ speed: 0, swing: 0, power: false, blocking: false, ride: false }, dt);
   }
 }

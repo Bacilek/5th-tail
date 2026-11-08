@@ -36,6 +36,7 @@ import { Menus } from './ui/menu';
 import { Gauntlet } from './systems/gauntlet';
 import { FlightField } from './world/field';
 import { buildQuadrantDetails } from './world/quadrants';
+import { mergeStatic } from './engine/merge';
 import { Threshing, type Bond } from './systems/threshing';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -62,9 +63,11 @@ sun.shadow.bias = -0.0005;
 scene.add(sun, sun.target);
 const dn = new DayNight(sky, sun, hemi, scene);
 
-scene.add(buildTerrain(), buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildVillage(), buildCamp(), buildTrees());
+const staticWorld = [buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildVillage(), buildCamp(), buildQuadrantDetails()];
+if (!location.search.includes('nomerge')) for (const g of staticWorld) mergeStatic(g); // far fewer draw calls (see engine/merge.ts)
+scene.add(buildTerrain(), ...staticWorld, buildTrees());
 const field = new FlightField();
-scene.add(field.group, buildQuadrantDetails());
+scene.add(field.group);
 dn.collectLights();
 
 // Decorative dragons circling the Citadel ridge (species/tails from Fourth Wing lore)
@@ -309,6 +312,7 @@ const menus = new Menus({
   onSettingsChanged: () => applySettings(),
   onResume: () => { renderer.domElement.requestPointerLock(); },
   onSave: () => saveGame(),
+  onSkipNight: () => dn.setHour(7),
   onQuit: () => { saveGame(); location.reload(); },
 });
 document.addEventListener('pointerlockchange', () => {
@@ -348,6 +352,9 @@ addEventListener('pointerdown', () => audio.start());
 addEventListener('keydown', (e) => {
   if (isTyping(e)) return;
   audio.start();
+  if (e.code === 'KeyZ' && chosen && !panels.dialogOpen) {
+    if (dn.day < 0.6) { dn.setHour(7); hud.announce('You rest until morning', '', 2.5); } else hud.announce('You are not tired', 'Rest (Z) is possible at night', 2);
+  }
   if (e.code === 'KeyN') hud.announce(audio.toggleMute() ? 'Sound off' : 'Sound on', '', 1.5);
   if (e.code === 'KeyM' && chosen && !panels.dialogOpen) {
     minimap.toggle();
@@ -553,7 +560,7 @@ renderer.setAnimationLoop(() => {
   startQuest: (id: string) => quests.start(id),
   bond: (i = 0) => { const sp = BOND_SPECIES[i % BOND_SPECIES.length]; bondDragon({ species: sp, spec: { name: 'Testdrake', color: sp.hex, tail: sp.tail, size: sp.size } }); },
   spawnEnemy: (x: number, z: number, kind: EnemyKind = 'venin') => makeEnemy(x, z, kind),
-  perf, saveGame, snapshot, applySave, settings, input,
+  perf, renderer, scene, saveGame, snapshot, applySave, settings, input,
   /** debug: spawn a rigged humanoid 3 m ahead of the player, with a pose state */
   demoHumanoid: (st: Partial<HumanoidState> = {}, female = false, look: Record<string, unknown> = {}) => {
     const h = new Humanoid({ female, skin: 0xd9b69a, hair: 0x3a2418, ...look });

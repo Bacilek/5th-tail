@@ -54,7 +54,7 @@ function forge(g: THREE.Group, cx: number, cz: number, y: number): void {
     blade.position.set(cx + 4.3 - i * 0.4, y + 1.5, cz + 2); blade.rotation.z = 0.12 * (i - 1); g.add(blade);
   }
   prop(g, cx + 4.4, cz + 1.9, 0.5, 2.2, 0.5, y, wood, false);
-  label(g, 'Smithy', '#ffd98a', cx, y + 8, cz, 7);
+  label(g, 'Smithy', '#ffd98a', cx, y + 12.5, cz, 7);
 }
 
 /** Chantara: village south-west of the college (invented layout; the books only mention the town outside the college). */
@@ -89,7 +89,7 @@ export function buildVillage(): THREE.Group {
   stall(g, cx - 9, cz, 0xa03a30); stall(g, cx + 9, cz, 0x3a6aa0); stall(g, cx, cz + 6, 0x4a8a4a);
   for (const [tx, tz] of [[cx - 12, cz - 20], [cx + 12, cz - 20], [cx - 20, cz + 2], [cx + 20, cz + 2]]) torch(g, tx, Y, tz);
   label(g, 'Chantara', '#ffe9b0', cx, Y + 14, cz - 4, 24);
-  label(g, 'Inn', '#ffd98a', cx, Y + 9, cz + 22, 6);
+  label(g, 'Inn', '#ffd98a', cx, Y + 14.5, cz + 22, 6);
   return g;
 }
 

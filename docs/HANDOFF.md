@@ -17,6 +17,8 @@ Master plan = `TODO.md`; design = `docs/bible/`; rules = `CLAUDE.md`.
 - Flight Field extras live in `src/world/field.ts` (class FlightField, updated each frame in main.ts): Aeries (6 dens + sleeping dragons), Vale hatching ring with eggs, poles, review stand, landing ring. Dens deliberately have no PointLights (perf).
 - Chantara (areas.ts buildVillage): smithy (forge()), market clutter, notice board; renamed from "Basgiath Village". Test list is `docs/TEST-CHECKLIST.md` (newest round on top; Marek tests after a few milestones; keep adding items).
 - Quadrant landmarks live in `src/world/quadrants.ts` (buildQuadrantDetails: garden/morgue, sparring ring/armoury, torture chamber/survival course, vault/reading court). All purely decorative so far (no quests/AI attached; labels only).
+- Perf (Marek saw 30-40 FPS): measured with `scripts/perf-calls.mjs` (draw calls/tris per spot, `?nomerge` for comparison). Biggest cost was ~35 rigged humanoids (~22k tris each, x2 shadow) -> distance culling in npc.ts/enemy.ts; static world groups merged per 40 m cell (`engine/merge.ts`, not the field group: it has animated dragons); PointLights are pooled (DayNight keeps 4 real lights following the nearest lamps). Next ideas: LOD/cheaper humanoid for mid range (dress() doubles body tris), shadow map update every 2nd frame, chunked terrain (M3.1.1).
+- Night: moon/hemi raised, `settings.noNight`, key Z, pause menu button.
 - Open `[~]` items are listed in TODO.md (grep `\[~\]`).
 
 ## Key facts that are not obvious from code

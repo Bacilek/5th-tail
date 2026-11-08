@@ -50,7 +50,7 @@ function healers(g: THREE.Group): void {
     prop(g, -32.5, 98 + dz, 2.4, 1, 0.9, Y, slab);
     if (dz === 0) { const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.28, 0.6), new THREE.MeshStandardMaterial({ color: 0xd8d4c8 })); body.position.set(-32.5, Y + 1.04, 98); g.add(body); }
   }
-  label(g, 'Morgue', '#b8c4d0', -30, Y + 8, 98, 6);
+  label(g, 'Morgue', '#b8c4d0', -30, Y + 11.5, 98, 6);
   label(g, 'Infirmary', '#9fe3b5', 0, Y + 12, 70, 9);
 }
 
@@ -78,30 +78,31 @@ function infantry(g: THREE.Group): void {
     const helm = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 5), iron); helm.position.set(x, Y + 1.9, -100.4); g.add(helm);
     addCircle(x, -100.4, 0.4, Y + 2);
   }
-  label(g, 'Armoury', '#ffd98a', 0, Y + 8, -102, 7);
-  label(g, 'Barracks', '#ffd98a', 0, Y + 9, -112, 7);
+  label(g, 'Armoury', '#ffd98a', 0, Y + 11.5, -102, 7);
+  label(g, 'Barracks', '#ffd98a', 0, Y + 15, -112, 7);
 }
 
 function riders(g: THREE.Group): void {
   const Y = CITADEL_Y;
   // torture chamber: dark stone cell with a table, rack, chains and a grim glow
-  hall(g, 102, -46.5, 12, 7, 6, Y, 3, 's', 'none', darkStone);
+  hall(g, 102, -46.5, 12, 7, 6, Y, 3, 'w', 'none', darkStone); // door on the west side: the south side faces the hall wall
   prop(g, 99, -48, 2.4, 1.2, 0.8, Y, wood);
   prop(g, 105, -48, 0.5, 2.6, 2.4, Y, iron, false);
   for (const x of [98, 100, 104, 106]) chain(g, x, Y + 5.6, -49.4, 2.4);
   const glow = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 5), new THREE.MeshBasicMaterial({ color: 0xc03018 })); glow.position.set(102, Y + 4.6, -47); g.add(glow);
-  label(g, 'Torture Chamber', '#ff8a7a', 102, Y + 9, -46, 10);
-  // Rider Survival Course: balance beam, hurdles, rope wall
-  const cz = -2, x0 = 114;
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 0.5), wood); beam.position.set(x0 + 4, Y + 0.65, cz - 4); g.add(beam);
-  addBox(x0 + 4, cz - 4, 8, 0.5, Y + 0.8, Y + 0.5);
-  for (const bx of [x0, x0 + 8]) prop(g, bx, cz - 4, 0.5, 0.5, 0.5, Y, wood);
-  for (let i = 0; i < 3; i++) prop(g, x0 + 2 + i * 3.4, cz + 1, 0.5, 5, 0.9 + i * 0.25, Y, wood);
-  const wall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.6, 5), wood); wall.position.set(x0 + 11, Y + 1.3, cz + 4.5); wall.castShadow = true; g.add(wall);
-  addBox(x0 + 11, cz + 4.5, 0.5, 5, Y + 2.6);
-  for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.6, 4), new THREE.MeshStandardMaterial({ color: 0xc9b07a })); r.position.set(x0 + 10.7, Y + 1.3, cz + 2.4 + i * 1.4); g.add(r); }
-  label(g, 'Rider Survival Course', '#ffd98a', x0 + 6, Y + 5, cz, 12);
-  banner(g, 112, Y + 6, -2, 0xa02a20, 0, 5);
+  label(g, 'Torture Chamber', '#ff8a7a', 102, Y + 13, -46, 10);
+  // Rider Survival Course in the open yard south of the Parapet road (z -12..-6): balance beam, hurdles, rope wall
+  const x0 = 107;
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 0.5), wood); beam.position.set(x0 + 4, Y + 0.65, -11.5); g.add(beam);
+  addBox(x0 + 4, -11.5, 8, 0.5, Y + 0.8, Y + 0.5);
+  for (const bx of [x0, x0 + 8]) prop(g, bx, -11.5, 0.5, 0.5, 0.5, Y, wood);
+  for (let i = 0; i < 3; i++) prop(g, x0 + 1.5 + i * 3.4, -8.5, 0.5, 3.6, 0.9 + i * 0.25, Y, wood);
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.2, 5), wood); wall.position.set(x0 + 14, Y + 1.6, -9); wall.castShadow = true; g.add(wall);
+  addBox(x0 + 14, -9, 0.5, 5, Y + 3.2);
+  for (let i = 0; i < 5; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.2, 4), new THREE.MeshStandardMaterial({ color: 0xc9b07a })); r.position.set(x0 + 13.6, Y + 1.6, -11 + i * 1.0); g.add(r); }
+  for (const z of [-11, -7]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.6, 0.4), wood); post.position.set(x0 + 14, Y + 1.8, z); g.add(post); }
+  label(g, 'Rider Survival Course', '#ffd98a', x0 + 7, Y + 6, -9, 12);
+  banner(g, x0 - 1.5, Y + 4, -9, 0xa02a20, Math.PI / 2, 4);
 }
 
 function scribes(g: THREE.Group): void {
@@ -114,7 +115,7 @@ function scribes(g: THREE.Group): void {
   }
   const lock = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xd7b04a, metalness: 0.6, roughness: 0.4 }));
   lock.position.set(-100, Y + 1.5, -15.3); g.add(lock);
-  label(g, 'The Vault (restricted)', '#d8a8ff', -100, Y + 8, -12, 10);
+  label(g, 'The Vault (restricted)', '#d8a8ff', -100, Y + 12.5, -12, 10);
   // reading desks in the courtyard with lamps and open books
   for (let i = 0; i < 6; i++) {
     const x = -116 + i * 6.4, z = -22;

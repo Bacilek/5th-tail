@@ -24,6 +24,7 @@ export interface MenuHooks {
   onSettingsChanged: () => void;
   onResume: () => void;
   onSave: () => boolean;
+  onSkipNight: () => void;
   onQuit: () => void;
 }
 
@@ -75,6 +76,7 @@ export class Menus {
     el.className = 'menu'; el.id = 'pause';
     el.innerHTML = '<h2>PAUSED</h2>';
     this.btn(el, 'Resume', 'presume', () => this.hidePause());
+    this.btn(el, 'Rest until morning', 'prest', () => { this.hooks.onSkipNight(); this.toast('You rest until morning'); });
     this.btn(el, 'Save game', 'psave', () => this.toast(this.hooks.onSave() ? 'Game saved' : 'Saving failed'));
     this.btn(el, 'Settings', 'pset', () => this.showSettings());
     this.btn(el, 'Quit to title', 'pquit', () => this.hooks.onQuit());
@@ -118,6 +120,9 @@ export class Menus {
     const inv = document.createElement('input'); inv.type = 'checkbox'; inv.checked = settings.invertY;
     inv.addEventListener('change', () => { settings.invertY = inv.checked; saveSettings(); });
     row('Invert Y axis', inv);
+    const nn = document.createElement('input'); nn.type = 'checkbox'; nn.checked = settings.noNight;
+    nn.addEventListener('change', () => { settings.noNight = nn.checked; saveSettings(); });
+    row('Skip the night (always daytime)', nn);
     row('Graphics quality', select<Quality>([['low', 'Low (best FPS)'], ['medium', 'Medium'], ['high', 'High']], () => settings.quality, (v) => { settings.quality = v; }));
     row('Difficulty', select<Difficulty>(
       (Object.keys(DIFFICULTY) as Difficulty[]).map((k) => [k, DIFFICULTY[k].label] as [Difficulty, string]),

@@ -11,15 +11,19 @@ const roofMat = pbrRepeat('grey_roof_tiles', 0x5a6078, 5, 3);
 const wood = pbr('dark_planks', 0x9a7a5a);
 
 export function makeLabel(text: string, color = '#ffffff', w = 16): THREE.Sprite {
+  const FONT = 'bold 40px Georgia, serif';
   const cv = document.createElement('canvas');
-  cv.width = 512; cv.height = 96;
   const g = cv.getContext('2d')!;
-  g.font = 'bold 40px Georgia, serif';
+  g.font = FONT;
+  // size the canvas to the text so long labels are never clipped; `w` is the world width of a 512 px label
+  cv.width = Math.max(512, Math.ceil(g.measureText(text).width) + 40); cv.height = 96;
+  g.font = FONT;
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.lineWidth = 8; g.strokeStyle = 'rgba(0,0,0,0.85)'; g.strokeText(text, 256, 48);
-  g.fillStyle = color; g.fillText(text, 256, 48);
+  g.lineWidth = 8; g.strokeStyle = 'rgba(0,0,0,0.85)'; g.strokeText(text, cv.width / 2, 48);
+  g.fillStyle = color; g.fillText(text, cv.width / 2, 48);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthWrite: false, fog: false }));
-  s.scale.set(w, w * 96 / 512, 1);
+  const unit = w / 512;
+  s.scale.set(cv.width * unit, 96 * unit, 1);
   return s;
 }
 
@@ -336,7 +340,7 @@ export function buildCitadel(): THREE.Group {
   banner(g, 112, Y + 8, -25.3, 0xa02a20, 0, 8);
     // (the Gauntlet corridor and Flight Field are built in systems/gauntlet.ts and buildFlightField)
   label(g, 'Riders Quadrant - the Citadel', '#ff9a8a', 112, Y + 28, -34, 28);
-  label(g, 'The Gauntlet', '#ffd98a', 140, Y + 14, -22, 14);
+  label(g, 'The Gauntlet', '#ffd98a', 140, Y + 26, -22, 14);
   torch(g, 96, Y, PARAPET.z - 4); torch(g, 96, Y, PARAPET.z + 4);
   return g;
 }

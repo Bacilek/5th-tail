@@ -19,10 +19,11 @@ export interface Settings {
   quality: Quality;
   difficulty: Difficulty;
   invertY: boolean;
+  noNight: boolean;   // skip the night entirely (the clock jumps from evening to morning)
 }
 
 const KEY = '5thtail.settings.v1';
-const DEFAULTS: Settings = { keys: { ...DEFAULT_KEYS }, master: 0.7, music: 1, sens: 1, fov: 72, quality: 'medium', difficulty: 'normal', invertY: false };
+const DEFAULTS: Settings = { keys: { ...DEFAULT_KEYS }, master: 0.7, music: 1, sens: 1, fov: 72, quality: 'medium', difficulty: 'normal', invertY: false, noNight: false };
 
 /** Damage multipliers by difficulty. No difficulty has permadeath. */
 export const DIFFICULTY: Record<Difficulty, { taken: number; dealt: number; label: string }> = {
