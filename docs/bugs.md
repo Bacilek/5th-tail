@@ -30,3 +30,12 @@ Found by running the production build in headless Chrome (`npm run smoke`, `node
 | --- | --- | --- | --- |
 | B4 | **major** | A player who fell off the Parapet could be snapped back up onto the bridge from below (span treated as solid ground column) | `heightAtFor(x,z,y)`: the span only counts as ground for bodies at/above it; terrain mesh uses `baseHeight` so no ridge under the bridge |
 | B5 | minor | Parapet wind too weak (O2) | gusts +-1.7 m/s peak; walking straight now often falls (fall = respawn at tower); hint text added |
+
+## Fixed (round 3, flight test `scripts/fly.mjs`)
+| ID | Severity | Description | Fix |
+| --- | --- | --- | --- |
+| B6 | major | Broom/dragon flying into a cliff/steep terrain were teleported up onto it | stop at the cliff (speed x0.3) when the floor ahead is > 2.5 m (broom) / 4 m (dragon) higher |
+| B7 | minor | A dragon (radius 3 m) could squeeze through a 4.4 m building door | dragon collision radius 4.5 x size |
+
+## Verified (flight)
+Broom takes off, hugs the mesa slope and stops at the Citadel wall; dragon bonds (debug `__game.bond()`), arrives (6 game-s), can be mounted within 10 m with F and flies north.

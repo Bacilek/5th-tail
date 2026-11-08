@@ -11,7 +11,7 @@ import { buildTrees } from './world/trees';
 import { Player } from './entities/player';
 import { Enemy } from './entities/enemy';
 import { createDragon, type Dragon } from './entities/dragon';
-import { DRAGONS, TAIL_ATTACKS } from './data/dragons';
+import { DRAGONS, TAIL_ATTACKS, BOND_SPECIES } from './data/dragons';
 import { DragonMount } from './entities/mount';
 import { CLASSES, type ClassId } from './data/classes';
 import { Combat } from './systems/combat';
@@ -413,6 +413,7 @@ renderer.setAnimationLoop(() => {
   teleport: (x: number, z: number) => { player.pos.set(x, heightAt(x, z) + 0.2, z); player.vel.set(0, 0, 0); },
   give: (hand: 0 | 1, item: ItemId) => { if (ITEMS[item]) { player.hands[hand] = item; player.onHandsChanged(); } },
   startQuest: (id: string) => quests.start(id),
+  bond: (i = 0) => { const sp = BOND_SPECIES[i % BOND_SPECIES.length]; bondDragon({ species: sp, spec: { name: 'Testdrake', color: sp.hex, tail: sp.tail, size: sp.size } }); },
   spawnEnemy: (x: number, z: number) => { const e = new Enemy(x, z); scene.add(e.group); combat.enemies.push(e); },
   perf,
 };

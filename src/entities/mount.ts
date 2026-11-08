@@ -127,13 +127,17 @@ export class DragonMount {
     if (boost) player.useStaminaRaw(25 * dt);
     this.speed += (wanted - this.speed) * Math.min(1, 2.2 * dt);
     const fwd = this.forward;
+    const prevX = this.pos.x, prevZ = this.pos.z;
     this.pos.addScaledVector(fwd, this.speed * dt);
     this.pos.x = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.x));
     this.pos.z = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.z));
     this.pos.y = Math.min(this.pos.y, 320);
+    // flying into a cliff: stop instead of being snapped up onto it
+    const aheadFloor = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 3, 2)) + this.clearance;
+    if (aheadFloor - this.pos.y > 4) { this.pos.x = prevX; this.pos.z = prevZ; this.speed *= 0.3; }
     const sz = this.spec.size;
     const dx0 = this.pos.x, dz0 = this.pos.z;
-    resolve(this.pos, 3 * sz, 3.5 * sz, 1.5 * sz, 0);
+    resolve(this.pos, 4.5 * sz, 3.5 * sz, 1.5 * sz, 0);
     if (Math.hypot(this.pos.x - dx0, this.pos.z - dz0) > 0.02) this.speed *= 0.6;
     const ceil = ceilAt(this.pos.x, this.pos.z, this.pos.y - 1.5 * sz);
     if (this.pos.y + 2 * sz > ceil) this.pos.y = ceil - 2 * sz;

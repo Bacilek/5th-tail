@@ -61,10 +61,14 @@ export class Broom {
     this.speed += (wanted - this.speed) * Math.min(1, 2.5 * dt);
     const cp = Math.cos(this.pitch);
     const fwd = new THREE.Vector3(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
+    const prevX = this.pos.x, prevZ = this.pos.z;
     this.pos.addScaledVector(fwd, this.speed * dt);
     this.pos.x = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.x));
     this.pos.z = Math.max(-MAP_HALF + 5, Math.min(MAP_HALF - 5, this.pos.z));
     this.pos.y = Math.min(this.pos.y, 300);
+    // flying into a cliff/steep terrain: stop instead of being teleported up onto it
+    const ahead = Math.max(heightAt(this.pos.x, this.pos.z), supportAt(this.pos.x, this.pos.z, this.pos.y, 1.2, 0.5)) + 1.0;
+    if (ahead - this.pos.y > 2.5) { this.pos.x = prevX; this.pos.z = prevZ; this.speed *= 0.3; }
     // walls, roofs and tree trunks block the broom sideways; roofs also act as a ceiling from below
     const bx = this.pos.x, bz = this.pos.z;
     resolve(this.pos, 1.3, 2.4, 0.9, 0);
