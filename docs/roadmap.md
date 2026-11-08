@@ -15,3 +15,11 @@
 - [x] Procedural audio: ambient music, NPC babble, sfx (M mutes)
 - [x] New areas: Basgiath Village (with inn), Venin Camp; wandering NPCs
 - [x] 8 new quests incl. talk/chain/multi-objective; new NPCs (Imogen, Garrick, Mira, Commandant Sorrengail canon; Tavik, Hesper, Pell invented)
+
+## Batch 3 (user feedback)
+- [x] Flight collisions (roofs, walls, trees, ceilings) for broom and dragon
+- [x] Walk cycle (3rd person limbs, 1st person hand/camera bob, NPCs, cat), footsteps
+- [x] Character quick-select tiles (localStorage: look + class)
+- [x] Minimap + world map (M) with waypoints and quest markers (mute is now N)
+- [x] Violet Sorrengail NPC + q_violet
+- [x] Day-night cycle (sun/moon, stars, fog, torches); debug: window.__game.setHour(h)

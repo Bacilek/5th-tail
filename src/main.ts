@@ -5,7 +5,8 @@ import {
 } from './world/terrain';
 import { buildVillage, buildCamp } from './world/areas';
 import { makeLabel, buildCollege, buildParapet, buildHealers, buildInfantry, buildScribes, buildCitadel } from './world/college';
-import { buildSky } from './world/sky';
+import { Sky } from './world/sky';
+import { DayNight } from './systems/daynight';
 import { buildTrees } from './world/trees';
 import { Player } from './entities/player';
 import { Enemy } from './entities/enemy';
@@ -41,8 +42,10 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x8a8c9a, 90, 520);
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 1500);
 
-scene.add(buildSky());
-scene.add(new THREE.HemisphereLight(0xb8c4ee, 0x3a3328, 1.1));
+const sky = new Sky();
+scene.add(sky.group);
+const hemi = new THREE.HemisphereLight(0xb8c4ee, 0x3a3328, 1.1);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffd7a8, 2.2);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -50,9 +53,10 @@ const sc = sun.shadow.camera;
 sc.left = -70; sc.right = 70; sc.top = 70; sc.bottom = -70; sc.near = 1; sc.far = 400;
 sun.shadow.bias = -0.0005;
 scene.add(sun, sun.target);
-const SUN_OFFSET = new THREE.Vector3(-80, 120, 60);
+const dn = new DayNight(sky, sun, hemi, scene);
 
 scene.add(buildTerrain(), buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildVillage(), buildCamp(), buildTrees());
+dn.collectLights();
 
 // Decorative dragons circling the Citadel ridge (species/tails from Fourth Wing lore)
 const circling: { d: Dragon; r: number; alt: number; speed: number; phase: number }[] = [];
@@ -386,8 +390,8 @@ renderer.setAnimationLoop(() => {
     c.d.update(t + i);
   });
 
-  sun.position.copy(player.pos).add(SUN_OFFSET);
-  sun.target.position.copy(player.pos);
+  dn.update(dt, player.pos, camera.position);
+  minimap.clock = (dn.day > 0.5 ? 'Day ' : 'Night ') + dn.clock;
 
   if (chosen) minimap.update({ x: player.pos.x, z: player.pos.z, yaw: player.yaw }, questMarkers());
   hud.update(
@@ -401,4 +405,4 @@ renderer.setAnimationLoop(() => {
 });
 
 // debug hook for automated testing
-(window as unknown as { __game: unknown }).__game = { player, combat, heightAt, PARAPET, PLATEAU, onChosen };
+(window as unknown as { __game: unknown }).__game = { player, combat, heightAt, PARAPET, PLATEAU, onChosen, setHour: (h: number) => dn.setHour(h) };
