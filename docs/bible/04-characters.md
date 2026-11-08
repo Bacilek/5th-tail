@@ -64,3 +64,8 @@ Xaden (shadow aura, gold-flecked eyes, tousled hair), Dain (chin scar), Imogen (
 - Timeline problem: Onyx Storm is the *third* year, our Act I is the *first* year. Decision: **conscious, flagged anachronism** - in Act I Broccoli is a stray kitten the player can adopt (companion). In Act III the Drake storyline can recontextualise it (quest to return/share the cat). Kitten model scale 0.8.
 - Gameplay: follows the player, sits on shoulders/in rest areas (SHOULD), purr/meow audio, small companion quests.
 - Name in UI: "Broccoli". Never claim it is Violet's cat.
+
+### Broccoli update from deep research (lore-db/characters-adults.md)
+- Owner: **Drake Cordella**, who got the orange kitten as a gift in a card game (Zihnal) on Zehyllna and named it Broccoli (one source says "cat", others "kitten"; sex unknown (?)). Author's cat Boots was the model; Broccoli is safe in the series.
+- Rank: Lilith Sorrengail is **General**; "Commandant" is Colonel Panchek's post (renamed in game data).
+- Tail types confirmed by most sources: Tairn morningstar, Teine green club, Feirge green dagger, Cath red sword, Codagh black sword (one source dagger (?)).
