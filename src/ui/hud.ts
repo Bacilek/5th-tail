@@ -77,7 +77,7 @@ export class Hud {
     document.body.appendChild(root);
     const start = document.createElement('div');
     start.id = 'start';
-    start.innerHTML = '<h1>5TH TAIL</h1><p>Click to begin &middot; Esc to release the mouse</p>';
+    start.innerHTML = '<h1>FIFTH TAIL</h1><p>Click to begin &middot; Esc to release the mouse</p>';
     start.style.display = 'none';
     document.body.appendChild(start);
     document.addEventListener('pointerlockchange', () => {

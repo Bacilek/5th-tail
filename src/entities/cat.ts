@@ -44,6 +44,7 @@ export class Cat {
     lab.position.y = 1.1;
     this.group.add(lab);
     this.group.position.copy(this.pos);
+    this.group.scale.setScalar(0.8); // Broccoli is a kitten in the books (Onyx Storm)
   }
 
   update(dt: number, t: number, player: THREE.Vector3): void {

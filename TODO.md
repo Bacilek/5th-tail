@@ -387,3 +387,27 @@ See `18-multiplayer.md`.
 2. M1.1-M1.5 (feel) -> G1.
 3. Phase 2 asset pipeline + humanoid -> Phase 3 Basgiath rebuild -> Phase 4 dragons -> Phase 5 Act I.
 4. Remaining phases interleaved by owners' priorities.
+
+---
+
+## Additions after Marek's answers (decisions applied)
+### Phase 0 additions
+- [ ] M0.3.4 [MUST|S] Resolution scale slider + dynamic resolution; Low preset must hold 60 FPS on Ryzen 7 7735HS / Radeon 680M. *Accept: documented FPS on that machine via F3 overlay.*
+- [ ] M0.4.7 [MUST|M] Difficulty setting in menu (damage dealt/taken, stamina cost, enemy aggression); no permadeath anywhere. *Accept: three levels + custom sliders, persisted.*
+- [ ] M0.4.8 [MUST|S] Language setting scaffold (EN default, CZ second). *Accept: `t()` function exists and UI text uses it.*
+- [ ] M0.6.7 [MUST|S] Display name **Fifth Tail** in title screen, window title, installer. *Accept: no "5th Tail" in player-visible text.*
+### Look and tone (Phase 2)
+- [ ] M2.6.5 [SHOULD|M] "Darker Hogwarts-Legacy" grade: colour grade, fog colours, torch light placement, bloom - tuned to stay cheap on iGPU. *Accept: screenshot comparison approved by Marek.*
+### Characters and lore
+- [ ] M2.3.7 [SHOULD|S] Jesinia deaf/signing animation (gesture set) and canon looks pass using `lore-db/characters-*.md`. *Accept: recognisable Jesinia.*
+- [ ] M5.4.4 [SHOULD|M] Broccoli arc: Act I stray kitten, Act III Drake storyline (`docs/bible/04-characters.md`). *Accept: two quests tied to the cat.*
+- [ ] M5.4.5 [SHOULD|M] Romance/friendship hooks: 3 optional relationship threads (tasteful). *Accept: dialogue + small quests.*
+### Audio
+- [ ] M7.8a [SHOULD|M] TTS pipeline v1 using browser `speechSynthesis` with per-character pitch/rate (`src/data/voices.ts`), toggle in settings. *Accept: key NPC lines spoken.*
+- [ ] M7.8b [SHOULD|L] Offline neural TTS render script (Piper or similar) -> audio files per line; ask Marek before downloading models; log licence. *Accept: 3 characters voiced with distinct voices.*
+### Multiplayer
+- [ ] M9.3a [SHOULD|M] Two player characters in one save (shared world flags, separate quest logs/inventories). *Accept: save format holds both.*
+### Research and lore quality
+- [x] M-L.1 Deep lore database: `docs/bible/lore-db/` (characters, places, glossary-culture, creatures-magic, timeline) created from many sources.
+- [ ] M-L.2 [MUST|M] Apply lore-db to game data: NPC looks, names, dragon table, place names, quests. *Accept: data matches lore-db or is flagged (invented).*
+- [ ] M-L.3 [MUST|S] Resolve `gf.md` answers into docs/data (when the partner answers). *Accept: gf.md items checked off.*

@@ -130,7 +130,7 @@ function talkTo(npc: Npc): void {
 
 function talkToCat(): void {
   if (!cat.adopted) {
-    panels.open('Broccoli', 'A scruffy orange cat inspects you, then decides you will do. (Its origin in the books is uncertain, so it is a stray here.)', [
+    panels.open('Broccoli', 'A scrawny orange kitten stares up at you, thoroughly unimpressed, then decides you will do.', [
       { label: 'Adopt Broccoli.', cb: () => { cat.adopted = true; hud.announce('Broccoli joins you', 'The cat will follow you around.', 4); } },
       { label: 'Leave it.' },
     ]);

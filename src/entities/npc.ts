@@ -83,6 +83,11 @@ export class Npc {
       tips.position.set(0, 1.27, 0.2);
       this.group.add(upper, tips);
     }
+    if (has('longHair')) {
+      const lh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.7, 0.08), hair);
+      lh.position.set(0, 1.5, 0.19);
+      this.group.add(lh);
+    }
     if (has('braid')) {
       const braid = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 0.09), hair);
       braid.position.set(0.06, 1.48, 0.2); braid.rotation.x = 0.15;

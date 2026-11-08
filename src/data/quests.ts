@@ -114,11 +114,11 @@ export const QUESTS: QuestDef[] = [
     gold: 60,
   },
   {
-    id: 'q_report', title: 'Report to the Commandant', giver: 'commandant', requires: 'q_fly',
+    id: 'q_report', title: 'Report to the General', giver: 'general', requires: 'q_fly',
     intro: 'You flew to the Conscription Tower and back, and Xaden vouched for you, which he rarely does. Hear this: the camp in the south-east is only one of many, and the wards are failing. Go to the village and tell the innkeeper that the college will pay for any news from the border.',
     remind: 'Speak to the innkeeper in the village inn.',
     outro: 'The college hears everything eventually. Take this for the road.',
-    objectives: [{ type: 'talk', npc: 'hesper', text: 'Tell the innkeeper Hesper what the Commandant said' }],
+    objectives: [{ type: 'talk', npc: 'hesper', text: 'Tell the innkeeper Hesper what the General said' }],
     gold: 150,
   },
   {

@@ -44,3 +44,9 @@ Violet Sorrengail, Xaden Riorson, Dain Aetos, Rhiannon Matthias, Ridoc Gamlyn, S
 
 ## Signets vs. dragon type (checked)
 Fan wikis (Empyrean Riders, Audible guides) show NO consistent link between a rider's signet and the dragon's color or tail type (the same type appears with different signets; one low-quality source claims color predicts signet). So the game does not tie signets to dragon type. Corrected data: Teine is a green swordtail (Mira's dragon), Aotrom a brown swordtail (Ridoc's).
+
+## Broccoli (researched)
+Orange kitten from Onyx Storm; one recap says Drake receives and names it; author's cat Boots was the inspiration; the cat survives. Game: stray kitten adopted in Act I (flagged anachronism). Previous note "owner uncertain" is superseded.
+
+## Rank titles
+Sources call Lilith Sorrengail "General"; the NPC was renamed from Commandant to General Sorrengail.

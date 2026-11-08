@@ -24,3 +24,6 @@ Standard mapping (see 09): sticks move/look, triggers hands, bumpers cycle, butt
 
 ## Acceptance
 Two people on one PC can both explore, fight, mount dragons/brooms and do quests simultaneously at >= 30 FPS.
+
+## Decisions
+Two players share one world with separate characters, quest logs and inventories (shared world flags and time). Keyboard+mouse primary, gamepad for the second player.

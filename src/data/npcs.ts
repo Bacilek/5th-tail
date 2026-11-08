@@ -13,12 +13,12 @@ export interface NpcDef {
   eyes?: number;
   build?: 'tall' | 'hulking' | 'small';
   /** Signature marks from the books. Only key (canon) NPCs have these; generic NPCs never do. */
-  marks?: ('shadowAura' | 'goldEyes' | 'tousled' | 'chinScar' | 'halfShaved' | 'braid' | 'insignia' | 'crownBraid' | 'silverTips')[];
+  marks?: ('shadowAura' | 'goldEyes' | 'tousled' | 'chinScar' | 'halfShaved' | 'braid' | 'insignia' | 'crownBraid' | 'silverTips' | 'longHair')[];
 }
 
 // Canon names per docs/lore.md; dialogue lines are original (not quoted from the books).
 export const NPCS: NpcDef[] = [
-  { id: 'jesinia', name: 'Jesinia', role: 'Archivist', x: -100, z: -21, cloth: 0x5a3a86, hair: 0x2a1a10,
+  { id: 'jesinia', name: 'Jesinia', role: 'Archivist (signs) (?)', x: -100, z: -21, cloth: 0x5a3a86, hair: 0x4a3220, marks: ['longHair'],
     chat: ['Quiet in the Archives. Knowledge is the only weapon that does not break.', 'Every Rider who ever bonded a dragon is written down here. Eventually.'] },
   { id: 'marren', name: 'Marren', role: 'Healer (invented)', x: 0, z: 64, cloth: 0x2f7a42, hair: 0x6a4a2a, invented: true,
     chat: ['Healers carry no magic. Just patience, clean hands and very little sleep.'] },
@@ -41,7 +41,7 @@ export const NPCS: NpcDef[] = [
     chat: ['I am small for a rider. Everyone here has noticed. Everyone here is wrong about what that means.', 'Tairn says I think too loudly. I pretend not to hear him.'] },
   { id: 'mira', name: 'Mira', role: 'Rider', x: 94, z: 4, cloth: 0x2a2f45, hair: 0x3a2a1a, marks: ['braid'],
     chat: ['Survived the Parapet? Good. That was the easy part.'] },
-  { id: 'commandant', name: 'Commandant Sorrengail', role: 'Commandant', x: 0, z: -24, cloth: 0x1a1a22, hair: 0xb8b8c0, build: 'tall', marks: ['insignia'],
+  { id: 'general', name: 'General Sorrengail', role: 'General', x: 0, z: -24, cloth: 0x1a1a22, hair: 0xb8b8c0, build: 'tall', marks: ['insignia'],
     chat: ['The college does not waste what it cannot replace.'] },
   { id: 'tavik', name: 'Tavik', role: 'Merchant (invented)', x: -99, z: 87, cloth: 0x8a4a2a, hair: 0x5a3a20, invented: true,
     chat: ['Roots, fish, rope, rumor. Best prices south of the college.'] },

@@ -42,3 +42,12 @@ Only Riders have magic via signets (lore). Others can still use items/relics (DR
 
 ## Scope honesty
 Real AAA is hundreds of people for years. The goal is the best possible two-person-playable, large, deep, stylised game, improved in layers so that after every milestone the game is playable.
+
+## Decisions (answered by Marek, applied)
+- **Title:** displayed as **Fifth Tail** (repo and package name stay `5th-tail`).
+- **Tone:** darker, in the spirit of Hogwarts Legacy: gothic, atmospheric, adult-leaning without gore. Achieved with colour, fog, light and music rather than expensive effects (see 13).
+- **Difficulty:** selectable in the menu (damage dealt/taken, stamina, enemy aggression). **No permadeath, ever.** The Parapet respawns the player at the tower.
+- **Relationships:** light friendship/romance hooks are welcome (tasteful, optional).
+- **Language:** English by default, Czech as a second localization.
+- **Players:** two players share one world, each with an own character, quest log and inventory (simplest to build and makes sense for co-op).
+- **Playtests:** after every milestone, short notes in `docs/playtests/`.

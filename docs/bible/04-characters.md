@@ -58,3 +58,9 @@ dragon?, signet?, disposition, dialogue trees, bark lines, quest hooks, faction 
 
 ## Look/marks implemented
 Xaden (shadow aura, gold-flecked eyes, tousled hair), Dain (chin scar), Imogen (half-shaved pink), Garrick (hulking), Mira (braid), Commandant (cape+epaulettes), Violet (crown braid, silver tips). To add: Jesinia (signing gestures), Sawyer (freckles), Liam (blond spikes), Rhiannon (braids), Ridoc, Brennan, Sloane, Lilith (storm sparks), etc.
+
+## Broccoli the cat (updated: researched)
+- Canon: an **orange kitten from Onyx Storm** (book 3). One recap says a character named Drake receives the kitten as a gift and names it Broccoli (owner/identity of "Drake" still `(?)`, see `lore-db/characters-adults.md`). The author has said the cat is based on her own cat Boots (Empyrean Riders Q&A) and that it survives the series.
+- Timeline problem: Onyx Storm is the *third* year, our Act I is the *first* year. Decision: **conscious, flagged anachronism** - in Act I Broccoli is a stray kitten the player can adopt (companion). In Act III the Drake storyline can recontextualise it (quest to return/share the cat). Kitten model scale 0.8.
+- Gameplay: follows the player, sits on shoulders/in rest areas (SHOULD), purr/meow audio, small companion quests.
+- Name in UI: "Broccoli". Never claim it is Violet's cat.

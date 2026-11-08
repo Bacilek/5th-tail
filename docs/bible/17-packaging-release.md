@@ -29,3 +29,6 @@ Desktop build: `%APPDATA%/5th-tail/saves/*.json`. Browser build: IndexedDB. Both
 
 ## Troubleshooting checklist
 GPU acceleration disabled? -> fallback quality. Gamepad not detected? -> Chromium flags. Audio blocked? -> first-click start screen.
+
+## Decisions
+Electron chosen (Marek trusts the recommendation). App/window title and icon use the name **Fifth Tail**.

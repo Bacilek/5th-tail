@@ -43,3 +43,9 @@ Sources: (a) extend the procedural generator with per-state scales/tempos (cheap
 
 ## Technical tasks
 Audio manager with buses, sound pool (avoid GC), positional emitters, event-driven API (`audio.play('hit.sword', {pos})`), loading/caching of CC0 samples, autoplay-policy handling (start on first gesture - exists).
+
+## TTS plan (decided: Claude does it, Marek does nothing)
+1. **Now:** nonsense babble + subtitles (default).
+2. **SHOULD:** browser `speechSynthesis` for optional spoken lines (free; quality depends on Windows voices; English good, Czech varies).
+3. **Better:** local neural TTS (e.g. Piper, offline, open-source). A script renders all key lines to audio files per character (different voice/pitch/speed), shipped with the game. Needs Marek's approval for downloading the voice models; licences to be checked. Synthetic voices are not actors; characters are distinguished by voice choice and processing (reverb, pitch). English first (default), Czech if a decent voice exists.
+Voice assignment table lives in `src/data/voices.ts` (to create).

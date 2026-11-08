@@ -41,3 +41,9 @@ App icon: stylised dragon scale or five-tail motif (name "5th Tail" is working t
 
 ## Credits
 Maintain `CREDITS.md` generated from `assets/licences.md`.
+
+## Decisions (hardware and tone)
+- **Target machine:** non-gaming laptop, AMD Ryzen 7 7735HS with Radeon 680M integrated graphics. Budget: **1080p, 60 FPS on Low/Medium; >= 30 FPS in split-screen**; resolution scale (0.6-1.0) and dynamic resolution; shadow map 1024 default; limited view distance with fog; instancing and LOD everywhere; expensive effects (SSAO, volumetrics, big shadow cascades) only on High and optional.
+- **Look (darker, Hogwarts-Legacy-like):** cold stone, deep shadow, warm point-lights from torches, heavy mood fog, bloom on lights, desaturated palette with ember accents. Create it with colour grading, fog, light placement, texture quality and composition rather than heavy post-processing.
+- **CC0 packs approved** (Quaternius, Kenney, Poly Haven, ambientCG, etc.) provided they match the style and do not clash; every asset logged in `assets/licences.md`.
+- **Photo-to-face** (later, M2.3.5): applies to characters we create; not required now.

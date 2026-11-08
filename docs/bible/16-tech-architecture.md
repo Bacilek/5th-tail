@@ -36,3 +36,6 @@ Vite + TS strict; ESLint/Prettier (to add); `npm run check` = typecheck + lint +
 
 ## Risk list
 Large-world precision, browser memory limits, shader compile hitches, asset pipeline sizes (GLB budgets), WebGL differences across GPUs. Mitigation: streaming, compression, quality presets, test on multiple machines.
+
+## Decisions (hardware)
+Primary test device: Ryzen 7 7735HS / Radeon 680M. All performance targets in this file refer to that class of machine at 1080p Medium. The Low preset must hold 60 FPS in the open areas and 30 FPS in split-screen. Profile on that machine (Marek reports FPS via the F3 overlay).

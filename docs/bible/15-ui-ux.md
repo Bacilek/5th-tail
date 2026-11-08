@@ -33,3 +33,6 @@ Parchment/ink inspired panels, dark navy background with ember accent, serif dis
 
 ## Tutorial flow
 Contextual one-time hints (movement, interact, combat, block, dragon, broom, map) driven by a `hints.json` file with triggers and "seen" flags saved per character.
+
+## Decisions
+English is the default language; Czech is the second language. Difficulty is a menu setting (see 00-vision); no permadeath.

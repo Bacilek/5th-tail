@@ -1,37 +1,29 @@
-# 99 - Open questions (for Marek and partner)
+# 99 - Decisions and open production questions
 
-Answer anywhere (chat is fine); I will fold the answers back into the docs and data.
+Lore / "how is it in the books" questions now live in **`/gf.md`** (for the partner). Until she answers, I decide by my own judgement using the best sources (documented in `lore-db/` and `01-lore-canon.md`).
 
-## Lore checks (partner: you know the books best)
-1. **Tairn's tail type** - morningstar or dagger? (our code says dagger, one source says morningstar)
-2. **Teine** (Mira's dragon) - green club or green sword?
-3. **Feirge** (Rhiannon) - green dagger or club? **Cath** (Dain) - red sword?
-4. Is the commanding officer **General** or **Commandant** Sorrengail in the books?
-5. **Gauntlet**: is it a steep vertical climb? How many obstacles, what are they (without spoiling too much)?
-6. **Broccoli the cat**: is there a book reference/owner?
-7. Names/looks of Rhiannon, Ridoc, Sawyer, Liam, Sloane, Bodhi, Jesinia: anything iconic that should be visible on the model?
-8. Which signets must exist in the game (for the player to choose or find)?
-9. Are Irids/gryphons/wyverns/venin important to show early? How should venin look?
-10. Which scenes/places from the books do you want to *stand in* the most (Parapet, Flight Field, Archives, Aretia, Samara, Resson...)?
-11. Which characters should be companions?
+## Decisions made by Marek (applied)
+| Topic | Decision |
+| --- | --- |
+| Title | **Fifth Tail** (repo stays `5th-tail`) |
+| Relationships | Light friendship/romance hooks OK |
+| Tone | Darker, Hogwarts-Legacy-like; no gore |
+| Language | English default, Czech second |
+| Voices | Claude builds the TTS pipeline (see 12-audio); nothing needed from Marek except approving model downloads |
+| Difficulty | Selectable in menu; **no permadeath** |
+| Controls | Mouse+keyboard primary; gamepad for second player |
+| Two players | Shared world, one character each (separate quest logs/inventories) |
+| Assets | CC0 packs OK when they fit the look; photo-to-face later for created characters |
+| Hardware target | Ryzen 7 7735HS + Radeon 680M iGPU, 1080p Medium 60 FPS |
+| Playtests | After every milestone |
+| Packaging | Electron |
 
-## Direction and taste
-12. **Game title**: keep "5th Tail" or something else (affects icon/logo)?
-13. Mood/art style references (screenshots of games or fan art you like).
-14. Romance/relationships: include light friendship/romance hooks or skip?
-15. Violence level and tone (dark vs lighter).
-16. Language: Czech UI/subtitles as default? Czech quest text?
-17. Voice: nonsense babble only, or TTS for key lines later?
-18. Difficulty feel: forgiving or Skyrim-hard? Permadeath-like events (Parapet)?
-19. Preferred controls: mouse+keyboard primary; gamepad for the second player?
-20. Should the second player be a separate character from the start, or can it be co-op with shared story?
+## Still open (production)
+1. Should the game start with a short cinematic or go straight to character creation? (default: straight to creation + short intro text)
+2. Do you want a "photo mode" (free camera + hide HUD) for screenshots? (cheap, SHOULD)
+3. Are Windows-only builds enough (Electron)? (assumed yes)
+4. Any age/rating concern about the darker tone for the sharing circle? (assumed private use)
+5. Save-game policy: autosave + manual slots (assumed)
 
-## Production
-21. Are you OK with me downloading CC0 asset packs (Quaternius/Kenney/Poly Haven etc.) with licences logged?
-22. Do you have any assets you want to use (models, music, face photos)?
-23. Hardware: GPU/CPU of the machines you play on (sets performance budget).
-24. How often do you want to playtest? (suggest: after each milestone, 15-30 min notes)
-25. Packaging: Electron (recommended) vs PWA for the desktop icon.
-
-## Source reliability notes (for me)
-Fandom wiki and Literary Lifestyle pages could not be read by my tools; empyreanriders.com, Ink & Imaginings, Audible and recap sites were read. Many (?) flags come from that gap. Your corrections override anything written here.
+## Source reliability (for me)
+Readable: empyreanriders.com, inkandimaginings.com, bookseriesrecaps.com, Audible blog, Wikipedia, recap sites. Often blocked: Fandom wiki, theliterarylifestyle.com. Many `(?)` flags come from that gap; the partner's answers in `gf.md` override everything.
