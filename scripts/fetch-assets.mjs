@@ -2,7 +2,7 @@
 // and writes assets/licences.md. Usage: node scripts/fetch-assets.mjs
 import fs from 'node:fs';
 
-const TEXTURES = ['castle_brick_07', 'cobblestone_floor_04', 'forest_ground_04', 'rock_face_03', 'grey_roof_tiles'];
+const TEXTURES = ['dark_planks', 'bark_brown_02', 'castle_brick_07', 'cobblestone_floor_04', 'forest_ground_04', 'rock_face_03', 'grey_roof_tiles'];
 fs.mkdirSync('public/textures', { recursive: true });
 fs.mkdirSync('assets', { recursive: true });
 

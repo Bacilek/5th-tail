@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import { addBox } from './collision';
-import { pbr, tileBoxUV } from '../engine/textures';
+import { pbr, pbrRepeat, tileBoxUV } from '../engine/textures';
 import {
   PLATEAU, COLLEGE, HEALERS, INFANTRY, SCRIBE, SCRIBE_Y, CITADEL, CITADEL_Y, TOWER, PARAPET, type Rect,
 } from './terrain';
 
 const stone = pbr('castle_brick_07', 0xa9adb8);
 const darkStone = pbr('castle_brick_07', 0x70747f);
-const roofMat = new THREE.MeshStandardMaterial({ color: 0x23283f, flatShading: true });
-const wood = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
+const roofMat = pbrRepeat('grey_roof_tiles', 0x5a6078, 5, 3);
+const wood = pbr('dark_planks', 0x9a7a5a);
 
 export function makeLabel(text: string, color = '#ffffff', w = 16): THREE.Sprite {
   const cv = document.createElement('canvas');

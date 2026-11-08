@@ -173,7 +173,7 @@ Goal: replace blocky placeholders with real models and a real animation system. 
 - [ ] M2.4.3 [SHOULD|M] Hatchling Andarna-style model. *Accept: small feathertail variant.*
 
 ## M2.5 Environment art
-- [~] M2.5.1 [MUST|L] PBR materials + textures for stone, wood, grass, rock. *Accept: terrain and buildings look textured.* (done: CC0 stone/cobble/ground/rock textures on walls, floors, terrain; todo: roofs, wood, props)
+- [x] M2.5.1 [MUST|L] PBR materials + textures for stone, wood, grass, rock. *Accept: terrain and buildings look textured.* (done: CC0 stone/cobble/ground/rock textures on walls, floors, terrain; todo: roofs, wood, props) (stone, cobble, ground, rock, roof tiles, wood planks, bark)
 - [ ] M2.5.2 [MUST|L] Replace buildings with modular kit (walls, towers, roofs, doors). *Accept: Basgiath rebuilt from kit.*
 - [ ] M2.5.3 [SHOULD|L] Vegetation: wind-animated trees, grass, flowers, herbs. *Accept: instanced and swaying.*
 - [ ] M2.5.4 [SHOULD|M] Props library (furniture, books, weapons racks, banners). *Accept: interiors furnished.*

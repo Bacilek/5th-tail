@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { heightAt, COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, VILLAGE, CAMP, type Rect } from './terrain';
 const KEEP_OUT: Rect[] = [COLLEGE, HEALERS, INFANTRY, SCRIBE, MESA, FIELD, VILLAGE, CAMP];
 import { addCircle } from './collision';
+import { pbrRepeat } from '../engine/textures';
 import { fbm, mulberry } from '../engine/noise';
 
 export function buildTrees(): THREE.Group {
@@ -18,7 +19,7 @@ export function buildTrees(): THREE.Group {
     pts.push({ x, y: h, z, s: 0.8 + rnd() * 1.1 });
   }
   for (const t of pts) addCircle(t.x, t.z, 0.45 * t.s, t.y + 8.5 * t.s);
-  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.4, 3, 5), new THREE.MeshStandardMaterial({ color: 0x4a3524, flatShading: true }), pts.length);
+  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.4, 3, 5), pbrRepeat('bark_brown_02', 0x8a6a50, 1, 2), pts.length);
   const f1 = new THREE.InstancedMesh(new THREE.ConeGeometry(2.2, 4.5, 6), new THREE.MeshStandardMaterial({ color: 0x1f4a30, flatShading: true }), pts.length);
   const f2 = new THREE.InstancedMesh(new THREE.ConeGeometry(1.6, 3.8, 6), new THREE.MeshStandardMaterial({ color: 0x2a5c3a, flatShading: true }), pts.length);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), sc = new THREE.Vector3();

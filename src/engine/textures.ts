@@ -32,3 +32,17 @@ export function tileBoxUV(geo: THREE.BoxGeometry, w: number, h: number, d: numbe
   }
   uv.needsUpdate = true;
 }
+
+/** PBR material whose textures repeat (rx, ry) times over the UV range (for cones/cylinders such as roofs and trunks). */
+export function pbrRepeat(id: string, tint: number, rx: number, ry: number, roughness = 0.9): THREE.MeshStandardMaterial {
+  // separate texture objects (not clones): each loads its own image so the upload is triggered correctly
+  const mk = (name: string, srgb: boolean) => {
+    const t = loader.load(`./textures/${name}.jpg`);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(rx, ry);
+    t.anisotropy = 4;
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+  return new THREE.MeshStandardMaterial({ map: mk(`${id}_diff`, true), normalMap: mk(`${id}_nor`, false), color: tint, roughness });
+}

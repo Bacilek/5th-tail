@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { addBox } from './collision';
+import { pbr } from '../engine/textures';
 import { PLATEAU, VILLAGE, CAMP } from './terrain';
 import { hall, label, torch, banner, prop, floorRect } from './college';
 
-const wood = new THREE.MeshStandardMaterial({ color: 0x5a3a28, flatShading: true });
+const wood = pbr('dark_planks', 0x9a7a5a);
 const stoneM = new THREE.MeshStandardMaterial({ color: 0x6b6f78, flatShading: true });
 const dark = new THREE.MeshStandardMaterial({ color: 0x1b1722, flatShading: true, side: THREE.DoubleSide });
 const ember = new THREE.MeshBasicMaterial({ color: 0xff7a20 });
