@@ -35,6 +35,7 @@ import { settings } from './engine/settings';
 import { Menus } from './ui/menu';
 import { Gauntlet } from './systems/gauntlet';
 import { FlightField } from './world/field';
+import { buildQuadrantDetails } from './world/quadrants';
 import { Threshing, type Bond } from './systems/threshing';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -63,7 +64,7 @@ const dn = new DayNight(sky, sun, hemi, scene);
 
 scene.add(buildTerrain(), buildCollege(), buildHealers(), buildInfantry(), buildScribes(), buildCitadel(), buildParapet(), buildVillage(), buildCamp(), buildTrees());
 const field = new FlightField();
-scene.add(field.group);
+scene.add(field.group, buildQuadrantDetails());
 dn.collectLights();
 
 // Decorative dragons circling the Citadel ridge (species/tails from Fourth Wing lore)

@@ -1,6 +1,14 @@
 # Playtest checklist (Marek) - since the last tested build
 
-## Round 4 changes: Chantara village (NEW, check first)
+## Round 5 changes: quadrant landmarks (NEW, check first)
+- [ ] Healers (south): Infirmary label, herb garden with fountain and 6 flower beds (beds/fountain collide), Morgue room west of the garden with stone slabs and a shrouded body.
+- [ ] Infantry (north): Sparring Ring (sand disc + rope posts) south of the parade ground, Armoury (weapon racks, armour stands) in front of the barracks, Barracks label.
+- [ ] Riders (Citadel): Torture Chamber (dark cell: table, rack, hanging chains, red glow) north of the hall; Rider Survival Course east of the dorm (balance beam, 3 hurdles, rope wall) - check you can reach it and not get stuck.
+- [ ] Scribes (west, sunken): The Vault (iron grille + gold lock) behind the Archives, Reading Court with 6 desks, benches, lamps and books; labels readable.
+- [ ] No building overlaps another (walls/halls clip) and no spots where you get stuck in the alleys between them.
+- [ ] FPS in each quadrant (F3): healers ___ infantry ___ riders ___ scribes ___
+
+## Round 4 changes: Chantara village
 - [ ] Village (south-west) is now called **Chantara** everywhere (label, map POI, quest text).
 - [ ] Smithy at the north side: hearth with glowing coals + flame, anvil, trough, weapon rack; you can walk in, furniture collides.
 - [ ] Market: stalls with goods, crates, barrels, sacks, cart, notice board with notes; you can walk between them without getting stuck.

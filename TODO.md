@@ -203,10 +203,10 @@ Goal: a large, readable open world of Navarre with a full Basgiath. See `02-worl
 ## M3.2 Basgiath complete
 - [ ] M3.2.1 [MUST|L] Rebuild exterior/skyline of Basgiath on the mountain with turrets and bell tower. *Accept: iconic silhouette.*
 - [ ] M3.2.2 [MUST|L] Interiors: Administration, General's office, Gathering Hall, classrooms, dorms. *Accept: each walkable.*
-- [ ] M3.2.3 [MUST|L] Riders Quadrant: citadel, dorms, Torture Chamber cave, Rider Survival Course. *Accept: all visitable.*
-- [ ] M3.2.4 [MUST|L] Infantry Quadrant (drill yards, armoury, barracks). *Accept: all visitable.*
-- [ ] M3.2.5 [MUST|L] Healers Quadrant (infirmary, gardens, morgue). *Accept: all visitable.*
-- [ ] M3.2.6 [MUST|L] Scribes Quadrant + Archives (stacks, vault, reading rooms) + central tunnel. *Accept: all visitable.*
+- [~] M3.2.3 [MUST|L] Riders Quadrant: citadel, dorms, Torture Chamber cave, Rider Survival Course. *Accept: all visitable.*
+- [~] M3.2.4 [MUST|L] Infantry Quadrant (drill yards, armoury, barracks). *Accept: all visitable.*
+- [~] M3.2.5 [MUST|L] Healers Quadrant (infirmary, gardens, morgue). *Accept: all visitable.*
+- [~] M3.2.6 [MUST|L] Scribes Quadrant + Archives (stacks, vault, reading rooms) + central tunnel. *Accept: all visitable.*
 - [~] M3.2.7 [MUST|M] The Parapet polish (tower stair, wind/rain, fall cinematic). *Accept: tense and fair.* (outer spiral stair of the Conscription Tower done and walkable, tower ground floor enterable; wind rain/fall cinematic pending)
 - [~] M3.2.8 [MUST|L] Gauntlet redesign (vertical climb, 5 obstacles per lore (?)). *Accept: completable, deadline timer.*
 - [~] M3.2.9 [MUST|M] Flight Field + aeries/Vale (dragon homes, hatching ground). *Accept: dragons present.*
