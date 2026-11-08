@@ -13,6 +13,7 @@ Master plan = `TODO.md`; design = `docs/bible/`; rules = `CLAUDE.md`.
 - Tower (college.ts): hollow shell with a south door (TOWER_DOOR in terrain.ts), ground-floor guardroom with ceiling disc/torches/table; wall collider = ring of small circles with a door gap; top platform = 8x8 box slab with finite bottom (support only). Terrain no longer returns TOWER.top inside the tower (the Parapet strip starts at x=43, which is why the door is south, not east). Landing bridge has finite bottom so the stair passes under it; `stairBlocked` (terrain.ts) blocks walking into steps >0.55 above the feet. Scripts: `stair-walk.mjs`, `tower-door.mjs` (slow under software GL).
 - Next (agreed order): (1) playtest feedback on swing/block/stair; (2) Phase 3 world/interiors: more enterable buildings (halls already enterable via hall()), quadrant detail, M3.2.2 interiors; (3) M5.2.1b physical quadrant choice replacing class menu (Riders climb tower -> Parapet).
 - Halls (`hall()` in college.ts) now have rug, sconces, back-wall banner, pillars (w or d >= 20) and a real point light only if area >= 300; `scripts/hall-shot.mjs x z yaw` screenshots inside.
+- Gauntlet is now a vertical course (gauntlet.ts): hurdles, sweeper, 8 ledges, beam under 2 pendulums, barrier wall + drop. Player test list: `docs/TEST-CHECKLIST.md` (keep it updated per milestone).
 - Open `[~]` items are listed in TODO.md (grep `\[~\]`).
 
 ## Key facts that are not obvious from code
